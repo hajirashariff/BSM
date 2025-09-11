@@ -1,0 +1,7 @@
+Django<5
+djangorestframework
+drf-yasg
+django-cors-headers
+pydantic
+psycopg2-binary
+
