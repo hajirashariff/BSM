@@ -1,0 +1,27 @@
+{
+  "name": "bsm",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Business Service Management monorepo",
+  "packageManager": "npm@10.8.2",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "turbo run dev --parallel",
+    "build": "turbo run build",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "turbo run format",
+    "start": "turbo run start",
+    "prepare": "husky install"
+  },
+  "devDependencies": {
+    "eslint": "^9.35.0",
+    "husky": "^9.1.7",
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.6",
+    "typescript": "^5.9.2"
+  }
+}

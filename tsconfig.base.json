@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@bsm/ui": ["packages/ui/src"],
+      "@bsm/models": ["packages/models/src"],
+      "@bsm/utils": ["packages/utils/src"],
+      "@bsm/auth": ["packages/auth/src"],
+      "@bsm/integrations": ["packages/integrations/src"]
+    }
+  }
+}
+
+
