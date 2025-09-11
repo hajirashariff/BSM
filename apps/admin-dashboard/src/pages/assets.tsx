@@ -208,6 +208,13 @@ export default function AssetsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // grid or list
 
+  const getProgressBarClass = (health: number) => {
+    if (health >= 90) return 'progress-bar-90';
+    if (health >= 85) return 'progress-bar-85';
+    if (health >= 80) return 'progress-bar-78';
+    return 'progress-bar-78';
+  };
+
   const filteredAssets = assetData.filter(asset => {
     const matchesStatus = filterStatus === 'All' || asset.status === filterStatus;
     const matchesType = filterType === 'All' || asset.type === filterType;
@@ -403,14 +410,13 @@ export default function AssetsPage() {
                       <span className="text-sm text-gray-600">{asset.health}%</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
-                      <div 
-                        className={`h-2 rounded-full ${
-                          asset.health >= 90 ? 'bg-green-500' :
-                          asset.health >= 80 ? 'bg-yellow-500' :
-                          'bg-red-500'
-                        }`}
-                        style={{ width: `${asset.health}%` }}
-                      ></div>
+                    <div 
+                      className={`progress-bar ${getProgressBarClass(asset.health)} ${
+                        asset.health >= 90 ? 'bg-green-500' :
+                        asset.health >= 80 ? 'bg-yellow-500' :
+                        'bg-red-500'
+                      }`}
+                    ></div>
                     </div>
                   </div>
 

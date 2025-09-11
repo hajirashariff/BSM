@@ -1,4 +1,4 @@
-### Context: BSM Platform Monorepo
+### Context: Pro BSM Platform Monorepo
 
 This monorepo hosts a modular BSM platform inspired by Jira SM, ServiceNow, and Kroolo. It targets cross-departmental service ops with reusable apps and packages.
 

@@ -62,6 +62,13 @@ const accountHealth = [
 ];
 
 export default function Dashboard() {
+  const getProgressBarClass = (health: number) => {
+    if (health >= 90) return 'progress-bar-90';
+    if (health >= 85) return 'progress-bar-85';
+    if (health >= 80) return 'progress-bar-78';
+    return 'progress-bar-78';
+  };
+
   return (
     <div className="space-y-6">
       {/* KPI Cards */}
@@ -140,12 +147,11 @@ export default function Dashboard() {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full ${
+                      className={`progress-bar ${getProgressBarClass(account.health)} ${
                         account.health >= 90 ? 'bg-green-500' :
                         account.health >= 80 ? 'bg-yellow-500' :
                         'bg-red-500'
                       }`}
-                      style={{ width: `${account.health}%` }}
                     ></div>
                   </div>
                   <div className="flex items-center justify-between mt-1 text-xs text-gray-500">

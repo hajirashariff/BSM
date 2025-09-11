@@ -26,4 +26,20 @@
   .input-field {
     @apply w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent;
   }
+  
+  .progress-bar {
+    @apply h-2 rounded-full transition-all duration-300;
+  }
+  
+  .progress-bar-dynamic {
+    @apply h-2 rounded-full transition-all duration-300;
+    width: var(--progress-width, 0%);
+  }
+  
+  .progress-bar-90 { width: 90%; }
+  .progress-bar-85 { width: 85%; }
+  .progress-bar-78 { width: 78%; }
+  .progress-bar-92 { width: 92%; }
+  .progress-bar-95 { width: 95%; }
+  .progress-bar-88 { width: 88%; }
 }

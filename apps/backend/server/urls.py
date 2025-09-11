@@ -13,7 +13,7 @@ def health(_: any):
 
 
 schema_view = get_schema_view(
-    openapi.Info(title="BSM API", default_version='v1', description="BSM Backend API"),
+    openapi.Info(title="Pro BSM API", default_version='v1', description="Pro BSM Backend API"),
     public=True,
     permission_classes=(permissions.AllowAny,),
 )

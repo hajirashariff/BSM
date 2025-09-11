@@ -127,6 +127,13 @@ export default function AccountsPage() {
   const [filterStatus, setFilterStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const getProgressBarClass = (health: number) => {
+    if (health >= 90) return 'progress-bar-90';
+    if (health >= 85) return 'progress-bar-85';
+    if (health >= 80) return 'progress-bar-78';
+    return 'progress-bar-78';
+  };
+
   const filteredAccounts = accountData.filter(account => {
     const matchesStatus = filterStatus === 'All' || account.status === filterStatus;
     const matchesSearch = account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -304,12 +311,11 @@ export default function AccountsPage() {
                   </div>
                   <div className="w-full bg-gray-200 rounded-full h-2">
                     <div 
-                      className={`h-2 rounded-full ${
+                      className={`progress-bar ${getProgressBarClass(account.health)} ${
                         account.health >= 90 ? 'bg-green-500' :
                         account.health >= 80 ? 'bg-yellow-500' :
                         'bg-red-500'
                       }`}
-                      style={{ width: `${account.health}%` }}
                     ></div>
                   </div>
                 </div>

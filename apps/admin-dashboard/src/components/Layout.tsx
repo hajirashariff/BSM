@@ -42,7 +42,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
               <span className="text-white font-bold text-sm">BSM</span>
             </div>
-            <h1 className="text-xl font-bold text-gray-900">Kroolo BSM</h1>
+            <h1 className="text-xl font-bold text-gray-900">Pro BSM</h1>
           </div>
         </div>
         

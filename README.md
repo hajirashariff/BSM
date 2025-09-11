@@ -1,4 +1,4 @@
-## BSM Monorepo
+## Pro BSM Monorepo
 
 Enterprise Business Service Management platform monorepo.
 
