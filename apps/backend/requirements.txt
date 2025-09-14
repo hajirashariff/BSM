@@ -4,4 +4,7 @@ drf-yasg
 django-cors-headers
 pydantic
 psycopg2-binary
+markdown
+bleach
+python-slugify
 
