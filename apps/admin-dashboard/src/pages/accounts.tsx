@@ -18,8 +18,11 @@ import {
   ExternalLink,
   BarChart3,
   Target,
-  Zap
+  Zap,
+  X
 } from 'lucide-react';
+import AddAccountModal from '../components/AddAccountModal';
+import AccountDetailsModal from '../components/AccountDetailsModal';
 
 const accountData = [
   {
@@ -123,9 +126,26 @@ const healthColors = {
 };
 
 export default function AccountsPage() {
-  const [selectedAccount, setSelectedAccount] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [selectedAccount, setSelectedAccount] = useState(null);
+  const [accounts, setAccounts] = useState(accountData);
+  const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    healthScore: { min: 0, max: 100 },
+    revenue: { min: 0, max: 10000000 },
+    satisfaction: { min: 0, max: 5 },
+    ticketCount: { min: 0, max: 100 },
+    industry: '',
+    size: '',
+    renewalDate: { start: '', end: '' },
+    lastActivity: { start: '', end: '' },
+    hasRiskFactors: null, // null, true, false
+    hasOpportunities: null, // null, true, false
+    stakeholderCount: { min: 0, max: 20 }
+  });
 
   const getProgressBarClass = (health: number) => {
     if (health >= 90) return 'progress-bar-90';
@@ -134,16 +154,145 @@ export default function AccountsPage() {
     return 'progress-bar-78';
   };
 
-  const filteredAccounts = accountData.filter(account => {
+  const filteredAccounts = accounts.filter(account => {
+    // Basic filters
     const matchesStatus = filterStatus === 'All' || account.status === filterStatus;
     const matchesSearch = account.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          account.industry.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+    
+    // Advanced filters
+    const matchesHealthScore = account.health >= advancedFilters.healthScore.min && 
+                              account.health <= advancedFilters.healthScore.max;
+    
+    const accountRevenue = parseFloat(account.revenue.replace('$', '').replace('M', '')) * 1000000;
+    const matchesRevenue = accountRevenue >= advancedFilters.revenue.min && 
+                          accountRevenue <= advancedFilters.revenue.max;
+    
+    const matchesSatisfaction = account.satisfaction >= advancedFilters.satisfaction.min && 
+                               account.satisfaction <= advancedFilters.satisfaction.max;
+    
+    const matchesTicketCount = account.tickets >= advancedFilters.ticketCount.min && 
+                              account.tickets <= advancedFilters.ticketCount.max;
+    
+    const matchesIndustry = !advancedFilters.industry || 
+                           account.industry.toLowerCase().includes(advancedFilters.industry.toLowerCase());
+    
+    const matchesSize = !advancedFilters.size || 
+                       account.size.toLowerCase().includes(advancedFilters.size.toLowerCase());
+    
+    const matchesRenewalDate = !advancedFilters.renewalDate.start || 
+                              (new Date(account.renewal) >= new Date(advancedFilters.renewalDate.start) &&
+                               (!advancedFilters.renewalDate.end || new Date(account.renewal) <= new Date(advancedFilters.renewalDate.end)));
+    
+    const matchesLastActivity = !advancedFilters.lastActivity.start || 
+                               (new Date(account.lastActivity) >= new Date(advancedFilters.lastActivity.start) &&
+                                (!advancedFilters.lastActivity.end || new Date(account.lastActivity) <= new Date(advancedFilters.lastActivity.end)));
+    
+    const matchesRiskFactors = advancedFilters.hasRiskFactors === null || 
+                              (advancedFilters.hasRiskFactors ? account.riskFactors.length > 0 : account.riskFactors.length === 0);
+    
+    const matchesOpportunities = advancedFilters.hasOpportunities === null || 
+                                (advancedFilters.hasOpportunities ? account.opportunities.length > 0 : account.opportunities.length === 0);
+    
+    const matchesStakeholderCount = account.stakeholders.length >= advancedFilters.stakeholderCount.min && 
+                                   account.stakeholders.length <= advancedFilters.stakeholderCount.max;
+    
+    return matchesStatus && matchesSearch && matchesHealthScore && matchesRevenue && 
+           matchesSatisfaction && matchesTicketCount && matchesIndustry && matchesSize && 
+           matchesRenewalDate && matchesLastActivity && matchesRiskFactors && 
+           matchesOpportunities && matchesStakeholderCount;
   });
 
-  const totalRevenue = accountData.reduce((sum, acc) => sum + parseFloat(acc.revenue.replace('$', '').replace('M', '')), 0);
-  const avgHealth = Math.round(accountData.reduce((sum, acc) => sum + acc.health, 0) / accountData.length);
-  const renewalRisk = accountData.filter(acc => acc.status === 'At Risk' || acc.status === 'Critical').length;
+  const totalRevenue = accounts.reduce((sum, acc) => sum + parseFloat(acc.revenue.replace('$', '').replace('M', '')), 0);
+  const avgHealth = Math.round(accounts.reduce((sum, acc) => sum + acc.health, 0) / accounts.length);
+  const renewalRisk = accounts.filter(acc => acc.status === 'At Risk' || acc.status === 'Critical').length;
+
+  const handleAddAccount = (newAccount: any) => {
+    setAccounts(prev => [newAccount, ...prev]);
+    setIsAddModalOpen(false);
+  };
+
+  const handleViewDetails = (account: any) => {
+    setSelectedAccount(account);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleUpdateAccount = (updatedAccount: any) => {
+    setAccounts(prev => prev.map(acc => 
+      acc.id === updatedAccount.id ? updatedAccount : acc
+    ));
+  };
+
+  const handleDeleteAccount = (accountId: string) => {
+    setAccounts(prev => prev.filter(acc => acc.id !== accountId));
+    setIsDetailsModalOpen(false);
+  };
+
+  // Icon functionality handlers
+  const handleExternalLink = (account: any) => {
+    // In a real app, this would open the account's external profile or website
+    const accountUrl = `https://crm.company.com/accounts/${account.id}`;
+    window.open(accountUrl, '_blank');
+    console.log(`Opening external link for ${account.name}: ${accountUrl}`);
+  };
+
+  const handleEmailContact = (account: any) => {
+    // Get primary stakeholder email or show email options
+    const primaryStakeholder = account.stakeholders[0];
+    if (primaryStakeholder && primaryStakeholder.email) {
+      const subject = `Re: ${account.name} - Account Discussion`;
+      const body = `Hello ${primaryStakeholder.name},\n\nI hope this email finds you well. I wanted to reach out regarding your account with us.\n\nBest regards,\nYour Account Manager`;
+      const mailtoUrl = `mailto:${primaryStakeholder.email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+      window.location.href = mailtoUrl;
+    } else {
+      // Show email options modal or alert
+      alert(`Email options for ${account.name}:\n\n${account.stakeholders.map(s => `• ${s.name} (${s.role}): ${s.email}`).join('\n')}`);
+    }
+  };
+
+  // Advanced filter handlers
+  const handleAdvancedFilterChange = (filterType: string, value: any) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      [filterType]: value
+    }));
+  };
+
+  const handleResetFilters = () => {
+    setAdvancedFilters({
+      healthScore: { min: 0, max: 100 },
+      revenue: { min: 0, max: 10000000 },
+      satisfaction: { min: 0, max: 5 },
+      ticketCount: { min: 0, max: 100 },
+      industry: '',
+      size: '',
+      renewalDate: { start: '', end: '' },
+      lastActivity: { start: '', end: '' },
+      hasRiskFactors: null,
+      hasOpportunities: null,
+      stakeholderCount: { min: 0, max: 20 }
+    });
+  };
+
+  const handleApplyFilters = () => {
+    setIsAdvancedFilterOpen(false);
+  };
+
+  const getActiveFilterCount = () => {
+    let count = 0;
+    if (advancedFilters.healthScore.min > 0 || advancedFilters.healthScore.max < 100) count++;
+    if (advancedFilters.revenue.min > 0 || advancedFilters.revenue.max < 10000000) count++;
+    if (advancedFilters.satisfaction.min > 0 || advancedFilters.satisfaction.max < 5) count++;
+    if (advancedFilters.ticketCount.min > 0 || advancedFilters.ticketCount.max < 100) count++;
+    if (advancedFilters.industry) count++;
+    if (advancedFilters.size) count++;
+    if (advancedFilters.renewalDate.start || advancedFilters.renewalDate.end) count++;
+    if (advancedFilters.lastActivity.start || advancedFilters.lastActivity.end) count++;
+    if (advancedFilters.hasRiskFactors !== null) count++;
+    if (advancedFilters.hasOpportunities !== null) count++;
+    if (advancedFilters.stakeholderCount.min > 0 || advancedFilters.stakeholderCount.max < 20) count++;
+    return count;
+  };
 
   return (
     <div className="space-y-6">
@@ -153,7 +302,10 @@ export default function AccountsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Account Management</h1>
           <p className="text-gray-600">Deep B2B account management with health scoring and stakeholder mapping</p>
         </div>
-        <button className="btn-primary flex items-center space-x-2">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="btn-primary flex items-center space-x-2"
+        >
           <Plus size={20} />
           <span>Add Account</span>
         </button>
@@ -273,10 +425,18 @@ export default function AccountsPage() {
               <option value="Critical">Critical</option>
             </select>
           </div>
-          <div className="flex items-center space-x-2">
+          <button 
+            onClick={() => setIsAdvancedFilterOpen(true)}
+            className="flex items-center space-x-2 px-3 py-2 text-sm text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-lg transition-colors"
+          >
             <Filter size={20} className="text-gray-400" />
-            <span className="text-sm text-gray-600">Advanced Filters</span>
-          </div>
+            <span>Advanced Filters</span>
+            {getActiveFilterCount() > 0 && (
+              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                {getActiveFilterCount()}
+              </span>
+            )}
+          </button>
         </div>
       </div>
 
@@ -384,11 +544,19 @@ export default function AccountsPage() {
               </div>
               
               <div className="flex flex-col space-y-2">
-                <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <ExternalLink size={16} className="text-gray-400" />
+                <button 
+                  onClick={() => handleExternalLink(account)}
+                  className="p-2 hover:bg-blue-50 rounded-lg transition-colors group"
+                  title="Open in CRM"
+                >
+                  <ExternalLink size={16} className="text-gray-400 group-hover:text-blue-600 transition-colors" />
                 </button>
-                <button className="p-2 hover:bg-gray-100 rounded-lg">
-                  <Mail size={16} className="text-gray-400" />
+                <button 
+                  onClick={() => handleEmailContact(account)}
+                  className="p-2 hover:bg-green-50 rounded-lg transition-colors group"
+                  title="Send Email"
+                >
+                  <Mail size={16} className="text-gray-400 group-hover:text-green-600 transition-colors" />
                 </button>
               </div>
             </div>
@@ -398,11 +566,309 @@ export default function AccountsPage() {
                 <Clock size={14} className="text-gray-400" />
                 <span className="text-xs text-gray-500">Last activity: {account.lastActivity}</span>
               </div>
-              <button className="btn-primary text-sm">View Details</button>
+              <button 
+                onClick={() => handleViewDetails(account)}
+                className="btn-primary text-sm"
+              >
+                View Details
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {/* Add Account Modal */}
+      <AddAccountModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddAccount={handleAddAccount}
+      />
+
+      {/* Account Details Modal */}
+      <AccountDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => setIsDetailsModalOpen(false)}
+        account={selectedAccount}
+        onUpdateAccount={handleUpdateAccount}
+        onDeleteAccount={handleDeleteAccount}
+      />
+
+      {/* Advanced Filter Modal */}
+      {isAdvancedFilterOpen && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            {/* Header */}
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Filter className="text-blue-600" size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Advanced Filters</h2>
+                  <p className="text-sm text-gray-600">Filter accounts by multiple criteria</p>
+                </div>
+              </div>
+              <button
+                onClick={() => setIsAdvancedFilterOpen(false)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X size={20} className="text-gray-500" />
+              </button>
+            </div>
+
+            {/* Content */}
+            <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Health Score Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Health Score Range</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={advancedFilters.healthScore.min}
+                      onChange={(e) => handleAdvancedFilterChange('healthScore', { ...advancedFilters.healthScore, min: parseInt(e.target.value) || 0 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      value={advancedFilters.healthScore.max}
+                      onChange={(e) => handleAdvancedFilterChange('healthScore', { ...advancedFilters.healthScore, max: parseInt(e.target.value) || 100 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+
+                {/* Revenue Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Revenue Range ($)</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="0"
+                      value={advancedFilters.revenue.min}
+                      onChange={(e) => handleAdvancedFilterChange('revenue', { ...advancedFilters.revenue, min: parseInt(e.target.value) || 0 })}
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={advancedFilters.revenue.max}
+                      onChange={(e) => handleAdvancedFilterChange('revenue', { ...advancedFilters.revenue, max: parseInt(e.target.value) || 10000000 })}
+                      className="w-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+
+                {/* Satisfaction Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Satisfaction Range</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      value={advancedFilters.satisfaction.min}
+                      onChange={(e) => handleAdvancedFilterChange('satisfaction', { ...advancedFilters.satisfaction, min: parseFloat(e.target.value) || 0 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="number"
+                      min="0"
+                      max="5"
+                      step="0.1"
+                      value={advancedFilters.satisfaction.max}
+                      onChange={(e) => handleAdvancedFilterChange('satisfaction', { ...advancedFilters.satisfaction, max: parseFloat(e.target.value) || 5 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+
+                {/* Ticket Count Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Ticket Count Range</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="0"
+                      value={advancedFilters.ticketCount.min}
+                      onChange={(e) => handleAdvancedFilterChange('ticketCount', { ...advancedFilters.ticketCount, min: parseInt(e.target.value) || 0 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={advancedFilters.ticketCount.max}
+                      onChange={(e) => handleAdvancedFilterChange('ticketCount', { ...advancedFilters.ticketCount, max: parseInt(e.target.value) || 100 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+
+                {/* Industry */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Industry</label>
+                  <input
+                    type="text"
+                    value={advancedFilters.industry}
+                    onChange={(e) => handleAdvancedFilterChange('industry', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Technology, Manufacturing"
+                  />
+                </div>
+
+                {/* Company Size */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Company Size</label>
+                  <select
+                    value={advancedFilters.size}
+                    onChange={(e) => handleAdvancedFilterChange('size', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Sizes</option>
+                    <option value="Startup">Startup</option>
+                    <option value="Small">Small</option>
+                    <option value="Mid-Market">Mid-Market</option>
+                    <option value="Enterprise">Enterprise</option>
+                  </select>
+                </div>
+
+                {/* Renewal Date Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Renewal Date Range</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="date"
+                      value={advancedFilters.renewalDate.start}
+                      onChange={(e) => handleAdvancedFilterChange('renewalDate', { ...advancedFilters.renewalDate, start: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="date"
+                      value={advancedFilters.renewalDate.end}
+                      onChange={(e) => handleAdvancedFilterChange('renewalDate', { ...advancedFilters.renewalDate, end: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Last Activity Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Last Activity Range</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="date"
+                      value={advancedFilters.lastActivity.start}
+                      onChange={(e) => handleAdvancedFilterChange('lastActivity', { ...advancedFilters.lastActivity, start: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="date"
+                      value={advancedFilters.lastActivity.end}
+                      onChange={(e) => handleAdvancedFilterChange('lastActivity', { ...advancedFilters.lastActivity, end: e.target.value })}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Risk Factors */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Has Risk Factors</label>
+                  <select
+                    value={advancedFilters.hasRiskFactors === null ? '' : advancedFilters.hasRiskFactors.toString()}
+                    onChange={(e) => handleAdvancedFilterChange('hasRiskFactors', e.target.value === '' ? null : e.target.value === 'true')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Accounts</option>
+                    <option value="true">Has Risk Factors</option>
+                    <option value="false">No Risk Factors</option>
+                  </select>
+                </div>
+
+                {/* Opportunities */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Has Opportunities</label>
+                  <select
+                    value={advancedFilters.hasOpportunities === null ? '' : advancedFilters.hasOpportunities.toString()}
+                    onChange={(e) => handleAdvancedFilterChange('hasOpportunities', e.target.value === '' ? null : e.target.value === 'true')}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Accounts</option>
+                    <option value="true">Has Opportunities</option>
+                    <option value="false">No Opportunities</option>
+                  </select>
+                </div>
+
+                {/* Stakeholder Count Range */}
+                <div className="space-y-2">
+                  <label className="block text-sm font-medium text-gray-700">Stakeholder Count Range</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="number"
+                      min="0"
+                      value={advancedFilters.stakeholderCount.min}
+                      onChange={(e) => handleAdvancedFilterChange('stakeholderCount', { ...advancedFilters.stakeholderCount, min: parseInt(e.target.value) || 0 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Min"
+                    />
+                    <span className="text-gray-500">to</span>
+                    <input
+                      type="number"
+                      min="0"
+                      value={advancedFilters.stakeholderCount.max}
+                      onChange={(e) => handleAdvancedFilterChange('stakeholderCount', { ...advancedFilters.stakeholderCount, max: parseInt(e.target.value) || 20 })}
+                      className="w-20 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Max"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="flex items-center justify-between p-6 border-t border-gray-200">
+              <button
+                onClick={handleResetFilters}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              >
+                Reset All Filters
+              </button>
+              <div className="flex items-center space-x-3">
+                <button
+                  onClick={() => setIsAdvancedFilterOpen(false)}
+                  className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleApplyFilters}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                >
+                  Apply Filters ({getActiveFilterCount()})
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

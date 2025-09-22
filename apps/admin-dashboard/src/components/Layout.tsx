@@ -83,6 +83,23 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             </div>
             
             <div className="flex items-center space-x-4">
+              {/* Portal Switcher */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => window.open('http://localhost:3000', '_blank')}
+                  className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-white rounded-md transition-colors duration-200"
+                >
+                  <span>🌐</span>
+                  <span>Web Portal</span>
+                </button>
+                <button
+                  className="flex items-center space-x-2 px-3 py-1.5 text-sm font-medium text-white bg-primary-600 rounded-md"
+                >
+                  <span>⚙️</span>
+                  <span>Admin Portal</span>
+                </button>
+              </div>
+
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
                 <input 
