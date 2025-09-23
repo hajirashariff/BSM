@@ -11,7 +11,7 @@ import {
   FileText,
   MessageSquare,
   Download,
-  Settings,
+  Settings as SettingsIcon,
   Bell,
   Search,
   Plus,
@@ -38,7 +38,7 @@ const navItems = [
   { href: '/documents', label: 'Documents', icon: FileText },
   { href: '/chat', label: 'Live Chat', icon: MessageSquare },
   { href: '/downloads', label: 'Downloads', icon: Download },
-  { href: '/settings', label: 'Settings', icon: Settings },
+  { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
 const kpiCards = [

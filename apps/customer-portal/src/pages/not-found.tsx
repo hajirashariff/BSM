@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft } from "lucide-react";
+import { Home as HomeIcon, ArrowLeft } from "lucide-react";
 import Link from "next/link";
 
 export default function NotFound() {
@@ -20,7 +20,7 @@ export default function NotFound() {
           <div className="flex gap-2 justify-center">
             <Button asChild>
               <Link href="/">
-                <Home className="h-4 w-4 mr-2" />
+                <HomeIcon className="h-4 w-4 mr-2" />
                 Go Home
               </Link>
             </Button>
