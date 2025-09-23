@@ -4,7 +4,7 @@ Enterprise Business Service Management platform monorepo.
 
 ### Structure
 - apps/
-  - web-portal (Next.js)
+  - customer-portal (Next.js)
   - admin-dashboard (Next.js)
   - backend (Django + DRF)
 - packages/

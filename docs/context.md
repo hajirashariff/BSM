@@ -3,7 +3,7 @@
 This monorepo hosts a modular BSM platform inspired by Jira SM, ServiceNow, and Kroolo. It targets cross-departmental service ops with reusable apps and packages.
 
 #### Apps
-- web-portal: Customer portal, KB, ticket tracking
+- customer-portal: Customer portal, KB, ticket tracking
 - admin-dashboard: Agent/admin tools, workflows, analytics
 - backend: Django REST API for core domain modules (tickets, accounts, assets, workflows, dashboards, users, KB, integrations)
 

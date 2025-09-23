@@ -10,7 +10,7 @@
   ],
   "scripts": {
     "dev": "turbo run dev --parallel",
-    "dev:web": "npm --workspace @bsm/web-portal run dev",
+    "dev:customer": "npm --workspace @bsm/customer-portal run dev",
     "dev:admin": "npm --workspace @bsm/admin-dashboard run dev",
     "dev:backend": "python apps/backend/manage.py runserver 8000",
     "build": "turbo run build",
