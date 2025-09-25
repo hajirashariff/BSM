@@ -121,12 +121,16 @@ export default function TicketsPage() {
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (activeDropdown) {
+      const target = event.target as Element;
+      if (activeDropdown && !target.closest('.dropdown-container')) {
         closeDropdown();
       }
     };
 
-    document.addEventListener('click', handleClickOutside);
+    if (activeDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    
     return () => {
       document.removeEventListener('click', handleClickOutside);
     };
@@ -312,6 +316,7 @@ export default function TicketsPage() {
   };
 
   const toggleDropdown = (ticketId: string) => {
+    console.log('Toggling dropdown for ticket:', ticketId, 'Current active:', activeDropdown);
     setActiveDropdown(activeDropdown === ticketId ? null : ticketId);
   };
 
@@ -741,9 +746,10 @@ export default function TicketsPage() {
                         </div>
                         
                         <div className="flex items-center space-x-2 ml-4">
-                          <div className="relative">
+                          <div className="relative dropdown-container">
                             <button
                               onClick={(e) => {
+                                e.preventDefault();
                                 e.stopPropagation();
                                 toggleDropdown(ticket.id);
                               }}
@@ -754,10 +760,11 @@ export default function TicketsPage() {
                             </button>
                             
                             {activeDropdown === ticket.id && (
-                              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 z-50">
+                              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 z-50 dropdown-container">
                                 <div className="py-1">
                                   <button
                                     onClick={(e) => {
+                                      e.preventDefault();
                                       e.stopPropagation();
                                       handleMenuAction('view', ticket);
                                     }}
@@ -768,6 +775,7 @@ export default function TicketsPage() {
                                   </button>
                                   <button
                                     onClick={(e) => {
+                                      e.preventDefault();
                                       e.stopPropagation();
                                       handleMenuAction('edit', ticket);
                                     }}
@@ -778,6 +786,7 @@ export default function TicketsPage() {
                                   </button>
                                   <button
                                     onClick={(e) => {
+                                      e.preventDefault();
                                       e.stopPropagation();
                                       handleMenuAction('duplicate', ticket);
                                     }}
@@ -788,6 +797,7 @@ export default function TicketsPage() {
                                   </button>
                                   <button
                                     onClick={(e) => {
+                                      e.preventDefault();
                                       e.stopPropagation();
                                       handleMenuAction('archive', ticket);
                                     }}
@@ -799,6 +809,7 @@ export default function TicketsPage() {
                                   <div className="border-t border-gray-200 dark:border-zinc-700 my-1"></div>
                                   <button
                                     onClick={(e) => {
+                                      e.preventDefault();
                                       e.stopPropagation();
                                       handleMenuAction('delete', ticket);
                                     }}
