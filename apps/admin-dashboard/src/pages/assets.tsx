@@ -27,6 +27,10 @@ import {
   Zap,
   Network
 } from 'lucide-react';
+import AddAssetModal from '../components/AddAssetModal';
+import AssetDetailsModal from '../components/AssetDetailsModal';
+import EditAssetModal from '../components/EditAssetModal';
+import AdvancedFilterModal from '../components/AdvancedFilterModal';
 
 const assetData = [
   {
@@ -176,14 +180,14 @@ const assetData = [
   }
 ];
 
-const statusColors = {
+const statusColors: { [key: string]: string } = {
   'Healthy': 'bg-green-100 text-green-800',
   'Degraded': 'bg-yellow-100 text-yellow-800',
   'Critical': 'bg-red-100 text-red-800',
   'Offline': 'bg-gray-100 text-gray-800'
 };
 
-const typeIcons = {
+const typeIcons: { [key: string]: any } = {
   'Server': Server,
   'Network': Router,
   'Storage': HardDrive,
@@ -194,7 +198,7 @@ const typeIcons = {
   'Cloud': Cloud
 };
 
-const lifecycleColors = {
+const lifecycleColors: { [key: string]: string } = {
   'Planning': 'bg-blue-100 text-blue-800',
   'Active': 'bg-green-100 text-green-800',
   'Maintenance': 'bg-yellow-100 text-yellow-800',
@@ -202,11 +206,32 @@ const lifecycleColors = {
 };
 
 export default function AssetsPage() {
-  const [selectedAsset, setSelectedAsset] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterType, setFilterType] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
   const [viewMode, setViewMode] = useState('grid'); // grid or list
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  const [assets, setAssets] = useState(assetData);
+  const [isAdvancedFilterOpen, setIsAdvancedFilterOpen] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    healthMin: '',
+    healthMax: '',
+    costMin: '',
+    costMax: '',
+    purchaseDateFrom: '',
+    purchaseDateTo: '',
+    warrantyExpiryFrom: '',
+    warrantyExpiryTo: '',
+    location: '',
+    owner: '',
+    vendor: '',
+    lifecycle: 'All',
+    tags: [] as string[],
+    dependencies: [] as string[]
+  });
 
   const getProgressBarClass = (health: number) => {
     if (health >= 90) return 'progress-bar-90';
@@ -215,19 +240,136 @@ export default function AssetsPage() {
     return 'progress-bar-78';
   };
 
-  const filteredAssets = assetData.filter(asset => {
-    const matchesStatus = filterStatus === 'All' || asset.status === filterStatus;
-    const matchesType = filterType === 'All' || asset.type === filterType;
+  const filteredAssets = assets.filter(asset => {
+    // Basic filters
     const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          asset.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         asset.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          asset.vendor.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesType && matchesSearch;
+    const matchesStatus = filterStatus === 'All' || asset.status === filterStatus;
+    const matchesType = filterType === 'All' || asset.type === filterType;
+    
+    // Advanced filters
+    const matchesHealth = (!advancedFilters.healthMin || asset.health >= parseInt(advancedFilters.healthMin)) &&
+                         (!advancedFilters.healthMax || asset.health <= parseInt(advancedFilters.healthMax));
+    
+    const assetCost = parseFloat(asset.cost?.replace(/[$,]/g, '') || '0');
+    const matchesCost = (!advancedFilters.costMin || assetCost >= parseFloat(advancedFilters.costMin)) &&
+                       (!advancedFilters.costMax || assetCost <= parseFloat(advancedFilters.costMax));
+    
+    const matchesPurchaseDate = (!advancedFilters.purchaseDateFrom || new Date(asset.purchaseDate) >= new Date(advancedFilters.purchaseDateFrom)) &&
+                               (!advancedFilters.purchaseDateTo || new Date(asset.purchaseDate) <= new Date(advancedFilters.purchaseDateTo));
+    
+    const matchesWarrantyExpiry = (!advancedFilters.warrantyExpiryFrom || new Date(asset.warrantyExpiry) >= new Date(advancedFilters.warrantyExpiryFrom)) &&
+                                 (!advancedFilters.warrantyExpiryTo || new Date(asset.warrantyExpiry) <= new Date(advancedFilters.warrantyExpiryTo));
+    
+    const matchesLocation = !advancedFilters.location || asset.location.toLowerCase().includes(advancedFilters.location.toLowerCase());
+    const matchesOwner = !advancedFilters.owner || asset.owner.toLowerCase().includes(advancedFilters.owner.toLowerCase());
+    const matchesVendor = !advancedFilters.vendor || asset.vendor.toLowerCase().includes(advancedFilters.vendor.toLowerCase());
+    const matchesLifecycle = advancedFilters.lifecycle === 'All' || asset.lifecycle === advancedFilters.lifecycle;
+    
+    const matchesTags = advancedFilters.tags.length === 0 || 
+                       advancedFilters.tags.some(tag => asset.tags?.includes(tag));
+    
+    const matchesDependencies = advancedFilters.dependencies.length === 0 || 
+                               advancedFilters.dependencies.some(dep => asset.dependencies?.includes(dep));
+    
+    return matchesSearch && matchesStatus && matchesType && matchesHealth && matchesCost && 
+           matchesPurchaseDate && matchesWarrantyExpiry && matchesLocation && matchesOwner && 
+           matchesVendor && matchesLifecycle && matchesTags && matchesDependencies;
   });
 
-  const totalAssets = assetData.length;
-  const healthyAssets = assetData.filter(a => a.status === 'Healthy').length;
-  const criticalAssets = assetData.filter(a => a.status === 'Critical').length;
-  const totalValue = assetData.reduce((sum, asset) => sum + parseFloat(asset.cost.replace('$', '').replace(',', '')), 0);
+  const totalAssets = assets.length;
+  const healthyAssets = assets.filter(a => a.status === 'Healthy').length;
+  const criticalAssets = assets.filter(a => a.status === 'Critical').length;
+  const totalValue = assets.reduce((sum, asset) => sum + parseFloat(asset.cost.replace('$', '').replace(',', '')), 0);
+
+  const handleAddAsset = (newAsset: any) => {
+    setAssets(prev => [newAsset, ...prev]);
+    setIsAddModalOpen(false);
+  };
+
+  const handleViewDetails = (asset: any) => {
+    setSelectedAsset(asset);
+    setIsDetailsModalOpen(true);
+  };
+
+  const handleEditAsset = (asset: any) => {
+    setSelectedAsset(asset);
+    setIsEditModalOpen(true);
+  };
+
+  const handleUpdateAsset = (updatedAsset: any) => {
+    setAssets(prev => prev.map(asset => 
+      asset.id === updatedAsset.id ? updatedAsset : asset
+    ));
+    setIsEditModalOpen(false);
+    setSelectedAsset(null);
+  };
+
+  const handleDeleteAsset = (assetId: string) => {
+    if (confirm('Are you sure you want to delete this asset?')) {
+      setAssets(prev => prev.filter(asset => asset.id !== assetId));
+      setIsDetailsModalOpen(false);
+      setSelectedAsset(null);
+    }
+  };
+
+  const handleAdvancedFilterChange = (field: string, value: any) => {
+    setAdvancedFilters(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAddTag = (tag: string) => {
+    if (tag.trim() && !advancedFilters.tags.includes(tag.trim())) {
+      setAdvancedFilters(prev => ({
+        ...prev,
+        tags: [...prev.tags, tag.trim()]
+      }));
+    }
+  };
+
+  const handleRemoveTag = (tagToRemove: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      tags: prev.tags.filter(tag => tag !== tagToRemove)
+    }));
+  };
+
+  const handleAddDependency = (dep: string) => {
+    if (dep.trim() && !advancedFilters.dependencies.includes(dep.trim())) {
+      setAdvancedFilters(prev => ({
+        ...prev,
+        dependencies: [...prev.dependencies, dep.trim()]
+      }));
+    }
+  };
+
+  const handleRemoveDependency = (depToRemove: string) => {
+    setAdvancedFilters(prev => ({
+      ...prev,
+      dependencies: prev.dependencies.filter(dep => dep !== depToRemove)
+    }));
+  };
+
+  const clearAdvancedFilters = () => {
+    setAdvancedFilters({
+      healthMin: '',
+      healthMax: '',
+      costMin: '',
+      costMax: '',
+      purchaseDateFrom: '',
+      purchaseDateTo: '',
+      warrantyExpiryFrom: '',
+      warrantyExpiryTo: '',
+      location: '',
+      owner: '',
+      vendor: '',
+      lifecycle: 'All',
+      tags: [],
+      dependencies: []
+    });
+  };
 
   return (
     <div className="space-y-6">
@@ -237,7 +379,10 @@ export default function AssetsPage() {
           <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
           <p className="text-gray-600">Service mapping, CMDB-lite, and asset lifecycle management</p>
         </div>
-        <button className="btn-primary flex items-center space-x-2">
+        <button 
+          onClick={() => setIsAddModalOpen(true)}
+          className="btn-primary flex items-center space-x-2"
+        >
           <Plus size={20} />
           <span>Add Asset</span>
         </button>
@@ -369,10 +514,13 @@ export default function AssetsPage() {
               <option value="Desktop">Desktop</option>
             </select>
           </div>
-          <div className="flex items-center space-x-2">
-            <Filter size={20} className="text-gray-400" />
-            <span className="text-sm text-gray-600">Advanced Filters</span>
-          </div>
+          <button
+            onClick={() => setIsAdvancedFilterOpen(true)}
+            className="flex items-center space-x-2 px-4 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
+          >
+            <Filter size={20} className="text-gray-600" />
+            <span className="text-sm text-gray-700">Advanced Filters</span>
+          </button>
         </div>
       </div>
 
@@ -469,13 +617,25 @@ export default function AssetsPage() {
                 </div>
                 
                 <div className="flex flex-col space-y-2">
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
+                  <button 
+                    onClick={() => handleViewDetails(asset)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    title="View Details"
+                  >
                     <Eye size={16} className="text-gray-400" />
                   </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
+                  <button 
+                    onClick={() => handleEditAsset(asset)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    title="Edit Asset"
+                  >
                     <Edit size={16} className="text-gray-400" />
                   </button>
-                  <button className="p-2 hover:bg-gray-100 rounded-lg">
+                  <button 
+                    onClick={() => handleDeleteAsset(asset.id)}
+                    className="p-2 hover:bg-gray-100 rounded-lg"
+                    title="Delete Asset"
+                  >
                     <Trash2 size={16} className="text-gray-400" />
                   </button>
                 </div>
@@ -492,12 +652,60 @@ export default function AssetsPage() {
                     <span>Next: {asset.nextMaintenance}</span>
                   </div>
                 </div>
-                <button className="btn-primary text-sm">View Details</button>
+                <button 
+                  onClick={() => handleViewDetails(asset)}
+                  className="btn-primary text-sm"
+                >
+                  View Details
+                </button>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Add Asset Modal */}
+      <AddAssetModal
+        isOpen={isAddModalOpen}
+        onClose={() => setIsAddModalOpen(false)}
+        onAddAsset={handleAddAsset}
+      />
+
+      {/* Asset Details Modal */}
+      <AssetDetailsModal
+        isOpen={isDetailsModalOpen}
+        onClose={() => {
+          setIsDetailsModalOpen(false);
+          setSelectedAsset(null);
+        }}
+        asset={selectedAsset}
+        onEdit={handleEditAsset}
+        onDelete={handleDeleteAsset}
+      />
+
+      {/* Edit Asset Modal */}
+      <EditAssetModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setSelectedAsset(null);
+        }}
+        asset={selectedAsset}
+        onUpdateAsset={handleUpdateAsset}
+      />
+
+      {/* Advanced Filter Modal */}
+      <AdvancedFilterModal
+        isOpen={isAdvancedFilterOpen}
+        onClose={() => setIsAdvancedFilterOpen(false)}
+        filters={advancedFilters}
+        onFilterChange={handleAdvancedFilterChange}
+        onAddTag={handleAddTag}
+        onRemoveTag={handleRemoveTag}
+        onAddDependency={handleAddDependency}
+        onRemoveDependency={handleRemoveDependency}
+        onClearFilters={clearAdvancedFilters}
+      />
     </div>
   );
 }

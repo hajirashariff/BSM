@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal Switch Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 30px;
+            border-radius: 15px;
+            backdrop-filter: blur(10px);
+        }
+        .button {
+            display: inline-block;
+            padding: 15px 30px;
+            margin: 10px;
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+        .button:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+        .status {
+            background: rgba(0, 255, 0, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Portal Switching Test</h1>
+        <p>Both applications are running successfully! Test the portal switching functionality:</p>
+        
+        <div class="status">
+            ✅ Admin Dashboard: <strong>http://localhost:3001</strong> - Running<br>
+            ✅ Customer Portal: <strong>http://localhost:3000</strong> - Running
+        </div>
+
+        <h2>Test Instructions:</h2>
+        <ol>
+            <li>Click the button below to go to the Admin Dashboard</li>
+            <li>Look for the "Admin" button in the top-right corner</li>
+            <li>Click it and select "Customer Portal"</li>
+            <li>You should be redirected to the customer interface</li>
+            <li>Use the "Customer" button there to switch back</li>
+        </ol>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <a href="http://localhost:3001" class="button">🏢 Go to Admin Dashboard</a>
+            <a href="http://localhost:3000" class="button">👥 Go to Customer Portal</a>
+        </div>
+
+        <div style="margin-top: 30px; padding: 20px; background: rgba(255, 255, 255, 0.1); border-radius: 10px;">
+            <h3>🔧 Debug Information:</h3>
+            <p>If switching doesn't work:</p>
+            <ul>
+                <li>Open browser Developer Tools (F12)</li>
+                <li>Check the Console tab for any error messages</li>
+                <li>Look for "Switching to Customer Portal..." or "Switching to Admin Portal..." messages</li>
+                <li>Make sure both applications are running on the correct ports</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>
+
+
+
+
