@@ -49,10 +49,17 @@ export default function TopNavigation({
   notificationCount = 0
 }: TopNavigationProps) {
   const router = useRouter();
+  
+  // Debug log
+  console.log('TopNavigation component rendered');
 
   return (
     <header className="bg-white shadow-sm border-b border-gray-200 dark:bg-zinc-900 dark:border-zinc-800 sticky top-0 z-50">
       <div className="px-6 py-4">
+        {/* Debug indicator */}
+        <div className="bg-red-500 text-white text-xs px-2 py-1 rounded mb-2">
+          TopNavigation Component Loaded
+        </div>
         <div className="flex items-center justify-between">
           {/* Logo and Brand */}
           <div className="flex items-center space-x-8">
