@@ -369,10 +369,10 @@ export default function AccountsPage() {
       {/* AI-Powered Insights */}
       <div className="card bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
         <div className="flex items-center space-x-3 mb-4">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Zap className="text-blue-600" size={20} />
-          </div>
-          <h3 className="text-lg font-semibold text-gray-900">AI-Powered Account Insights</h3>
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Zap className="text-blue-600" size={20} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">AI-Powered Account Insights</h3>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-lg">
@@ -857,13 +857,13 @@ export default function AccountsPage() {
                   className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                 >
                   Cancel
-                </button>
-                <button
+              </button>
+              <button
                   onClick={handleApplyFilters}
                   className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   Apply Filters ({getActiveFilterCount()})
-                </button>
+              </button>
               </div>
             </div>
           </div>
