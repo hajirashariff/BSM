@@ -63,11 +63,11 @@ import {
   Bell,
   Search,
   User,
-  Plus,
-  Edit,
-  Trash2,
-  LogOut,
-  Loader2,
+  Plus, 
+  Edit, 
+  Trash2, 
+  LogOut, 
+  Loader2, 
   X
 } from 'lucide-react';
 
@@ -229,12 +229,12 @@ export default function AdminDashboard() {
   return (
     <ProtectedRoute requiredRole="Admin">
       <div className="space-y-6">
-        {/* Header */}
+      {/* Header */}
         <div className="flex items-center justify-between">
-          <div>
+              <div>
             <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
             <p className="text-gray-600 mt-1">Real-time insights and analytics</p>
-          </div>
+              </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
               <Calendar className="w-4 h-4 text-gray-500" />
@@ -267,7 +267,7 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Today's Tickets</p>
                 <p className="text-2xl font-bold text-gray-900">{dashboardData.kpis.todayTickets}</p>
-              </div>
+      </div>
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <Ticket className="w-6 h-6 text-blue-600" />
               </div>
@@ -294,7 +294,7 @@ export default function AdminDashboard() {
               </div>
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                 <Clock className="w-6 h-6 text-orange-600" />
-              </div>
+        </div>
             </div>
           </div>
 
@@ -303,13 +303,13 @@ export default function AdminDashboard() {
               <div>
                 <p className="text-sm font-medium text-gray-600">Satisfaction</p>
                 <p className="text-2xl font-bold text-gray-900">{dashboardData.kpis.satisfaction}/5</p>
-              </div>
+            </div>
               <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
                 <Star className="w-6 h-6 text-yellow-600" />
-              </div>
+                        </div>
             </div>
           </div>
-        </div>
+      </div>
 
         {/* Main Metrics */}
         <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
