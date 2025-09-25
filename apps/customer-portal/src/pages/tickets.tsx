@@ -105,18 +105,36 @@ export default function TicketsPage() {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
-    in_progress: 0,
+    inProgress: 0,
     resolved: 0,
     closed: 0,
     overdue: 0
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   useEffect(() => {
     setIsClient(true);
     loadTickets();
   }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      if (activeDropdown && !target.closest('.dropdown-container')) {
+        closeDropdown();
+      }
+    };
+
+    if (activeDropdown) {
+      document.addEventListener('click', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [activeDropdown]);
 
   useEffect(() => {
     if (isClient) {
@@ -297,6 +315,42 @@ export default function TicketsPage() {
     setSearchTerm('');
   };
 
+  const toggleDropdown = (ticketId: string) => {
+    console.log('Toggling dropdown for ticket:', ticketId, 'Current active:', activeDropdown);
+    if (activeDropdown === ticketId) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(ticketId);
+    }
+  };
+
+  const closeDropdown = () => {
+    setActiveDropdown(null);
+  };
+
+  const handleMenuAction = (action: string, ticket: Ticket) => {
+    closeDropdown();
+    switch (action) {
+      case 'view':
+        handleViewTicket(ticket);
+        break;
+      case 'edit':
+        handleEditTicket(ticket);
+        break;
+      case 'delete':
+        handleDeleteTicket(ticket.id);
+        break;
+      case 'duplicate':
+        // Handle duplicate ticket
+        console.log('Duplicate ticket:', ticket.id);
+        break;
+      case 'archive':
+        // Handle archive ticket
+        console.log('Archive ticket:', ticket.id);
+        break;
+    }
+  };
+
   const getActiveFiltersCount = () => {
     let count = 0;
     if (advancedFilters.status?.length) count += advancedFilters.status.length;
@@ -418,7 +472,7 @@ export default function TicketsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 dark:text-zinc-400">In Progress</p>
-                    <p className="text-2xl font-bold text-purple-600">{stats.in_progress}</p>
+                    <p className="text-2xl font-bold text-purple-600">{stats.inProgress}</p>
                   </div>
                   <Activity className="h-8 w-8 text-purple-600" />
                 </div>
@@ -696,27 +750,87 @@ export default function TicketsPage() {
                         </div>
                         
                         <div className="flex items-center space-x-2 ml-4">
-                          <button
-                            onClick={() => handleViewTicket(ticket)}
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
-                            title="View ticket"
-                          >
-                            <Eye size={20} />
-                          </button>
-                          <button
-                            onClick={() => handleEditTicket(ticket)}
-                            className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800"
-                            title="Edit ticket"
-                          >
-                            <Edit size={20} />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteTicket(ticket.id)}
-                            className="p-2 text-red-600 hover:text-red-900 hover:bg-red-100 rounded-lg dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900"
-                            title="Delete ticket"
-                          >
-                            <Trash2 size={20} />
-                          </button>
+                          <div className="relative dropdown-container">
+                            <button
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                toggleDropdown(ticket.id);
+                              }}
+                              className={`p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
+                                activeDropdown === ticket.id ? 'bg-gray-100 dark:bg-zinc-800' : ''
+                              }`}
+                              title="More actions"
+                            >
+                              <MoreVertical size={20} />
+                            </button>
+                            
+                            {activeDropdown === ticket.id && (
+                              <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 z-50 dropdown-container">
+                                <div className="py-1">
+                                  <div className="px-4 py-2 text-xs text-gray-500 border-b">
+                                    Debug: {activeDropdown} === {ticket.id}
+                                  </div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleMenuAction('view', ticket);
+                                    }}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                                  >
+                                    <Eye size={16} className="mr-3" />
+                                    View Details
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleMenuAction('edit', ticket);
+                                    }}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                                  >
+                                    <Edit size={16} className="mr-3" />
+                                    Edit Ticket
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleMenuAction('duplicate', ticket);
+                                    }}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                                  >
+                                    <MessageCircle size={16} className="mr-3" />
+                                    Duplicate
+                                  </button>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleMenuAction('archive', ticket);
+                                    }}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-zinc-300 hover:bg-gray-100 dark:hover:bg-zinc-700 transition-colors"
+                                  >
+                                    <Star size={16} className="mr-3" />
+                                    Archive
+                                  </button>
+                                  <div className="border-t border-gray-200 dark:border-zinc-700 my-1"></div>
+                                  <button
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleMenuAction('delete', ticket);
+                                    }}
+                                    className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900 transition-colors"
+                                  >
+                                    <Trash2 size={16} className="mr-3" />
+                                    Delete Ticket
+                                  </button>
+                                </div>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </div>
