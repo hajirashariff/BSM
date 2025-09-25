@@ -105,7 +105,7 @@ export default function TicketsPage() {
   const [stats, setStats] = useState({
     total: 0,
     open: 0,
-    in_progress: 0,
+    inProgress: 0,
     resolved: 0,
     closed: 0,
     overdue: 0
@@ -418,7 +418,7 @@ export default function TicketsPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-gray-600 dark:text-zinc-400">In Progress</p>
-                    <p className="text-2xl font-bold text-purple-600">{stats.in_progress}</p>
+                    <p className="text-2xl font-bold text-purple-600">{stats.inProgress}</p>
                   </div>
                   <Activity className="h-8 w-8 text-purple-600" />
                 </div>
