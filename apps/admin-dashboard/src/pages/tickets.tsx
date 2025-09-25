@@ -86,20 +86,20 @@ const ticketData = [
   }
 ];
 
-const channelIcons = {
+const channelIcons: { [key: string]: any } = {
   Email: Mail,
   Portal: MessageSquare,
   Slack: Slack,
   Phone: Phone
 };
 
-const priorityColors = {
+const priorityColors: { [key: string]: string } = {
   High: 'bg-red-100 text-red-800',
   Medium: 'bg-yellow-100 text-yellow-800',
   Low: 'bg-green-100 text-green-800'
 };
 
-const statusColors = {
+const statusColors: { [key: string]: string } = {
   Open: 'bg-blue-100 text-blue-800',
   'In Progress': 'bg-yellow-100 text-yellow-800',
   Resolved: 'bg-green-100 text-green-800',
@@ -110,12 +110,62 @@ export default function TicketsPage() {
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showSearchSuggestions, setShowSearchSuggestions] = useState(false);
+  const [advancedFilters, setAdvancedFilters] = useState({
+    priority: 'All',
+    category: 'All',
+    channel: 'All',
+    assignee: 'All'
+  });
+
+  const getSearchSuggestions = () => {
+    if (!searchTerm.trim()) return [];
+    
+    const suggestions = new Set<string>();
+    
+    ticketData.forEach(ticket => {
+      if (ticket.subject.toLowerCase().includes(searchTerm.toLowerCase())) {
+        suggestions.add(ticket.subject);
+      }
+      if (ticket.id.toLowerCase().includes(searchTerm.toLowerCase())) {
+        suggestions.add(ticket.id);
+      }
+      if (ticket.assignee.toLowerCase().includes(searchTerm.toLowerCase())) {
+        suggestions.add(ticket.assignee);
+      }
+      if (ticket.category.toLowerCase().includes(searchTerm.toLowerCase())) {
+        suggestions.add(ticket.category);
+      }
+    });
+    
+    return Array.from(suggestions).slice(0, 5);
+  };
+
+  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setSearchTerm(value);
+    setShowSearchSuggestions(value.length > 0);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setSearchTerm(suggestion);
+    setShowSearchSuggestions(false);
+  };
 
   const filteredTickets = ticketData.filter(ticket => {
     const matchesStatus = filterStatus === 'All' || ticket.status === filterStatus;
+    const matchesPriority = advancedFilters.priority === 'All' || ticket.priority === advancedFilters.priority;
+    const matchesCategory = advancedFilters.category === 'All' || ticket.category === advancedFilters.category;
+    const matchesChannel = advancedFilters.channel === 'All' || ticket.channel === advancedFilters.channel;
+    const matchesAssignee = advancedFilters.assignee === 'All' || ticket.assignee === advancedFilters.assignee;
+    
     const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         ticket.id.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
+                         ticket.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ticket.assignee.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ticket.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (ticket.description && ticket.description.toLowerCase().includes(searchTerm.toLowerCase()));
+    
+    return matchesStatus && matchesPriority && matchesCategory && matchesChannel && matchesAssignee && matchesSearch;
   });
 
   return (
@@ -223,9 +273,34 @@ export default function TicketsPage() {
                 type="text"
                 placeholder="Search tickets..."
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={handleSearchInputChange}
+                onFocus={() => searchTerm && setShowSearchSuggestions(true)}
+                onBlur={() => setTimeout(() => setShowSearchSuggestions(false), 200)}
                 className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
               />
+              
+              {/* Search Suggestions */}
+              {showSearchSuggestions && getSearchSuggestions().length > 0 && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white rounded-lg shadow-lg border border-gray-200 z-50">
+                  <div className="p-2">
+                    <div className="text-xs text-gray-500 px-3 py-2 border-b border-gray-100">
+                      Suggestions
+                    </div>
+                    {getSearchSuggestions().map((suggestion, index) => (
+                      <button
+                        key={index}
+                        onClick={() => handleSuggestionClick(suggestion)}
+                        className="w-full text-left px-3 py-2 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <div className="flex items-center space-x-2">
+                          <Search size={14} className="text-gray-400" />
+                          <span className="text-sm text-gray-700">{suggestion}</span>
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
             <select
               value={filterStatus}
@@ -271,7 +346,9 @@ export default function TicketsPage() {
                       <div className="flex items-center space-x-2">
                         <span className="font-medium text-gray-900">{ticket.id}</span>
                         {ticket.aiInsights && (
-                          <Brain size={16} className="text-purple-600" title={ticket.aiInsights} />
+                          <div title={ticket.aiInsights}>
+                            <Brain size={16} className="text-purple-600" />
+                          </div>
                         )}
                       </div>
                     </td>
