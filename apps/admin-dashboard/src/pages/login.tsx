@@ -1,15 +1,14 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase } from '../lib/supabase';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2, CheckCircle, User, Shield } from 'lucide-react';
 
 export default function LoginPage() {
-  const [accountType, setAccountType] = useState<'Customer' | 'Admin'>('Customer');
+  const [accountType, setAccountType] = useState<'Customer' | 'Admin'>('Admin');
   const [isSignup, setIsSignup] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: 'admin@example.com',
+    password: 'password123',
     confirmPassword: '',
     keepLoggedIn: false
   });
@@ -20,6 +19,7 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   
   const router = useRouter();
+  const { signIn } = useAuth();
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -86,28 +86,17 @@ export default function LoginPage() {
         }
       } else {
         // Sign in logic
-        const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-          email: formData.email,
-          password: formData.password,
-        });
+        const { error: authError } = await signIn(formData.email, formData.password);
 
-        if (authError) throw authError;
+        if (authError) {
+          throw new Error(authError.message || 'Sign in failed');
+        }
 
-        if (authData.user) {
-          const { data: userData, error: userError } = await supabase
-            .from('users')
-            .select('role')
-            .eq('id', authData.user.id)
-            .single();
-
-          if (userError) throw userError;
-
-          // Redirect based on role
-          if (userData.role === 'Admin') {
-            router.push('/admin');
-          } else {
-            router.push('/customer-dashboard');
-          }
+        // Redirect based on account type
+        if (accountType === 'Admin') {
+          router.push('/admin');
+        } else {
+          router.push('/customer-dashboard');
         }
       }
     } catch (err: any) {
@@ -119,13 +108,7 @@ export default function LoginPage() {
 
   const handleGoogleAuth = async () => {
     try {
-      const { error } = await supabase.auth.signInWithOAuth({
-        provider: 'google',
-        options: {
-          redirectTo: `${window.location.origin}/auth/callback`
-        }
-      });
-      if (error) throw error;
+      setError('Google authentication is not available in demo mode. Please use email/password login.');
     } catch (err: any) {
       setError(err.message);
     }
