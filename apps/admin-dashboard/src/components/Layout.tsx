@@ -15,16 +15,20 @@ import {
   Bell,
   Search,
   User,
-  Brain
+  Brain,
+  MessageSquare
 } from 'lucide-react';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
-  { href: '/tickets', label: 'Service Requests', icon: Ticket },
+  { href: '/tickets', label: 'Tickets', icon: Ticket },
+  { href: '/service-requests', label: 'Service Requests', icon: Ticket },
   { href: '/accounts', label: 'Account Management', icon: Building2 },
   { href: '/assets', label: 'Asset Management', icon: Server },
   { href: '/rules-engine', label: 'Rules Engine', icon: Brain },
   { href: '/workflows', label: 'Workflow Engine', icon: Workflow },
+  { href: '/customer-messages', label: 'Customer Messages', icon: MessageSquare },
+  { href: '/notifications', label: 'Notifications', icon: Bell },
   { href: '/analytics', label: 'Analytics & Reports', icon: BarChart3 },
   { href: '/users', label: 'User Management', icon: Users },
   { href: '/knowledge', label: 'Knowledge Base', icon: BookOpen },

@@ -133,7 +133,7 @@ export default function AccountDetailsModal({
 
   if (!isOpen || !account) return null;
 
-  const healthColors = {
+  const healthColors: { [key: string]: string } = {
     'Champion': 'bg-green-100 text-green-800',
     'Active': 'bg-blue-100 text-blue-800',
     'At Risk': 'bg-yellow-100 text-yellow-800',

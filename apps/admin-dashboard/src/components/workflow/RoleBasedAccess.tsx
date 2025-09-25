@@ -258,20 +258,20 @@ export default function RoleBasedAccess() {
     }
   ]);
 
-  const hasPermission = (permission) => {
+  const hasPermission = (permission: string) => {
     return currentUser.permissions.includes(permission);
   };
 
-  const getRoleIcon = (role) => {
+  const getRoleIcon = (role: string) => {
     const Icon = roleIcons[role];
     return <Icon size={16} />;
   };
 
-  const switchUser = (user) => {
+  const switchUser = (user: any) => {
     setCurrentUser(user);
   };
 
-  const updateUserRole = (userId, newRole) => {
+  const updateUserRole = (userId: string, newRole: string) => {
     setUsers(users.map(user => 
       user.id === userId 
         ? { ...user, role: newRole, permissions: ROLE_PERMISSIONS[newRole] }

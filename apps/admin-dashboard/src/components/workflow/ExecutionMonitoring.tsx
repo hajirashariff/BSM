@@ -188,7 +188,7 @@ const executionData = [
   }
 ];
 
-const statusColors = {
+const statusColors: { [key: string]: string } = {
   'Running': 'bg-blue-100 text-blue-800',
   'Completed': 'bg-green-100 text-green-800',
   'Failed': 'bg-red-100 text-red-800',
@@ -196,7 +196,7 @@ const statusColors = {
   'Cancelled': 'bg-gray-100 text-gray-800'
 };
 
-const logLevelColors = {
+const logLevelColors: { [key: string]: string } = {
   'INFO': 'text-blue-600',
   'SUCCESS': 'text-green-600',
   'WARNING': 'text-yellow-600',

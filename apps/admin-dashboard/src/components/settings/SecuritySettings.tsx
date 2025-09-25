@@ -28,7 +28,7 @@ export default function SecuritySettings() {
   const [mfaSettings, setMfaSettings] = useState({
     enabled: false,
     method: 'sms', // sms, email, authenticator
-    backupCodes: []
+    backupCodes: [] as string[]
   });
 
   const [sessionSettings, setSessionSettings] = useState({
