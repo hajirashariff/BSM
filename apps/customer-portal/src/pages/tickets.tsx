@@ -317,7 +317,11 @@ export default function TicketsPage() {
 
   const toggleDropdown = (ticketId: string) => {
     console.log('Toggling dropdown for ticket:', ticketId, 'Current active:', activeDropdown);
-    setActiveDropdown(activeDropdown === ticketId ? null : ticketId);
+    if (activeDropdown === ticketId) {
+      setActiveDropdown(null);
+    } else {
+      setActiveDropdown(ticketId);
+    }
   };
 
   const closeDropdown = () => {
@@ -753,7 +757,9 @@ export default function TicketsPage() {
                                 e.stopPropagation();
                                 toggleDropdown(ticket.id);
                               }}
-                              className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+                              className={`p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
+                                activeDropdown === ticket.id ? 'bg-gray-100 dark:bg-zinc-800' : ''
+                              }`}
                               title="More actions"
                             >
                               <MoreVertical size={20} />
@@ -762,6 +768,9 @@ export default function TicketsPage() {
                             {activeDropdown === ticket.id && (
                               <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-zinc-800 rounded-lg shadow-lg border border-gray-200 dark:border-zinc-700 z-50 dropdown-container">
                                 <div className="py-1">
+                                  <div className="px-4 py-2 text-xs text-gray-500 border-b">
+                                    Debug: {activeDropdown} === {ticket.id}
+                                  </div>
                                   <button
                                     onClick={(e) => {
                                       e.preventDefault();
