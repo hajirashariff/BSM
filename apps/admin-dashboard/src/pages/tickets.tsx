@@ -555,7 +555,7 @@ export default function TicketsPage() {
                           </div>
                         )}
                         {ticket.approvalMethod === 'rule' && (
-                          <Bot size={16} className="text-blue-600" title="Auto-approved by Rules Engine" />
+                          <Bot size={16} className="text-blue-600" />
                         )}
                       </div>
                     </td>
@@ -828,12 +828,16 @@ export default function TicketsPage() {
                     channel: newTicket.channel,
                     status: 'Open',
                     assignee: newTicket.assignee || 'Unassigned',
+                    requester: newTicket.customer || 'Anonymous',
                     customer: newTicket.customer || 'Anonymous',
                     created: new Date().toISOString().slice(0, 16).replace('T', ' '),
                     updated: new Date().toISOString().slice(0, 16).replace('T', ' '),
+                    sla: '24h',
+                    tags: [],
+                    sentiment: 'neutral',
                     aiInsights: 'New ticket created',
                     approvalMethod: 'pending',
-                    approvedBy: null,
+                    approvedBy: '',
                     approvedAt: null
                   };
                   ticketData.unshift(ticket);

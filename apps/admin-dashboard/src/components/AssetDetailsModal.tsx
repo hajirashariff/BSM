@@ -35,21 +35,21 @@ interface AssetDetailsModalProps {
   onDelete?: (assetId: string) => void;
 }
 
-const statusColors = {
+const statusColors: { [key: string]: string } = {
   'Healthy': 'bg-green-100 text-green-800',
   'Degraded': 'bg-yellow-100 text-yellow-800',
   'Critical': 'bg-red-100 text-red-800',
   'Offline': 'bg-gray-100 text-gray-800'
 };
 
-const lifecycleColors = {
+const lifecycleColors: { [key: string]: string } = {
   'Planning': 'bg-blue-100 text-blue-800',
   'Active': 'bg-green-100 text-green-800',
   'Maintenance': 'bg-yellow-100 text-yellow-800',
   'Retired': 'bg-gray-100 text-gray-800'
 };
 
-const typeIcons = {
+const typeIcons: { [key: string]: any } = {
   'Server': Server,
   'Network': Wifi,
   'Storage': HardDrive,

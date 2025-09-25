@@ -12,7 +12,6 @@ import {
   BookOpen, 
   Plug, 
   Settings,
-  Bell,
   Search,
   User,
   Brain
@@ -20,7 +19,7 @@ import {
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
-  { href: '/tickets', label: 'Service Requests', icon: Ticket },
+  { href: '/tickets', label: 'Tickets', icon: Ticket },
   { href: '/accounts', label: 'Account Management', icon: Building2 },
   { href: '/assets', label: 'Asset Management', icon: Server },
   { href: '/rules-engine', label: 'Rules Engine', icon: Brain },
@@ -92,10 +91,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 />
               </div>
               
-              <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800">
-                <Bell size={20} />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-              </button>
               
               <div className="flex items-center space-x-2">
                 <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center dark:bg-zinc-700">

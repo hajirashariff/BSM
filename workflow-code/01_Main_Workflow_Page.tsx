@@ -171,14 +171,14 @@ const workflowData = [
   }
 ];
 
-const statusColors: { [key: string]: string } = {
+const statusColors = {
   'Active': 'bg-green-100 text-green-800',
   'Draft': 'bg-yellow-100 text-yellow-800',
   'Paused': 'bg-gray-100 text-gray-800',
   'Error': 'bg-red-100 text-red-800'
 };
 
-const categoryIcons: { [key: string]: any } = {
+const categoryIcons = {
   'HR': Users,
   'IT': Settings,
   'Procurement': FileText,
@@ -186,7 +186,7 @@ const categoryIcons: { [key: string]: any } = {
   'Asset Management': Database
 };
 
-const triggerIcons: { [key: string]: any } = {
+const triggerIcons = {
   'New employee added to HR system': Users,
   'Critical incident created': AlertTriangle,
   'License expiry warning (30 days)': Timer,
@@ -194,7 +194,7 @@ const triggerIcons: { [key: string]: any } = {
   'Maintenance due date approaching': Clock
 };
 
-const actionIcons: { [key: string]: any } = {
+const actionIcons = {
   'Create accounts': Settings,
   'Assign equipment': Database,
   'Schedule training': Calendar,
@@ -318,11 +318,11 @@ export default function WorkflowsPage() {
                 <Icon size={16} />
                 <span>{tab.label}</span>
               </button>
-                        );
-                      })}
+            );
+          })}
         </nav>
-                </div>
-                
+      </div>
+      
       {/* Tab Content */}
       <div className="min-h-screen">
         {renderTabContent()}
@@ -330,6 +330,3 @@ export default function WorkflowsPage() {
     </div>
   );
 }
-
-
-
