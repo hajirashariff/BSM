@@ -243,26 +243,9 @@ export default function BusinessDashboard() {
   };
 
 
-  // Navigation handlers for detailed metric cards
-  const handleCardClick = (cardType: string) => {
-    if (!isClient) return; // Only run on client side
-    
-    switch (cardType) {
-      case 'active-tickets':
-        router.push('/active-tickets');
-        break;
-      case 'client-accounts':
-        router.push('/client-accounts');
-        break;
-      case 'it-assets':
-        router.push('/it-assets');
-        break;
-      case 'response-time':
-        router.push('/response-time');
-        break;
-      default:
-        console.log(`Clicked on ${cardType}`);
-    }
+  // Disable navigation from KPI cards per request
+  const handleCardClick = (_cardType: string) => {
+    return; // no-op
   };
 
   // Show loading state during hydration
@@ -590,18 +573,13 @@ export default function BusinessDashboard() {
           </div>
         </div>
 
+        {/* Quick Access removed per request */}
+
         {/* Account Health Overview Section */}
         <div className="mt-8">
           <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div className="flex items-center justify-between mb-6">
               <h3 className="text-xl font-bold text-gray-900">Account Health Overview</h3>
-              <button 
-                onClick={() => router.push('/client-accounts')}
-                className="flex items-center space-x-2 px-4 py-2 text-blue-600 hover:text-blue-700 hover:bg-blue-50 rounded-lg transition-colors"
-              >
-                <span className="text-sm font-medium">View All</span>
-                <Eye size={16} />
-              </button>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

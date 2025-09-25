@@ -32,9 +32,7 @@ const navItems = [
   { href: '/rules-engine', label: 'Rules Engine', icon: Brain },
   { href: '/analytics', label: 'Analytics & Reports', icon: BarChart3 },
   { href: '/users', label: 'User Management', icon: Users },
-  { href: '/customer-messages', label: 'Customer Messages', icon: MessageSquare },
-    { href: '/service-requests', label: 'Service Requests', icon: Ticket },
-  { href: '/notifications', label: 'Notifications', icon: Bell },
+  // Removed per request: Customer Messages and Notifications in sidebar
   { href: '/knowledge', label: 'Knowledge Base', icon: BookOpen },
   { href: '/integrations', label: 'Integrations', icon: Plug },
   { href: '/settings', label: 'Settings', icon: Settings },
