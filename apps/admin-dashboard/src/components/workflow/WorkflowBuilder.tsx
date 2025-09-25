@@ -8,6 +8,7 @@ import ReactFlow, {
   useEdgesState,
   Controls,
   Background,
+  BackgroundVariant,
   MiniMap,
   Position,
   MarkerType,
@@ -523,8 +524,8 @@ function TransitionDialogueBox({
 function WorkflowBuilderContent() {
   const [nodes, setNodes, onNodesChange] = useNodesState(initialNodes);
   const [edges, setEdges, onEdgesChange] = useEdgesState(initialEdges);
-  const [selectedNode, setSelectedNode] = useState(null);
-  const [selectedEdge, setSelectedEdge] = useState(null);
+  const [selectedNode, setSelectedNode] = useState<any>(null);
+  const [selectedEdge, setSelectedEdge] = useState<any>(null);
   const [isTransitionDialogueOpen, setIsTransitionDialogueOpen] = useState(false);
   const [currentTransition, setCurrentTransition] = useState<TransitionState | null>(null);
   const [isPaletteCollapsed, setIsPaletteCollapsed] = useState(false);
@@ -899,7 +900,7 @@ function WorkflowBuilderContent() {
               maskColor="rgba(0, 0, 0, 0.1)"
             />
             <Background 
-              variant="dots" 
+              variant={BackgroundVariant.Dots}
               gap={20} 
               size={1.5} 
               color="#E5E7EB"

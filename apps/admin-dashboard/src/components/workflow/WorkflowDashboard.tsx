@@ -169,7 +169,7 @@ const workflowData = [
   }
 ];
 
-const statusColors = {
+const statusColors: { [key: string]: string } = {
   'Active': 'bg-green-100 text-green-800',
   'Draft': 'bg-yellow-100 text-yellow-800',
   'Paused': 'bg-gray-100 text-gray-800',
@@ -177,14 +177,14 @@ const statusColors = {
   'Archived': 'bg-gray-100 text-gray-600'
 };
 
-const priorityColors = {
+const priorityColors: { [key: string]: string } = {
   'Critical': 'bg-red-100 text-red-800',
   'High': 'bg-orange-100 text-orange-800',
   'Medium': 'bg-yellow-100 text-yellow-800',
   'Low': 'bg-green-100 text-green-800'
 };
 
-const healthColors = {
+const healthColors: { [key: string]: string } = {
   'Excellent': 'bg-green-100 text-green-800',
   'Good': 'bg-blue-100 text-blue-800',
   'Warning': 'bg-yellow-100 text-yellow-800',

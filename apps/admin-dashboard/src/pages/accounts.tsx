@@ -118,7 +118,7 @@ const accountData = [
   }
 ];
 
-const healthColors = {
+const healthColors: { [key: string]: string } = {
   'Champion': 'bg-green-100 text-green-800',
   'Active': 'bg-blue-100 text-blue-800',
   'At Risk': 'bg-yellow-100 text-yellow-800',
@@ -142,8 +142,8 @@ export default function AccountsPage() {
     size: '',
     renewalDate: { start: '', end: '' },
     lastActivity: { start: '', end: '' },
-    hasRiskFactors: null, // null, true, false
-    hasOpportunities: null, // null, true, false
+    hasRiskFactors: null as boolean | null, // null, true, false
+    hasOpportunities: null as boolean | null, // null, true, false
     stakeholderCount: { min: 0, max: 20 }
   });
 
@@ -246,7 +246,7 @@ export default function AccountsPage() {
       window.location.href = mailtoUrl;
     } else {
       // Show email options modal or alert
-      alert(`Email options for ${account.name}:\n\n${account.stakeholders.map(s => `• ${s.name} (${s.role}): ${s.email}`).join('\n')}`);
+      alert(`Email options for ${account.name}:\n\n${account.stakeholders.map((s: any) => `• ${s.name} (${s.role}): ${s.email}`).join('\n')}`);
     }
   };
 

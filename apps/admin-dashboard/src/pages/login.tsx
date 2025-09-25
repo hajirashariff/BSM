@@ -58,32 +58,15 @@ export default function LoginPage() {
           return;
         }
 
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: formData.email,
-          password: formData.password,
-        });
-
-        if (authError) throw authError;
-
-        if (authData.user) {
-          const { error: dbError } = await supabase
-            .from('users')
-            .insert([{
-              id: authData.user.id,
-              email: formData.email,
-              role: accountType,
-              name: formData.email.split('@')[0]
-            }]);
-
-          if (dbError) throw dbError;
-
-          setSuccess(`${accountType} account created successfully! Please check your email to verify your account.`);
-          
-          setTimeout(() => {
-            setIsSignup(false);
-            setSuccess('');
-          }, 3000);
-        }
+        // Mock signup - in a real app, this would create a new user
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+        
+        setSuccess(`${accountType} account created successfully! You can now sign in.`);
+        
+        setTimeout(() => {
+          setIsSignup(false);
+          setSuccess('');
+        }, 3000);
       } else {
         // Sign in logic
         const { error: authError } = await signIn(formData.email, formData.password);

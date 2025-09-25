@@ -1,395 +1,525 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
-import { supabase, User } from '../lib/supabase';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { 
-  Plus, 
-  Edit, 
-  Trash2, 
-  LogOut, 
-  Users, 
-  Loader2, 
+  Ticket, 
+  Building2, 
+  Server, 
+  Clock, 
+  BarChart3, 
+  ArrowDown, 
+  ArrowUp, 
+  CheckCircle, 
+  Star, 
+  Calendar, 
+  RefreshCw, 
+  ArrowRight, 
+  TrendingUp, 
+  AlertTriangle, 
+  Eye,
+  Users,
+  Brain,
+  Workflow,
+  BookOpen,
+  Plug,
+  Settings,
+  Activity,
+  Zap,
+  Shield,
+  Globe,
+  Database,
+  FileText,
+  Bot,
+  Target,
+  DollarSign,
+  Layers,
+  Code,
+  Terminal,
+  Cloud,
+  GitCommit,
+  History,
+  Share2,
+  Lock,
+  Archive,
+  Tag,
+  Folder,
+  ChevronDown,
+  ChevronRight,
+  MoreHorizontal,
+  Grid3X3,
+  List,
+  Kanban,
+  TrendingDown,
+  RefreshCcw,
   AlertCircle,
-  CheckCircle,
+  CheckCircle2,
+  XCircle,
+  Clock3,
+  EyeOff,
+  Unlock,
+  Bookmark,
+  Download,
+  Upload,
+  Bell,
+  Search,
+  User,
+  Plus,
+  Edit,
+  Trash2,
+  LogOut,
+  Loader2,
   X
 } from 'lucide-react';
 
-interface UserFormData {
-  name: string;
-  email: string;
-  role: string;
-}
+// Mock data for the dashboard
+const dashboardData = {
+  kpis: {
+    todayTickets: 13,
+    resolvedToday: 9,
+    avgResponse: '3.0h',
+    satisfaction: 3.6
+  },
+  metrics: [
+    {
+      title: 'Active Tickets',
+      value: 201,
+      change: '+8%',
+      trend: 'up',
+      subtitle: 'Open service requests',
+      icon: Ticket,
+      color: 'blue',
+      chart: [65, 45, 78, 52, 89, 67, 91]
+    },
+    {
+      title: 'Client Accounts',
+      value: 79,
+      change: '+16%',
+      trend: 'up',
+      subtitle: 'Managed accounts',
+      icon: Building2,
+      color: 'green',
+      chart: [45, 67, 89, 34, 78, 56, 82]
+    },
+    {
+      title: 'IT Assets',
+      value: 1128,
+      change: '+6%',
+      trend: 'up',
+      subtitle: 'Managed devices',
+      icon: Server,
+      color: 'purple',
+      chart: [78, 56, 89, 67, 45, 78, 92]
+    },
+    {
+      title: 'Response Time',
+      value: '2.0h',
+      change: '-8%',
+      trend: 'down',
+      subtitle: 'Average resolution',
+      icon: Clock,
+      color: 'orange',
+      chart: [45, 67, 34, 78, 56, 89, 67]
+    }
+  ],
+  accountHealth: [
+    {
+      name: 'Contoso Ltd',
+      status: 'Healthy',
+      healthScore: 77,
+      activeTickets: 4,
+      renewalDate: '2024-12-15',
+      lastUpdated: '2 hours ago',
+      color: 'blue'
+    },
+    {
+      name: 'Fabrikam Inc',
+      status: 'Warning',
+      healthScore: 85,
+      activeTickets: 7,
+      renewalDate: '2025-03-20',
+      lastUpdated: '2 hours ago',
+      color: 'yellow'
+    },
+    {
+      name: 'Adventure Works',
+      status: 'Healthy',
+      healthScore: 86,
+      activeTickets: 3,
+      renewalDate: '2024-11-30',
+      lastUpdated: '2 hours ago',
+      color: 'blue'
+    },
+    {
+      name: 'Northwind Corp',
+      status: 'Excellent',
+      healthScore: 94,
+      activeTickets: 3,
+      renewalDate: '2025-01-10',
+      lastUpdated: '2 hours ago',
+      color: 'green'
+    }
+  ],
+  recentActivity: [
+    { id: 1, type: 'ticket', message: 'New ticket #TCK-2024-001 created', time: '5 min ago', icon: Ticket },
+    { id: 2, type: 'account', message: 'Account health updated for Contoso Ltd', time: '12 min ago', icon: Building2 },
+    { id: 3, type: 'workflow', message: 'Workflow "Employee Onboarding" completed', time: '18 min ago', icon: Workflow },
+    { id: 4, type: 'asset', message: 'New server added to inventory', time: '25 min ago', icon: Server },
+    { id: 5, type: 'user', message: 'New user John Doe registered', time: '32 min ago', icon: Users }
+  ],
+  systemStatus: {
+    workflows: { active: 12, total: 15, status: 'healthy' },
+    integrations: { active: 8, total: 10, status: 'warning' },
+    knowledgeBase: { articles: 156, views: 2340, status: 'healthy' },
+    rulesEngine: { rules: 45, active: 42, status: 'healthy' }
+  }
+};
+
+const getStatusColor = (status: string) => {
+  switch (status) {
+    case 'healthy': return 'text-green-600 bg-green-100';
+    case 'warning': return 'text-yellow-600 bg-yellow-100';
+    case 'critical': return 'text-red-600 bg-red-100';
+    case 'excellent': return 'text-green-600 bg-green-100';
+    default: return 'text-gray-600 bg-gray-100';
+  }
+};
+
+const getHealthColor = (score: number) => {
+  if (score >= 90) return 'bg-green-500';
+  if (score >= 80) return 'bg-blue-500';
+  if (score >= 70) return 'bg-yellow-500';
+  return 'bg-red-500';
+};
 
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
-  const [users, setUsers] = useState<User[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [success, setSuccess] = useState('');
-  const [showModal, setShowModal] = useState(false);
-  const [editingUser, setEditingUser] = useState<User | null>(null);
-  const [formData, setFormData] = useState<UserFormData>({
-    name: '',
-    email: '',
-    role: 'user'
-  });
+  const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [showAccountDetails, setShowAccountDetails] = useState<string | null>(null);
 
-  useEffect(() => {
-    fetchUsers();
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+    setIsRefreshing(false);
+  };
 
-    // Set up realtime subscription
-    const subscription = supabase
-      .channel('users-changes')
-      .on('postgres_changes', 
-        { 
-          event: '*', 
-          schema: 'public', 
-          table: 'users' 
-        }, 
-        (payload) => {
-          console.log('Change received!', payload);
-          fetchUsers(); // Refresh the users list
-        }
-      )
-      .subscribe();
-
-    return () => {
-      subscription.unsubscribe();
+  const MiniChart = ({ data, color }: { data: number[], color: string }) => {
+    const max = Math.max(...data);
+    const colorClasses = {
+      blue: 'bg-blue-500',
+      green: 'bg-green-500',
+      purple: 'bg-purple-500',
+      orange: 'bg-orange-500'
     };
-  }, []);
 
-  const fetchUsers = async () => {
-    try {
-      setLoading(true);
-      const { data, error } = await supabase
-        .from('users')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setUsers(data || []);
-    } catch (err: any) {
-      setError(err.message);
-    } finally {
-      setLoading(false);
-    }
+    return (
+      <div className="flex items-end space-x-1 h-8">
+        {data.map((value, index) => (
+          <div
+            key={index}
+            className={`w-1 ${colorClasses[color as keyof typeof colorClasses]} rounded-t`}
+            style={{ height: `${(value / max) * 100}%` }}
+          />
+        ))}
+      </div>
+    );
   };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      if (editingUser) {
-        // Update existing user
-        const { error } = await supabase
-          .from('users')
-          .update({
-            name: formData.name,
-            email: formData.email,
-            role: formData.role,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', editingUser.id);
-
-        if (error) throw error;
-        setSuccess('User updated successfully!');
-      } else {
-        // Create new user
-        const { error } = await supabase
-          .from('users')
-          .insert([{
-            name: formData.name,
-            email: formData.email,
-            role: formData.role
-          }]);
-
-        if (error) throw error;
-        setSuccess('User created successfully!');
-      }
-
-      setShowModal(false);
-      setEditingUser(null);
-      setFormData({ name: '', email: '', role: 'user' });
-      fetchUsers();
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleEdit = (user: User) => {
-    setEditingUser(user);
-    setFormData({
-      name: user.name,
-      email: user.email,
-      role: user.role
-    });
-    setShowModal(true);
-  };
-
-  const handleDelete = async (userId: string) => {
-    if (!confirm('Are you sure you want to delete this user?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('users')
-        .delete()
-        .eq('id', userId);
-
-      if (error) throw error;
-      setSuccess('User deleted successfully!');
-      fetchUsers();
-    } catch (err: any) {
-      setError(err.message);
-    }
-  };
-
-  const handleLogout = async () => {
-    await signOut();
-  };
-
-  const openModal = () => {
-    setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'user' });
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setEditingUser(null);
-    setFormData({ name: '', email: '', role: 'user' });
-  };
-
-  // Clear messages after 3 seconds
-  useEffect(() => {
-    if (error || success) {
-      const timer = setTimeout(() => {
-        setError('');
-        setSuccess('');
-      }, 3000);
-      return () => clearTimeout(timer);
-    }
-  }, [error, success]);
 
   return (
     <ProtectedRoute requiredRole="Admin">
-      <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <div className="bg-white shadow">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4">
-              <Users className="h-8 w-8 text-primary-600" />
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">Supabase Admin Dashboard</h1>
-                <p className="text-sm text-gray-500">Welcome back, {user?.email}</p>
-              </div>
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <p className="text-gray-600 mt-1">Real-time insights and analytics</p>
+          </div>
+          <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2">
+              <Calendar className="w-4 h-4 text-gray-500" />
+              <select 
+                value={selectedTimeRange}
+                onChange={(e) => setSelectedTimeRange(e.target.value)}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                <option value="24h">Last 24 Hours</option>
+                <option value="7d">Last 7 Days</option>
+                <option value="30d">Last 30 Days</option>
+                <option value="90d">Last 90 Days</option>
+              </select>
             </div>
             <button
-              onClick={handleLogout}
-              className="flex items-center space-x-2 px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              className="flex items-center space-x-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 disabled:opacity-50"
             >
-              <LogOut className="h-4 w-4" />
-              <span>Logout</span>
+              <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+              <span>Refresh</span>
             </button>
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Messages */}
-        {error && (
-          <div className="mb-6 bg-red-50 border border-red-200 rounded-md p-4">
-            <div className="flex">
-              <AlertCircle className="h-5 w-5 text-red-400" />
-              <div className="ml-3">
-                <p className="text-sm text-red-800">{error}</p>
+        {/* KPI Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Today's Tickets</p>
+                <p className="text-2xl font-bold text-gray-900">{dashboardData.kpis.todayTickets}</p>
+              </div>
+              <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Ticket className="w-6 h-6 text-blue-600" />
               </div>
             </div>
           </div>
-        )}
 
-        {success && (
-          <div className="mb-6 bg-green-50 border border-green-200 rounded-md p-4">
-            <div className="flex">
-              <CheckCircle className="h-5 w-5 text-green-400" />
-              <div className="ml-3">
-                <p className="text-sm text-green-800">{success}</p>
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Resolved Today</p>
+                <p className="text-2xl font-bold text-gray-900">{dashboardData.kpis.resolvedToday}</p>
+              </div>
+              <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
             </div>
           </div>
-        )}
 
-        {/* Actions */}
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-lg font-medium text-gray-900">Users Management</h2>
-          <button
-            onClick={openModal}
-            className="flex items-center space-x-2 px-4 py-2 bg-primary-600 text-white text-sm font-medium rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add User</span>
-          </button>
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Avg. Response</p>
+                <p className="text-2xl font-bold text-gray-900">{dashboardData.kpis.avgResponse}</p>
+              </div>
+              <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
+                <Clock className="w-6 h-6 text-orange-600" />
+              </div>
+            </div>
+          </div>
+
+          <div className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-gray-600">Satisfaction</p>
+                <p className="text-2xl font-bold text-gray-900">{dashboardData.kpis.satisfaction}/5</p>
+              </div>
+              <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Star className="w-6 h-6 text-yellow-600" />
+              </div>
+            </div>
+          </div>
         </div>
 
-        {/* Users Table */}
-        <div className="bg-white shadow overflow-hidden sm:rounded-md">
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <Loader2 className="animate-spin h-8 w-8 text-primary-600" />
-              <span className="ml-2 text-gray-600">Loading users...</span>
-            </div>
-          ) : users.length === 0 ? (
-            <div className="text-center py-12">
-              <Users className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">No users</h3>
-              <p className="mt-1 text-sm text-gray-500">Get started by creating a new user.</p>
-            </div>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Name
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Email
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Role
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Created At
-                    </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {users.map((user) => (
-                    <tr key={user.id} className="hover:bg-gray-50">
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                        {user.name}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {user.email}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                          user.role === 'admin' 
-                            ? 'bg-red-100 text-red-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
-                          {user.role}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                        {new Date(user.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button
-                            onClick={() => handleEdit(user)}
-                            className="text-primary-600 hover:text-primary-900"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDelete(user.id)}
-                            className="text-red-600 hover:text-red-900"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Modal */}
-      {showModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
+        {/* Main Metrics */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-6">
+          {dashboardData.metrics.map((metric, index) => (
+            <div key={index} className="bg-white p-6 rounded-xl border border-gray-200 shadow-sm">
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-medium text-gray-900">
-                  {editingUser ? 'Edit User' : 'Add New User'}
-                </h3>
-                <button
-                  onClick={closeModal}
-                  className="text-gray-400 hover:text-gray-600"
-                >
-                  <X className="h-6 w-6" />
-                </button>
+                <div className="flex items-center space-x-3">
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
+                    metric.color === 'blue' ? 'bg-blue-100' :
+                    metric.color === 'green' ? 'bg-green-100' :
+                    metric.color === 'purple' ? 'bg-purple-100' :
+                    'bg-orange-100'
+                  }`}>
+                    <metric.icon className={`w-5 h-5 ${
+                      metric.color === 'blue' ? 'text-blue-600' :
+                      metric.color === 'green' ? 'text-green-600' :
+                      metric.color === 'purple' ? 'text-purple-600' :
+                      'text-orange-600'
+                    }`} />
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-600">{metric.title}</p>
+                    <p className="text-2xl font-bold text-gray-900">{metric.value}</p>
+                  </div>
+                </div>
+                <div className={`flex items-center space-x-1 ${
+                  metric.trend === 'up' ? 'text-green-600' : 'text-red-600'
+                }`}>
+                  {metric.trend === 'up' ? <ArrowUp className="w-4 h-4" /> : <ArrowDown className="w-4 h-4" />}
+                  <span className="text-sm font-medium">{metric.change}</span>
+                </div>
               </div>
-
-              <form onSubmit={handleSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Name
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
+              <div className="space-y-2">
+                <p className="text-sm text-gray-500">{metric.subtitle}</p>
+                <div className="flex items-center justify-between">
+                  <MiniChart data={metric.chart} color={metric.color} />
+                  <span className="text-xs text-gray-400 capitalize">{metric.color}</span>
                 </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Email
-                  </label>
-                  <input
-                    type="email"
-                    required
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  />
+        {/* Account Health Overview */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">Account Health Overview</h2>
+            <p className="text-gray-600 mt-1">Monitor client account health and performance</p>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {dashboardData.accountHealth.map((account, index) => (
+                <div 
+                  key={index} 
+                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => setShowAccountDetails(showAccountDetails === account.name ? null : account.name)}
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-semibold text-gray-900">{account.name}</h3>
+                    <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(account.status.toLowerCase())}`}>
+                      {account.status}
+                    </span>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex items-center justify-between text-sm mb-1">
+                        <span className="text-gray-600">Health Score</span>
+                        <span className="font-medium">{account.healthScore}%</span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className={`h-2 rounded-full ${getHealthColor(account.healthScore)}`}
+                          style={{ width: `${account.healthScore}%` }}
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-2 text-sm">
+                      <div>
+                        <span className="text-gray-600">Tickets:</span>
+                        <span className="font-medium ml-1">{account.activeTickets}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-600">Renewal:</span>
+                        <span className="font-medium ml-1">{account.renewalDate}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500">Updated {account.lastUpdated}</p>
+                  </div>
                 </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Role
-                  </label>
-                  <select
-                    value={formData.role}
-                    onChange={(e) => setFormData({ ...formData, role: e.target.value })}
-                    className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                  >
-                    <option value="user">User</option>
-                    <option value="admin">Admin</option>
-                  </select>
-                </div>
-
-                <div className="flex justify-end space-x-3 pt-4">
-                  <button
-                    type="button"
-                    onClick={closeModal}
-                    className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="px-4 py-2 text-sm font-medium text-white bg-primary-600 border border-transparent rounded-md hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    {editingUser ? 'Update' : 'Create'}
-                  </button>
-                </div>
-              </form>
+              ))}
             </div>
           </div>
         </div>
-      )}
+
+        {/* System Status & Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* System Status */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">System Status</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Workflow className="w-5 h-5 text-blue-600" />
+                  <span className="font-medium">Workflow Engine</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">{dashboardData.systemStatus.workflows.active}/{dashboardData.systemStatus.workflows.total}</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(dashboardData.systemStatus.workflows.status)}`}>
+                    {dashboardData.systemStatus.workflows.status}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Plug className="w-5 h-5 text-green-600" />
+                  <span className="font-medium">Integrations</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">{dashboardData.systemStatus.integrations.active}/{dashboardData.systemStatus.integrations.total}</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(dashboardData.systemStatus.integrations.status)}`}>
+                    {dashboardData.systemStatus.integrations.status}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <BookOpen className="w-5 h-5 text-purple-600" />
+                  <span className="font-medium">Knowledge Base</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">{dashboardData.systemStatus.knowledgeBase.articles} articles</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(dashboardData.systemStatus.knowledgeBase.status)}`}>
+                    {dashboardData.systemStatus.knowledgeBase.status}
+                  </span>
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-3">
+                  <Brain className="w-5 h-5 text-orange-600" />
+                  <span className="font-medium">Rules Engine</span>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <span className="text-sm text-gray-600">{dashboardData.systemStatus.rulesEngine.active}/{dashboardData.systemStatus.rulesEngine.rules}</span>
+                  <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(dashboardData.systemStatus.rulesEngine.status)}`}>
+                    {dashboardData.systemStatus.rulesEngine.status}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+            <div className="p-6 border-b border-gray-200">
+              <h2 className="text-xl font-semibold text-gray-900">Recent Activity</h2>
+            </div>
+            <div className="p-6">
+              <div className="space-y-4">
+                {dashboardData.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center space-x-3">
+                    <div className="w-8 h-8 bg-gray-100 rounded-lg flex items-center justify-center">
+                      <activity.icon className="w-4 h-4 text-gray-600" />
+                    </div>
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{activity.message}</p>
+                      <p className="text-xs text-gray-500">{activity.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Quick Actions */}
+        <div className="bg-white rounded-xl border border-gray-200 shadow-sm">
+          <div className="p-6 border-b border-gray-200">
+            <h2 className="text-xl font-semibold text-gray-900">Quick Actions</h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Plus className="w-6 h-6 text-blue-600" />
+                <span className="text-sm font-medium">New Ticket</span>
+              </button>
+              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Building2 className="w-6 h-6 text-green-600" />
+                <span className="text-sm font-medium">Add Account</span>
+              </button>
+              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Server className="w-6 h-6 text-purple-600" />
+                <span className="text-sm font-medium">Add Asset</span>
+              </button>
+              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Workflow className="w-6 h-6 text-orange-600" />
+                <span className="text-sm font-medium">Create Workflow</span>
+              </button>
+              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <Users className="w-6 h-6 text-indigo-600" />
+                <span className="text-sm font-medium">Add User</span>
+              </button>
+              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                <BarChart3 className="w-6 h-6 text-pink-600" />
+                <span className="text-sm font-medium">View Reports</span>
+              </button>
+            </div>
+          </div>
+        </div>
       </div>
     </ProtectedRoute>
   );

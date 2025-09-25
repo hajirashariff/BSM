@@ -94,7 +94,7 @@ const analyticsData = {
   }
 };
 
-const typeIcons = {
+const typeIcons: { [key: string]: any } = {
   'Server': Server,
   'Network': Router,
   'Storage': HardDrive,
@@ -114,7 +114,7 @@ export default function AnalyticsPage() {
   const [isAutoRefresh, setIsAutoRefresh] = useState(false);
   const [selectedChart, setSelectedChart] = useState('health');
   const [chartZoom, setChartZoom] = useState(1);
-  const [hoveredData, setHoveredData] = useState(null);
+  const [hoveredData, setHoveredData] = useState<any>(null);
   const [showTooltip, setShowTooltip] = useState(false);
   const [tooltipPosition, setTooltipPosition] = useState({ x: 0, y: 0 });
   const [expandedCards, setExpandedCards] = useState(new Set());
