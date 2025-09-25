@@ -18,6 +18,7 @@ import {
   AlertTriangle,
   ArrowRight,
   ArrowDown,
+  ArrowUp,
   GitBranch,
   Timer,
   Mail,
@@ -27,7 +28,9 @@ import {
   Bot,
   Brain,
   Target,
-  BarChart3
+  BarChart3,
+  Calendar,
+  DollarSign
 } from 'lucide-react';
 
 const workflowData = [
@@ -128,14 +131,14 @@ const workflowData = [
   }
 ];
 
-const statusColors = {
+const statusColors: { [key: string]: string } = {
   'Active': 'bg-green-100 text-green-800',
   'Draft': 'bg-yellow-100 text-yellow-800',
   'Paused': 'bg-gray-100 text-gray-800',
   'Error': 'bg-red-100 text-red-800'
 };
 
-const categoryIcons = {
+const categoryIcons: { [key: string]: any } = {
   'HR': Users,
   'IT': Settings,
   'Procurement': FileText,
@@ -143,7 +146,7 @@ const categoryIcons = {
   'Asset Management': Database
 };
 
-const triggerIcons = {
+const triggerIcons: { [key: string]: any } = {
   'New employee added to HR system': Users,
   'Critical incident created': AlertTriangle,
   'License expiry warning (30 days)': Timer,
@@ -151,7 +154,7 @@ const triggerIcons = {
   'Maintenance due date approaching': Clock
 };
 
-const actionIcons = {
+const actionIcons: { [key: string]: any } = {
   'Create accounts': Settings,
   'Assign equipment': Database,
   'Schedule training': Calendar,
