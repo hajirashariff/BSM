@@ -14,7 +14,8 @@ import {
   Settings,
   Bell,
   Search,
-  User
+  User,
+  Brain
 } from 'lucide-react';
 
 const navItems = [
@@ -23,6 +24,7 @@ const navItems = [
   { href: '/accounts', label: 'Account Management', icon: Building2 },
   { href: '/assets', label: 'Asset Management', icon: Server },
   { href: '/workflows', label: 'Workflow Engine', icon: Workflow },
+  { href: '/rules-engine', label: 'Rules Engine', icon: Brain },
   { href: '/analytics', label: 'Analytics & Reports', icon: BarChart3 },
   { href: '/users', label: 'User Management', icon: Users },
   { href: '/knowledge', label: 'Knowledge Base', icon: BookOpen },
