@@ -115,7 +115,7 @@ const accountData = [
   }
 ];
 
-const healthColors: { [key: string]: string } = {
+const healthColors: Record<string, string> = {
   'Champion': 'bg-green-100 text-green-800',
   'Active': 'bg-blue-100 text-blue-800',
   'At Risk': 'bg-yellow-100 text-yellow-800',
@@ -126,6 +126,63 @@ export default function AccountsPage() {
   const [selectedAccount, setSelectedAccount] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
   const [searchTerm, setSearchTerm] = useState('');
+  const [showInsights, setShowInsights] = useState(false);
+  const [insights, setInsights] = useState('');
+
+  // AI-powered account insights generator
+  const generateAccountInsights = () => {
+    const totalAccounts = accountData.length;
+    const healthyAccounts = accountData.filter(a => a.status === 'Healthy').length;
+    const atRiskAccounts = accountData.filter(a => a.status === 'At Risk').length;
+    const criticalAccounts = accountData.filter(a => a.status === 'Critical').length;
+    
+    const avgHealth = accountData.reduce((sum, a) => sum + a.health, 0) / totalAccounts;
+    const highValueAccounts = accountData.filter(a => a.health >= 85).length;
+    const trendingUp = accountData.filter(a => a.healthTrend === 'up').length;
+    const trendingDown = accountData.filter(a => a.healthTrend === 'down').length;
+    
+    const industries = [...new Set(accountData.map(a => a.industry))];
+    const topIndustry = industries.reduce((top, industry) => {
+      const count = accountData.filter(a => a.industry === industry).length;
+      return count > top.count ? { industry, count } : top;
+    }, { industry: '', count: 0 });
+    
+    return `📊 **Account Portfolio Analysis**
+
+**Portfolio Health:**
+• ${totalAccounts} total accounts managed
+• ${healthyAccounts} healthy accounts (${((healthyAccounts/totalAccounts)*100).toFixed(1)}%)
+• ${atRiskAccounts} at-risk accounts (${((atRiskAccounts/totalAccounts)*100).toFixed(1)}%)
+• ${criticalAccounts} critical accounts requiring immediate attention
+
+**Performance Metrics:**
+• Average health score: ${avgHealth.toFixed(1)}%
+• ${highValueAccounts} high-value accounts (85%+ health)
+• ${trendingUp} accounts trending up
+• ${trendingDown} accounts trending down
+
+**Industry Distribution:**
+• Top industry: ${topIndustry.industry} (${topIndustry.count} accounts)
+• Industry diversity: ${industries.length} different sectors
+
+**AI Recommendations:**
+• **Immediate Action:** ${criticalAccounts > 0 ? `Address ${criticalAccounts} critical account(s)` : 'No critical accounts - good health'}
+• **Growth Opportunity:** ${highValueAccounts} accounts ready for expansion
+• **Risk Mitigation:** ${atRiskAccounts} accounts need proactive engagement
+• **Portfolio Optimization:** ${trendingDown > 0 ? `Investigate ${trendingDown} declining account(s)` : 'All accounts stable or improving'}
+
+**Strategic Insights:**
+• Focus on ${topIndustry.industry} sector for growth
+• Implement health monitoring for at-risk accounts
+• Create retention campaigns for trending down accounts
+• Leverage high-value accounts for referrals and expansion
+
+**Next Steps:**
+• Schedule health check calls with at-risk accounts
+• Develop industry-specific engagement strategies
+• Set up automated health monitoring alerts
+• Create account success playbooks by industry`;
+  };
 
   const getProgressBarClass = (health: number) => {
     if (health >= 90) return 'progress-bar-90';
@@ -216,11 +273,25 @@ export default function AccountsPage() {
 
       {/* AI-Powered Insights */}
       <div className="card bg-gradient-to-r from-blue-50 to-purple-50 border-blue-200">
-        <div className="flex items-center space-x-3 mb-4">
-          <div className="p-2 bg-blue-100 rounded-lg">
-            <Zap className="text-blue-600" size={20} />
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <Zap className="text-blue-600" size={20} />
+            </div>
+            <h3 className="text-lg font-semibold text-gray-900">AI-Powered Account Insights</h3>
           </div>
-          <h3 className="text-lg font-semibold text-gray-900">AI-Powered Account Insights</h3>
+          <button
+            onClick={() => {
+              // Generate intelligent insights based on current account data
+              const generatedInsights = generateAccountInsights();
+              setInsights(generatedInsights);
+              setShowInsights(true);
+            }}
+            className="btn-secondary flex items-center space-x-2 text-sm"
+          >
+            <Zap size={16} />
+            <span>Get Detailed Insights</span>
+          </button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="bg-white p-4 rounded-lg">
@@ -403,6 +474,53 @@ export default function AccountsPage() {
           </div>
         ))}
       </div>
+
+      {/* AI Insights Modal */}
+      {showInsights && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-blue-50 to-purple-50">
+              <div className="flex items-center space-x-3">
+                <div className="p-2 bg-blue-100 rounded-lg">
+                  <Zap className="text-blue-600" size={24} />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">AI Account Insights</h2>
+              </div>
+              <button
+                onClick={() => setShowInsights(false)}
+                className="text-gray-400 hover:text-gray-600 text-2xl font-bold"
+              >
+                ×
+              </button>
+            </div>
+            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+              <div className="prose prose-sm max-w-none">
+                <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                  {insights}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+              <button
+                onClick={() => setShowInsights(false)}
+                className="btn-secondary"
+              >
+                Close
+              </button>
+              <button
+                onClick={() => {
+                  const generatedInsights = generateAccountInsights();
+                  setInsights(generatedInsights);
+                }}
+                className="btn-primary flex items-center space-x-2"
+              >
+                <Zap size={16} />
+                <span>Refresh Insights</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
