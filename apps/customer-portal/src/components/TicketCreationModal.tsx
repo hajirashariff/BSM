@@ -1,25 +1,18 @@
 import React, { useState } from 'react';
-import { X, Paperclip, AlertCircle, Clock, Zap, Shield, Bug, Settings, HelpCircle } from 'lucide-react';
+import { X, Paperclip, AlertCircle, Clock, Zap, Shield, Bug, Settings, HelpCircle, Send } from 'lucide-react';
+import { CreateTicketData } from '../lib/ticketService';
 
 interface TicketCreationModalProps {
-  isOpen: boolean;
   onClose: () => void;
-  onSubmit: (ticket: TicketData) => void;
-}
-
-interface TicketData {
-  subject: string;
-  description: string;
-  category: string;
-  priority: string;
-  attachments: File[];
+  onSubmit: (data: CreateTicketData) => void;
 }
 
 const categories = [
   { id: 'technical', label: 'Technical Support', icon: Settings, color: 'text-blue-600' },
   { id: 'billing', label: 'Billing & Invoices', icon: Shield, color: 'text-green-600' },
-  { id: 'access', label: 'Access & Permissions', icon: Bug, color: 'text-red-600' },
   { id: 'general', label: 'General Inquiry', icon: HelpCircle, color: 'text-purple-600' },
+  { id: 'feature_request', label: 'Feature Request', icon: Zap, color: 'text-orange-600' },
+  { id: 'bug_report', label: 'Bug Report', icon: Bug, color: 'text-red-600' },
 ];
 
 const priorities = [
@@ -29,33 +22,63 @@ const priorities = [
   { id: 'urgent', label: 'Urgent', icon: AlertCircle, color: 'text-red-600', bgColor: 'bg-red-100 dark:bg-red-900' },
 ];
 
-export default function TicketCreationModal({ isOpen, onClose, onSubmit }: TicketCreationModalProps) {
-  const [formData, setFormData] = useState<TicketData>({
+export default function TicketCreationModal({ onClose, onSubmit }: TicketCreationModalProps) {
+  const [formData, setFormData] = useState<CreateTicketData>({
     subject: '',
     description: '',
     category: 'technical',
     priority: 'medium',
-    attachments: []
+    attachments: [],
+    tags: []
   });
+  const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const validateForm = () => {
+    const newErrors: Record<string, string> = {};
+    
+    if (!formData.subject.trim()) {
+      newErrors.subject = 'Subject is required';
+    } else if (formData.subject.length < 5) {
+      newErrors.subject = 'Subject must be at least 5 characters';
+    }
+    
+    if (!formData.description.trim()) {
+      newErrors.description = 'Description is required';
+    } else if (formData.description.length < 20) {
+      newErrors.description = 'Description must be at least 20 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!validateForm()) {
+      return;
+    }
+    
     setIsSubmitting(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    onSubmit(formData);
-    setFormData({
-      subject: '',
-      description: '',
-      category: 'technical',
-      priority: 'medium',
-      attachments: []
-    });
-    setIsSubmitting(false);
-    onClose();
+    try {
+      await onSubmit(formData);
+      setFormData({
+        subject: '',
+        description: '',
+        category: 'technical',
+        priority: 'medium',
+        attachments: [],
+        tags: []
+      });
+      onClose();
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -73,7 +96,30 @@ export default function TicketCreationModal({ isOpen, onClose, onSubmit }: Ticke
     }));
   };
 
-  if (!isOpen) return null;
+  const addTag = () => {
+    const tag = newTag.trim().toLowerCase();
+    if (tag && !formData.tags.includes(tag) && formData.tags.length < 5) {
+      setFormData(prev => ({
+        ...prev,
+        tags: [...prev.tags, tag]
+      }));
+      setNewTag('');
+    }
+  };
+
+  const removeTag = (tag: string) => {
+    setFormData(prev => ({
+      ...prev,
+      tags: prev.tags.filter(t => t !== tag)
+    }));
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      addTag();
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -99,11 +145,23 @@ export default function TicketCreationModal({ isOpen, onClose, onSubmit }: Ticke
             <input
               type="text"
               value={formData.subject}
-              onChange={(e) => setFormData(prev => ({ ...prev, subject: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:text-zinc-100"
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, subject: e.target.value }));
+                if (errors.subject) {
+                  setErrors(prev => ({ ...prev, subject: '' }));
+                }
+              }}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:text-zinc-100 ${
+                errors.subject 
+                  ? 'border-red-300 dark:border-red-700' 
+                  : 'border-gray-300 dark:border-zinc-600'
+              }`}
               placeholder="Brief description of your issue"
               required
             />
+            {errors.subject && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.subject}</p>
+            )}
           </div>
 
           {/* Category */}
@@ -175,12 +233,70 @@ export default function TicketCreationModal({ isOpen, onClose, onSubmit }: Ticke
             </label>
             <textarea
               value={formData.description}
-              onChange={(e) => setFormData(prev => ({ ...prev, description: e.target.value }))}
-              className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:text-zinc-100"
+              onChange={(e) => {
+                setFormData(prev => ({ ...prev, description: e.target.value }));
+                if (errors.description) {
+                  setErrors(prev => ({ ...prev, description: '' }));
+                }
+              }}
+              className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:text-zinc-100 ${
+                errors.description 
+                  ? 'border-red-300 dark:border-red-700' 
+                  : 'border-gray-300 dark:border-zinc-600'
+              }`}
               rows={6}
               placeholder="Please provide detailed information about your issue..."
               required
             />
+            {errors.description && (
+              <p className="mt-1 text-sm text-red-600 dark:text-red-400">{errors.description}</p>
+            )}
+            <p className="mt-1 text-sm text-gray-600 dark:text-zinc-400">
+              {formData.description.length}/20 characters minimum
+            </p>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
+              Tags {formData.tags.length > 0 && `(${formData.tags.length}/5)`}
+            </label>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {formData.tags.map((tag) => (
+                <span
+                  key={tag}
+                  className="inline-flex items-center px-3 py-1 bg-primary-100 text-primary-800 text-sm rounded-full dark:bg-primary-900 dark:text-primary-300"
+                >
+                  {tag}
+                  <button
+                    type="button"
+                    onClick={() => removeTag(tag)}
+                    className="ml-2 text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-200"
+                  >
+                    <X size={16} />
+                  </button>
+                </span>
+              ))}
+            </div>
+            <div className="flex space-x-2">
+              <input
+                type="text"
+                value={newTag}
+                onChange={(e) => setNewTag(e.target.value)}
+                onKeyPress={handleKeyPress}
+                disabled={formData.tags.length >= 5}
+                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100 disabled:opacity-50"
+                placeholder={formData.tags.length >= 5 ? "Maximum 5 tags reached" : "Add a tag and press Enter"}
+              />
+              <button
+                type="button"
+                onClick={addTag}
+                disabled={!newTag.trim() || formData.tags.length >= 5}
+                className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                Add
+              </button>
+            </div>
           </div>
 
           {/* Attachments */}
@@ -261,7 +377,10 @@ export default function TicketCreationModal({ isOpen, onClose, onSubmit }: Ticke
                   <span>Creating...</span>
                 </>
               ) : (
-                <span>Create Ticket</span>
+                <>
+                  <Send size={16} />
+                  <span>Create Ticket</span>
+                </>
               )}
             </button>
           </div>

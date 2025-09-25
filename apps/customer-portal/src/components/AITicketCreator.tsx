@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Brain, 
   Zap, 
@@ -13,11 +13,12 @@ import {
 import aiService, { AIClassification } from '../lib/aiService';
 
 interface AITicketCreatorProps {
+  isOpen: boolean;
+  onClose: () => void;
   onSubmit: (ticketData: any) => void;
-  onCancel: () => void;
 }
 
-const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel }) => {
+const AITicketCreator: React.FC<AITicketCreatorProps> = ({ isOpen, onClose, onSubmit }) => {
   const [formData, setFormData] = useState({
     subject: '',
     description: '',
@@ -30,6 +31,36 @@ const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel })
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [showAISuggestions, setShowAISuggestions] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  // Handle Escape key to close modal
+  useEffect(() => {
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener('keydown', handleEscape);
+      return () => document.removeEventListener('keydown', handleEscape);
+    }
+  }, [isOpen, onClose]);
+
+  // Reset form when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setFormData({
+        subject: '',
+        description: '',
+        category: '',
+        priority: '',
+        assignee: ''
+      });
+      setAiClassification(null);
+      setShowAISuggestions(false);
+      setAiError(null);
+    }
+  }, [isOpen]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
@@ -76,6 +107,11 @@ const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel })
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!formData.subject.trim() || !formData.description.trim()) {
+      setAiError('Please fill in all required fields');
+      return;
+    }
+    
     const ticketData = {
       ...formData,
       id: `TKT-${Date.now()}`,
@@ -86,6 +122,7 @@ const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel })
     };
     
     onSubmit(ticketData);
+    onClose(); // Close the modal after successful submission
   };
 
   const getPriorityColor = (priority: string) => {
@@ -104,8 +141,19 @@ const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel })
     return 'text-red-600';
   };
 
+  if (!isOpen) return null;
+
+  const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div 
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+      onClick={handleBackdropClick}
+    >
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
         {/* Header */}
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
@@ -119,7 +167,7 @@ const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel })
             </div>
           </div>
           <button
-            onClick={onCancel}
+            onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
           >
             <span className="text-gray-500">✕</span>
@@ -319,12 +367,14 @@ const AITicketCreator: React.FC<AITicketCreatorProps> = ({ onSubmit, onCancel })
         {/* Footer */}
         <div className="flex items-center justify-end space-x-3 p-6 border-t border-gray-200">
           <button
-            onClick={onCancel}
+            type="button"
+            onClick={onClose}
             className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
             Cancel
           </button>
           <button
+            type="submit"
             onClick={handleSubmit}
             className="flex items-center space-x-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors"
           >

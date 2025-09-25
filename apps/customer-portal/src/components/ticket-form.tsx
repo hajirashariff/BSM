@@ -3,8 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { PriorityIndicator, Priority } from "@/components/priority-indicator";
-import { StatusBadge, TicketStatus } from "@/components/status-badge";
+import PriorityIndicator, { Priority } from "@/components/priority-indicator";
+import StatusBadge, { TicketStatus } from "@/components/status-badge";
 import { ArrowLeft, Save, X } from "lucide-react";
 
 export interface TicketFormData {

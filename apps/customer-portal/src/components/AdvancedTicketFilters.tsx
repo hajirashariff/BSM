@@ -1,28 +1,19 @@
 import React, { useState } from 'react';
 import { X, Filter, Calendar, User, Tag, AlertCircle, Clock, CheckCircle, XCircle } from 'lucide-react';
+import { TicketFilters } from '../lib/ticketService';
+import FilterDropdown from './FilterDropdown';
 
 interface AdvancedTicketFiltersProps {
   isOpen: boolean;
   onClose: () => void;
-  onApplyFilters: (filters: FilterState) => void;
-  currentFilters: FilterState;
-}
-
-interface FilterState {
-  status: string[];
-  priority: string[];
-  category: string[];
-  assignee: string[];
-  dateRange: {
-    start: string;
-    end: string;
-  };
-  searchTerm: string;
+  onApplyFilters: (filters: TicketFilters) => void;
+  currentFilters: TicketFilters;
 }
 
 const statusOptions = [
   { id: 'open', label: 'Open', icon: AlertCircle, color: 'text-blue-600' },
-  { id: 'in-progress', label: 'In Progress', icon: Clock, color: 'text-yellow-600' },
+  { id: 'in_progress', label: 'In Progress', icon: Clock, color: 'text-yellow-600' },
+  { id: 'pending', label: 'Pending', icon: Clock, color: 'text-orange-600' },
   { id: 'resolved', label: 'Resolved', icon: CheckCircle, color: 'text-green-600' },
   { id: 'closed', label: 'Closed', icon: XCircle, color: 'text-gray-600' },
 ];
@@ -37,8 +28,9 @@ const priorityOptions = [
 const categoryOptions = [
   { id: 'technical', label: 'Technical Support' },
   { id: 'billing', label: 'Billing & Invoices' },
-  { id: 'access', label: 'Access & Permissions' },
   { id: 'general', label: 'General Inquiry' },
+  { id: 'feature_request', label: 'Feature Request' },
+  { id: 'bug_report', label: 'Bug Report' },
 ];
 
 const assigneeOptions = [
@@ -50,43 +42,8 @@ const assigneeOptions = [
 ];
 
 export default function AdvancedTicketFilters({ isOpen, onClose, onApplyFilters, currentFilters }: AdvancedTicketFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>(currentFilters);
+  const [filters, setFilters] = useState<TicketFilters>(currentFilters);
 
-  const handleStatusToggle = (statusId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      status: prev.status.includes(statusId)
-        ? prev.status.filter(id => id !== statusId)
-        : [...prev.status, statusId]
-    }));
-  };
-
-  const handlePriorityToggle = (priorityId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      priority: prev.priority.includes(priorityId)
-        ? prev.priority.filter(id => id !== priorityId)
-        : [...prev.priority, priorityId]
-    }));
-  };
-
-  const handleCategoryToggle = (categoryId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      category: prev.category.includes(categoryId)
-        ? prev.category.filter(id => id !== categoryId)
-        : [...prev.category, categoryId]
-    }));
-  };
-
-  const handleAssigneeToggle = (assigneeId: string) => {
-    setFilters(prev => ({
-      ...prev,
-      assignee: prev.assignee.includes(assigneeId)
-        ? prev.assignee.filter(id => id !== assigneeId)
-        : [...prev.assignee, assigneeId]
-    }));
-  };
 
   const handleApply = () => {
     onApplyFilters(filters);
@@ -139,109 +96,64 @@ export default function AdvancedTicketFilters({ isOpen, onClose, onApplyFilters,
           </div>
 
           {/* Status */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-3">
-              Status
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {statusOptions.map((status) => {
-                const Icon = status.icon;
-                return (
-                  <button
-                    key={status.id}
-                    onClick={() => handleStatusToggle(status.id)}
-                    className={`p-3 rounded-lg border-2 transition-all ${
-                      filters.status.includes(status.id)
-                        ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 dark:border-primary-400'
-                        : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
-                    }`}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Icon size={16} className={status.color} />
-                      <span className="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                        {status.label}
-                      </span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+          <FilterDropdown
+            label="Status"
+            options={statusOptions.map(status => ({
+              id: status.id,
+              label: status.label,
+              icon: status.icon,
+              color: status.color
+            }))}
+            selectedValues={filters.status || []}
+            onSelectionChange={(values) => setFilters(prev => ({ ...prev, status: values }))}
+            placeholder="Select statuses..."
+            searchable={true}
+            multiSelect={true}
+          />
 
           {/* Priority */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-3">
-              Priority
-            </label>
-            <div className="grid grid-cols-4 gap-2">
-              {priorityOptions.map((priority) => (
-                <button
-                  key={priority.id}
-                  onClick={() => handlePriorityToggle(priority.id)}
-                  className={`p-2 rounded-lg border-2 transition-all ${
-                    filters.priority.includes(priority.id)
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 dark:border-primary-400'
-                      : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
-                  }`}
-                >
-                  <span className={`text-sm font-medium ${priority.color}`}>
-                    {priority.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            label="Priority"
+            options={priorityOptions.map(priority => ({
+              id: priority.id,
+              label: priority.label,
+              color: priority.color
+            }))}
+            selectedValues={filters.priority || []}
+            onSelectionChange={(values) => setFilters(prev => ({ ...prev, priority: values }))}
+            placeholder="Select priorities..."
+            searchable={true}
+            multiSelect={true}
+          />
 
           {/* Category */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-3">
-              Category
-            </label>
-            <div className="grid grid-cols-2 gap-2">
-              {categoryOptions.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => handleCategoryToggle(category.id)}
-                  className={`p-3 rounded-lg border-2 transition-all ${
-                    filters.category.includes(category.id)
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 dark:border-primary-400'
-                      : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
-                  }`}
-                >
-                  <span className="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                    {category.label}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            label="Category"
+            options={categoryOptions.map(category => ({
+              id: category.id,
+              label: category.label
+            }))}
+            selectedValues={filters.category || []}
+            onSelectionChange={(values) => setFilters(prev => ({ ...prev, category: values }))}
+            placeholder="Select categories..."
+            searchable={true}
+            multiSelect={true}
+          />
 
           {/* Assignee */}
-          <div>
-            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-3">
-              Assignee
-            </label>
-            <div className="space-y-2">
-              {assigneeOptions.map((assignee) => (
-                <button
-                  key={assignee.id}
-                  onClick={() => handleAssigneeToggle(assignee.id)}
-                  className={`w-full p-3 rounded-lg border-2 transition-all text-left ${
-                    filters.assignee.includes(assignee.id)
-                      ? 'border-primary-500 bg-primary-50 dark:bg-primary-900 dark:border-primary-400'
-                      : 'border-gray-200 dark:border-zinc-700 hover:border-gray-300 dark:hover:border-zinc-600'
-                  }`}
-                >
-                  <div className="flex items-center space-x-2">
-                    <User size={16} className="text-gray-500 dark:text-zinc-400" />
-                    <span className="text-sm font-medium text-gray-900 dark:text-zinc-100">
-                      {assignee.label}
-                    </span>
-                  </div>
-                </button>
-              ))}
-            </div>
-          </div>
+          <FilterDropdown
+            label="Assignee"
+            options={assigneeOptions.map(assignee => ({
+              id: assignee.id,
+              label: assignee.label,
+              icon: User
+            }))}
+            selectedValues={filters.assignee || []}
+            onSelectionChange={(values) => setFilters(prev => ({ ...prev, assignee: values }))}
+            placeholder="Select assignees..."
+            searchable={true}
+            multiSelect={true}
+          />
 
           {/* Date Range */}
           <div>

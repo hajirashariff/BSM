@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -9,7 +9,6 @@ import {
   CreditCard,
   User,
   FileText,
-  MessageSquare,
   Download,
   Settings,
   Bell,
@@ -35,7 +34,6 @@ const navItems = [
   { href: '/billing', label: 'Billing & Invoices', icon: CreditCard },
   { href: '/account', label: 'My Account', icon: User },
   { href: '/documents', label: 'Documents', icon: FileText },
-  { href: '/chat', label: 'Live Chat', icon: MessageSquare },
   { href: '/downloads', label: 'Downloads', icon: Download },
   { href: '/settings', label: 'Settings', icon: Settings },
 ];

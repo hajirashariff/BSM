@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
@@ -40,11 +40,7 @@ const navItems = [
   { href: '/', label: 'Dashboard', icon: HomeIcon },
   { href: '/tickets', label: 'Support Tickets', icon: Ticket },
   { href: '/help', label: 'Help Center', icon: HelpCircle },
-  { href: '/billing', label: 'Billing & Invoices', icon: CreditCard },
   { href: '/account', label: 'My Account', icon: User },
-  { href: '/documents', label: 'Documents', icon: FileText },
-  { href: '/chat', label: 'Live Chat', icon: MessageSquare },
-  { href: '/downloads', label: 'Downloads', icon: Download },
   { href: '/settings', label: 'Settings', icon: SettingsIcon },
 ];
 
@@ -87,33 +83,114 @@ export default function SettingsPage() {
 
   const [preferences, setPreferences] = useState({
     theme: 'light',
-    language: 'en',
     timezone: 'UTC-5',
     dateFormat: 'MM/DD/YYYY',
     itemsPerPage: 25
   });
 
-  const handleSave = () => {
-    setIsEditing(false);
-    // In a real app, you would save to the backend
-    alert('Settings saved successfully!');
+  const [security, setSecurity] = useState({
+    twoFactorEnabled: false,
+    lastPasswordChange: '2024-01-15',
+    activeSessions: 3
+  });
+
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+
+  const handleSave = async () => {
+    setSaving(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setIsEditing(false);
+      setMessage({ type: 'success', text: 'Settings saved successfully!' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    const newPassword = prompt('Enter new password:');
+    if (newPassword && newPassword.length >= 8) {
+      setSaving(true);
+      try {
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        setSecurity(prev => ({ ...prev, lastPasswordChange: new Date().toISOString().split('T')[0] }));
+        setMessage({ type: 'success', text: 'Password changed successfully!' });
+        setTimeout(() => setMessage(null), 3000);
+      } catch (error) {
+        setMessage({ type: 'error', text: 'Failed to change password. Please try again.' });
+        setTimeout(() => setMessage(null), 3000);
+      } finally {
+        setSaving(false);
+      }
+    } else if (newPassword) {
+      setMessage({ type: 'error', text: 'Password must be at least 8 characters long.' });
+      setTimeout(() => setMessage(null), 3000);
+    }
+  };
+
+  const handle2FAToggle = async () => {
+    setSaving(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setSecurity(prev => ({ ...prev, twoFactorEnabled: !prev.twoFactorEnabled }));
+      setMessage({ 
+        type: 'success', 
+        text: `Two-factor authentication ${security.twoFactorEnabled ? 'disabled' : 'enabled'} successfully!` 
+      });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to update 2FA settings. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleIntegrationConfigure = (integration: string) => {
+    setMessage({ type: 'success', text: `${integration} configuration opened!` });
+    setTimeout(() => setMessage(null), 3000);
   };
 
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading...</p>
+          <p className="mt-4 text-gray-600 dark:text-zinc-400">Loading...</p>
         </div>
       </div>
     );
   }
 
+  const MessageNotification = () => {
+    if (!message) return null;
+    
+    return (
+      <div className={`fixed top-4 right-4 z-50 p-4 rounded-lg shadow-lg max-w-sm ${
+        message.type === 'success' 
+          ? 'bg-green-100 text-green-800 border border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700'
+          : 'bg-red-100 text-red-800 border border-red-200 dark:bg-red-900 dark:text-red-300 dark:border-red-700'
+      }`}>
+        <div className="flex items-center space-x-2">
+          <div className={`w-2 h-2 rounded-full ${
+            message.type === 'success' ? 'bg-green-600' : 'bg-red-600'
+          }`}></div>
+          <span className="text-sm font-medium">{message.text}</span>
+        </div>
+      </div>
+    );
+  };
+
   const renderProfileSection = () => (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h3 className="text-lg font-semibold text-gray-900">Profile Information</h3>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Profile Information</h3>
         <button
           onClick={() => setIsEditing(!isEditing)}
           className="btn-secondary flex items-center space-x-2"
@@ -125,75 +202,92 @@ export default function SettingsPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">First Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">First Name</label>
           <input
             type="text"
             value={profile.firstName}
             onChange={(e) => setProfile({...profile, firstName: e.target.value})}
             disabled={!isEditing}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Last Name</label>
           <input
             type="text"
             value={profile.lastName}
             onChange={(e) => setProfile({...profile, lastName: e.target.value})}
             disabled={!isEditing}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Email</label>
           <input
             type="email"
             value={profile.email}
             onChange={(e) => setProfile({...profile, email: e.target.value})}
             disabled={!isEditing}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Phone</label>
           <input
             type="tel"
             value={profile.phone}
             onChange={(e) => setProfile({...profile, phone: e.target.value})}
             disabled={!isEditing}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Company</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Company</label>
           <input
             type="text"
             value={profile.company}
             onChange={(e) => setProfile({...profile, company: e.target.value})}
             disabled={!isEditing}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Department</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Department</label>
           <input
             type="text"
             value={profile.department}
             onChange={(e) => setProfile({...profile, department: e.target.value})}
             disabled={!isEditing}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           />
         </div>
       </div>
 
       {isEditing && (
         <div className="flex justify-end space-x-3">
-          <button onClick={() => setIsEditing(false)} className="btn-secondary">
+          <button 
+            onClick={() => setIsEditing(false)} 
+            className="btn-secondary"
+            disabled={saving}
+          >
             Cancel
           </button>
-          <button onClick={handleSave} className="btn-primary flex items-center space-x-2">
-            <Save size={16} />
-            <span>Save Changes</span>
+          <button 
+            onClick={handleSave} 
+            className="btn-primary flex items-center space-x-2"
+            disabled={saving}
+          >
+            {saving ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                <span>Saving...</span>
+              </>
+            ) : (
+              <>
+                <Save size={16} />
+                <span>Save</span>
+              </>
+            )}
           </button>
         </div>
       )}
@@ -202,16 +296,16 @@ export default function SettingsPage() {
 
   const renderNotificationsSection = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Notification Preferences</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Notification Preferences</h3>
       
       <div className="space-y-4">
         {Object.entries(notifications).map(([key, value]) => (
-          <div key={key} className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+          <div key={key} className="flex items-center justify-between p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
             <div>
-              <h4 className="font-medium text-gray-900 capitalize">
+              <h4 className="font-medium text-gray-900 dark:text-zinc-100 capitalize">
                 {key.replace(/([A-Z])/g, ' $1').replace(/^./, str => str.toUpperCase())}
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-gray-600 dark:text-zinc-400">
                 {key === 'emailNotifications' && 'Receive notifications via email'}
                 {key === 'smsNotifications' && 'Receive notifications via SMS'}
                 {key === 'ticketUpdates' && 'Get notified about ticket status changes'}
@@ -227,35 +321,88 @@ export default function SettingsPage() {
                 onChange={(e) => setNotifications({...notifications, [key]: e.target.checked})}
                 className="sr-only peer"
               />
-              <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
+              <div className="w-11 h-6 bg-gray-200 dark:bg-zinc-600 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
             </label>
           </div>
         ))}
+      </div>
+      
+      <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <div className="flex items-start space-x-3">
+          <Bell size={20} className="text-blue-600 dark:text-blue-400 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-blue-900 dark:text-blue-100">Notification Frequency</h4>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
+              You can adjust how often you receive notifications. Changes will take effect immediately.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );
 
   const renderSecuritySection = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Security Settings</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Security Settings</h3>
       
       <div className="space-y-4">
-        <div className="p-4 border border-gray-200 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Password</h4>
-          <p className="text-sm text-gray-600 mb-3">Last changed 30 days ago</p>
-          <button className="btn-secondary">Change Password</button>
+        <div className="p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-zinc-100 mb-2">Password</h4>
+              <p className="text-sm text-gray-600 dark:text-zinc-400 mb-3">
+                Last changed {new Date(security.lastPasswordChange).toLocaleDateString()}
+              </p>
+            </div>
+            <button 
+              onClick={handlePasswordChange}
+              className="btn-secondary"
+              disabled={saving}
+            >
+              {saving ? 'Changing...' : 'Change Password'}
+            </button>
+          </div>
         </div>
         
-        <div className="p-4 border border-gray-200 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Two-Factor Authentication</h4>
-          <p className="text-sm text-gray-600 mb-3">Add an extra layer of security to your account</p>
-          <button className="btn-primary">Enable 2FA</button>
+        <div className="p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-zinc-100 mb-2">Two-Factor Authentication</h4>
+              <p className="text-sm text-gray-600 dark:text-zinc-400 mb-3">
+                Add an extra layer of security to your account
+              </p>
+              <div className="flex items-center space-x-2">
+                <div className={`w-2 h-2 rounded-full ${security.twoFactorEnabled ? 'bg-green-500' : 'bg-gray-400'}`}></div>
+                <span className="text-sm text-gray-600 dark:text-zinc-400">
+                  {security.twoFactorEnabled ? 'Enabled' : 'Disabled'}
+                </span>
+              </div>
+            </div>
+            <button 
+              onClick={handle2FAToggle}
+              className={`${security.twoFactorEnabled ? 'btn-secondary' : 'btn-primary'}`}
+              disabled={saving}
+            >
+              {saving ? 'Updating...' : security.twoFactorEnabled ? 'Disable 2FA' : 'Enable 2FA'}
+            </button>
+          </div>
         </div>
         
-        <div className="p-4 border border-gray-200 rounded-lg">
-          <h4 className="font-medium text-gray-900 mb-2">Active Sessions</h4>
-          <p className="text-sm text-gray-600 mb-3">Manage your active login sessions</p>
-          <button className="btn-secondary">View Sessions</button>
+        <div className="p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-medium text-gray-900 dark:text-zinc-100 mb-2">Active Sessions</h4>
+              <p className="text-sm text-gray-600 dark:text-zinc-400 mb-3">
+                Manage your active login sessions ({security.activeSessions} active)
+              </p>
+            </div>
+            <button 
+              onClick={() => setMessage({ type: 'success', text: 'Sessions management opened!' })}
+              className="btn-secondary"
+            >
+              View Sessions
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -263,15 +410,15 @@ export default function SettingsPage() {
 
   const renderPreferencesSection = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Preferences</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Preferences</h3>
       
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Theme</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Theme</label>
           <select
             value={preferences.theme}
             onChange={(e) => setPreferences({...preferences, theme: e.target.value})}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           >
             <option value="light">Light</option>
             <option value="dark">Dark</option>
@@ -280,44 +427,165 @@ export default function SettingsPage() {
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Language</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Language</label>
           <select
-            value={preferences.language}
-            onChange={(e) => setPreferences({...preferences, language: e.target.value})}
-            className="input-field"
+            value="en"
+            disabled
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           >
-            <option value="en">English</option>
-            <option value="es">Spanish</option>
-            <option value="fr">French</option>
-            <option value="de">German</option>
+            {/* Major International Languages */}
+            <optgroup label="Major Languages">
+              <option value="en">English</option>
+              <option value="es">Español (Spanish)</option>
+              <option value="fr">Français (French)</option>
+              <option value="de">Deutsch (German)</option>
+              <option value="it">Italiano (Italian)</option>
+              <option value="pt">Português (Portuguese)</option>
+              <option value="ru">Русский (Russian)</option>
+              <option value="ja">日本語 (Japanese)</option>
+              <option value="ko">한국어 (Korean)</option>
+              <option value="zh">中文 (Chinese)</option>
+              <option value="ar">العربية (Arabic)</option>
+            </optgroup>
+            
+            {/* Indian Languages */}
+            <optgroup label="Indian Languages">
+              <option value="hi">हिन्दी (Hindi)</option>
+              <option value="bn">বাংলা (Bengali)</option>
+              <option value="te">తెలుగు (Telugu)</option>
+              <option value="mr">मराठी (Marathi)</option>
+              <option value="ta">தமிழ் (Tamil)</option>
+              <option value="gu">ગુજરાતી (Gujarati)</option>
+              <option value="kn">ಕನ್ನಡ (Kannada)</option>
+              <option value="ml">മലയാളം (Malayalam)</option>
+              <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
+              <option value="or">ଓଡ଼ିଆ (Odia)</option>
+              <option value="as">অসমীয়া (Assamese)</option>
+              <option value="ne">नेपाली (Nepali)</option>
+            </optgroup>
+            
+            {/* Other Asian Languages */}
+            <optgroup label="Other Asian Languages">
+              <option value="th">ไทย (Thai)</option>
+              <option value="vi">Tiếng Việt (Vietnamese)</option>
+              <option value="id">Bahasa Indonesia (Indonesian)</option>
+              <option value="ms">Bahasa Melayu (Malay)</option>
+              <option value="tl">Filipino (Tagalog)</option>
+            </optgroup>
+            
+            {/* European Languages */}
+            <optgroup label="Other European Languages">
+              <option value="nl">Nederlands (Dutch)</option>
+              <option value="sv">Svenska (Swedish)</option>
+              <option value="no">Norsk (Norwegian)</option>
+              <option value="da">Dansk (Danish)</option>
+              <option value="fi">Suomi (Finnish)</option>
+              <option value="pl">Polski (Polish)</option>
+              <option value="tr">Türkçe (Turkish)</option>
+              <option value="el">Ελληνικά (Greek)</option>
+            </optgroup>
           </select>
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Timezone</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Timezone</label>
           <select
             value={preferences.timezone}
             onChange={(e) => setPreferences({...preferences, timezone: e.target.value})}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           >
-            <option value="UTC-5">UTC-5 (EST)</option>
-            <option value="UTC-6">UTC-6 (CST)</option>
-            <option value="UTC-7">UTC-7 (MST)</option>
-            <option value="UTC-8">UTC-8 (PST)</option>
+            {/* Indian Timezones */}
+            <optgroup label="Indian Timezones">
+              <option value="UTC+5:30">UTC+5:30 (IST - Indian Standard Time)</option>
+            </optgroup>
+            
+            {/* North American Timezones */}
+            <optgroup label="North America">
+              <option value="UTC-10">UTC-10 (HST - Hawaii)</option>
+              <option value="UTC-9">UTC-9 (AKST - Alaska)</option>
+              <option value="UTC-8">UTC-8 (PST - Pacific)</option>
+              <option value="UTC-7">UTC-7 (MST - Mountain)</option>
+              <option value="UTC-6">UTC-6 (CST - Central)</option>
+              <option value="UTC-5">UTC-5 (EST - Eastern)</option>
+              <option value="UTC-4">UTC-4 (AST - Atlantic)</option>
+            </optgroup>
+            
+            {/* European Timezones */}
+            <optgroup label="Europe">
+              <option value="UTC+0">UTC+0 (GMT - London)</option>
+              <option value="UTC+1">UTC+1 (CET - Central Europe)</option>
+              <option value="UTC+2">UTC+2 (EET - Eastern Europe)</option>
+              <option value="UTC+3">UTC+3 (MSK - Moscow)</option>
+            </optgroup>
+            
+            {/* Asian Timezones */}
+            <optgroup label="Asia">
+              <option value="UTC+5:30">UTC+5:30 (IST - India)</option>
+              <option value="UTC+6">UTC+6 (BST - Bangladesh)</option>
+              <option value="UTC+7">UTC+7 (ICT - Thailand/Vietnam)</option>
+              <option value="UTC+8">UTC+8 (CST - China/Singapore)</option>
+              <option value="UTC+9">UTC+9 (JST - Japan/Korea)</option>
+              <option value="UTC+10">UTC+10 (AEST - Australia East)</option>
+              <option value="UTC+11">UTC+11 (AEDT - Australia East DST)</option>
+              <option value="UTC+12">UTC+12 (NZST - New Zealand)</option>
+            </optgroup>
+            
+            {/* Middle East & Africa */}
+            <optgroup label="Middle East & Africa">
+              <option value="UTC+2">UTC+2 (EET - Cairo/Johannesburg)</option>
+              <option value="UTC+3">UTC+3 (AST - Dubai/Nairobi)</option>
+              <option value="UTC+4">UTC+4 (GST - Gulf Standard)</option>
+            </optgroup>
+            
+            {/* Other Major Timezones */}
+            <optgroup label="Other Major Timezones">
+              <option value="UTC-3">UTC-3 (BRT - Brazil)</option>
+              <option value="UTC+0">UTC+0 (GMT - Greenwich)</option>
+            </optgroup>
           </select>
         </div>
         
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Date Format</label>
+          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Date Format</label>
           <select
             value={preferences.dateFormat}
             onChange={(e) => setPreferences({...preferences, dateFormat: e.target.value})}
-            className="input-field"
+            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
           >
-            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
-            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
-            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+            {/* International Formats */}
+            <optgroup label="International Formats">
+              <option value="YYYY-MM-DD">YYYY-MM-DD (ISO 8601)</option>
+              <option value="DD/MM/YYYY">DD/MM/YYYY (European)</option>
+              <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
+            </optgroup>
+            
+            {/* Indian Formats */}
+            <optgroup label="Indian Formats">
+              <option value="DD-MM-YYYY">DD-MM-YYYY (Indian)</option>
+              <option value="DD/MM/YYYY">DD/MM/YYYY (Indian with slashes)</option>
+              <option value="DD-MMM-YYYY">DD-MMM-YYYY (e.g., 15-Jan-2024)</option>
+              <option value="DD MMM YYYY">DD MMM YYYY (e.g., 15 Jan 2024)</option>
+            </optgroup>
+            
+            {/* Other Regional Formats */}
+            <optgroup label="Other Regional Formats">
+              <option value="YYYY/MM/DD">YYYY/MM/DD (Japanese)</option>
+              <option value="DD.MM.YYYY">DD.MM.YYYY (German)</option>
+              <option value="DD-MM-YYYY">DD-MM-YYYY (European)</option>
+            </optgroup>
           </select>
+        </div>
+      </div>
+      
+      <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
+        <div className="flex items-start space-x-3">
+          <CheckCircle size={20} className="text-green-600 dark:text-green-400 mt-0.5" />
+          <div>
+            <h4 className="font-medium text-green-900 dark:text-green-100">Preferences Saved</h4>
+            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
+              Your preferences are automatically saved and will be applied across all devices.
+            </p>
+          </div>
         </div>
       </div>
     </div>
@@ -325,51 +593,66 @@ export default function SettingsPage() {
 
   const renderIntegrationsSection = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900">Integrations</h3>
+      <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Integrations</h3>
       
       <div className="space-y-4">
-        <div className="p-4 border border-gray-200 rounded-lg">
+        <div className="p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Mail size={20} className="text-blue-600" />
+              <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                <Mail size={20} className="text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Email Integration</h4>
-                <p className="text-sm text-gray-600">Connect your email for ticket notifications</p>
+                <h4 className="font-medium text-gray-900 dark:text-zinc-100">Email Integration</h4>
+                <p className="text-sm text-gray-600 dark:text-zinc-400">Connect your email for ticket notifications</p>
               </div>
             </div>
-            <button className="btn-secondary">Configure</button>
+            <button 
+              onClick={() => handleIntegrationConfigure('Email')}
+              className="btn-secondary"
+            >
+              Configure
+            </button>
           </div>
         </div>
         
-        <div className="p-4 border border-gray-200 rounded-lg">
+        <div className="p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <Phone size={20} className="text-green-600" />
+              <div className="w-10 h-10 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                <Phone size={20} className="text-green-600 dark:text-green-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">SMS Integration</h4>
-                <p className="text-sm text-gray-600">Receive SMS notifications for urgent tickets</p>
+                <h4 className="font-medium text-gray-900 dark:text-zinc-100">SMS Integration</h4>
+                <p className="text-sm text-gray-600 dark:text-zinc-400">Receive SMS notifications for urgent tickets</p>
               </div>
             </div>
-            <button className="btn-secondary">Configure</button>
+            <button 
+              onClick={() => handleIntegrationConfigure('SMS')}
+              className="btn-secondary"
+            >
+              Configure
+            </button>
           </div>
         </div>
         
-        <div className="p-4 border border-gray-200 rounded-lg">
+        <div className="p-4 border border-gray-200 dark:border-zinc-700 rounded-lg bg-white dark:bg-zinc-800">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Globe size={20} className="text-purple-600" />
+              <div className="w-10 h-10 bg-purple-100 dark:bg-purple-900/30 rounded-lg flex items-center justify-center">
+                <Globe size={20} className="text-purple-600 dark:text-purple-400" />
               </div>
               <div>
-                <h4 className="font-medium text-gray-900">Webhook Integration</h4>
-                <p className="text-sm text-gray-600">Connect external services via webhooks</p>
+                <h4 className="font-medium text-gray-900 dark:text-zinc-100">Webhook Integration</h4>
+                <p className="text-sm text-gray-600 dark:text-zinc-400">Connect external services via webhooks</p>
               </div>
             </div>
-            <button className="btn-secondary">Configure</button>
+            <button 
+              onClick={() => handleIntegrationConfigure('Webhook')}
+              className="btn-secondary"
+            >
+              Configure
+            </button>
           </div>
         </div>
       </div>
@@ -400,6 +683,8 @@ export default function SettingsPage() {
         <meta name="description" content="Manage your account settings and preferences" />
       </Head>
 
+      <MessageNotification />
+      
       <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
         {/* Sidebar */}
         <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 dark:bg-zinc-900 dark:border-zinc-800">
@@ -441,25 +726,25 @@ export default function SettingsPage() {
         {/* Main Content */}
         <div className="ml-64">
           {/* Header */}
-          <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
+          <header className="bg-white dark:bg-zinc-900 shadow-sm border-b border-gray-200 dark:border-zinc-800 px-6 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
-                <h2 className="text-2xl font-semibold text-gray-900">
+                <h2 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
                   Settings
                 </h2>
               </div>
               
               <div className="flex items-center space-x-4">
-                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg">
+                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
                   <Bell size={20} />
                   <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
                 </button>
                 
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center">
+                  <div className="w-8 h-8 bg-gray-300 dark:bg-zinc-700 rounded-full flex items-center justify-center">
                     <User size={16} />
                   </div>
-                  <span className="text-sm font-medium text-gray-700">Customer User</span>
+                  <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Customer User</span>
                 </div>
               </div>
             </div>
@@ -470,7 +755,7 @@ export default function SettingsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
               {/* Settings Navigation */}
               <div className="lg:col-span-1">
-                <div className="card">
+                <div className="card dark:bg-zinc-900 dark:border-zinc-800">
                   <nav className="space-y-2">
                     {settingsSections.map((section) => {
                       const Icon = section.icon;
@@ -480,8 +765,8 @@ export default function SettingsPage() {
                           onClick={() => setActiveSection(section.id)}
                           className={`w-full flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200 ${
                             activeSection === section.id
-                              ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600' 
-                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                              ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600 dark:bg-primary-900 dark:text-primary-300 dark:border-primary-400' 
+                              : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
                           }`}
                         >
                           <Icon size={20} />
@@ -495,7 +780,7 @@ export default function SettingsPage() {
 
               {/* Settings Content */}
               <div className="lg:col-span-3">
-                <div className="card">
+                <div className="card dark:bg-zinc-900 dark:border-zinc-800">
                   {renderActiveSection()}
                 </div>
               </div>

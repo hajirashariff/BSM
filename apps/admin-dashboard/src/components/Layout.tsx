@@ -16,7 +16,6 @@ import {
   Search,
   User
 } from 'lucide-react';
-import ThemeToggle from './theme-toggle';
 
 const navItems = [
   { href: '/', label: 'Dashboard', icon: Home },
@@ -92,8 +91,6 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                   className="pl-10 pr-4 py-2 w-80 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                 />
               </div>
-              
-              <ThemeToggle />
               
               <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800">
                 <Bell size={20} />

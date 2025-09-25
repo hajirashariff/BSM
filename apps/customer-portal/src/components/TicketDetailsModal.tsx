@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { X, MessageSquare, Paperclip, Clock, User, Tag, AlertCircle, CheckCircle, XCircle, Edit, Trash2, Send } from 'lucide-react';
+import { Ticket, Comment, Attachment } from '../lib/ticketService';
 
 interface TicketDetailsModalProps {
   isOpen: boolean;
@@ -9,47 +10,19 @@ interface TicketDetailsModalProps {
   onAddComment: (ticketId: string, comment: string) => void;
 }
 
-interface Ticket {
-  id: string;
-  subject: string;
-  description: string;
-  category: string;
-  priority: string;
-  status: string;
-  assignee: string;
-  created: string;
-  updated: string;
-  comments: Comment[];
-  attachments: Attachment[];
-}
-
-interface Comment {
-  id: string;
-  author: string;
-  content: string;
-  timestamp: string;
-  isInternal: boolean;
-}
-
-interface Attachment {
-  id: string;
-  name: string;
-  size: number;
-  url: string;
-}
-
 const statusConfig = {
-  'Open': { color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-900', icon: AlertCircle },
-  'In Progress': { color: 'text-yellow-600', bgColor: 'bg-yellow-100 dark:bg-yellow-900', icon: Clock },
-  'Resolved': { color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-900', icon: CheckCircle },
-  'Closed': { color: 'text-gray-600', bgColor: 'bg-gray-100 dark:bg-gray-900', icon: XCircle },
+  'open': { color: 'text-blue-600', bgColor: 'bg-blue-100 dark:bg-blue-900', icon: AlertCircle, label: 'Open' },
+  'in_progress': { color: 'text-yellow-600', bgColor: 'bg-yellow-100 dark:bg-yellow-900', icon: Clock, label: 'In Progress' },
+  'pending': { color: 'text-orange-600', bgColor: 'bg-orange-100 dark:bg-orange-900', icon: Clock, label: 'Pending' },
+  'resolved': { color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-900', icon: CheckCircle, label: 'Resolved' },
+  'closed': { color: 'text-gray-600', bgColor: 'bg-gray-100 dark:bg-gray-900', icon: XCircle, label: 'Closed' },
 };
 
 const priorityConfig = {
-  'Low': { color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-900' },
-  'Medium': { color: 'text-yellow-600', bgColor: 'bg-yellow-100 dark:bg-yellow-900' },
-  'High': { color: 'text-orange-600', bgColor: 'bg-orange-100 dark:bg-orange-900' },
-  'Urgent': { color: 'text-red-600', bgColor: 'bg-red-100 dark:bg-red-900' },
+  'low': { color: 'text-green-600', bgColor: 'bg-green-100 dark:bg-green-900', label: 'Low' },
+  'medium': { color: 'text-yellow-600', bgColor: 'bg-yellow-100 dark:bg-yellow-900', label: 'Medium' },
+  'high': { color: 'text-orange-600', bgColor: 'bg-orange-100 dark:bg-orange-900', label: 'High' },
+  'urgent': { color: 'text-red-600', bgColor: 'bg-red-100 dark:bg-red-900', label: 'Urgent' },
 };
 
 export default function TicketDetailsModal({ isOpen, onClose, ticket, onUpdate, onAddComment }: TicketDetailsModalProps) {
@@ -126,10 +99,10 @@ export default function TicketDetailsModal({ isOpen, onClose, ticket, onUpdate, 
                 )}
               </h2>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${statusInfo.bgColor} ${statusInfo.color}`}>
-                {ticket.status}
+                {statusInfo.label}
               </span>
               <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityInfo.bgColor} ${priorityInfo.color}`}>
-                {ticket.priority}
+                {priorityInfo.label}
               </span>
             </div>
             <div className="flex items-center space-x-2">
@@ -181,14 +154,14 @@ export default function TicketDetailsModal({ isOpen, onClose, ticket, onUpdate, 
                 <User size={16} className="text-gray-500 dark:text-zinc-400" />
                 <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Assignee</span>
               </div>
-              <p className="text-sm text-gray-900 dark:text-zinc-100">{ticket.assignee}</p>
+              <p className="text-sm text-gray-900 dark:text-zinc-100">{ticket.assignee || 'Unassigned'}</p>
             </div>
             <div className="bg-gray-50 dark:bg-zinc-800 p-4 rounded-lg">
               <div className="flex items-center space-x-2 mb-2">
                 <Clock size={16} className="text-gray-500 dark:text-zinc-400" />
                 <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Created</span>
               </div>
-              <p className="text-sm text-gray-900 dark:text-zinc-100">{formatDate(ticket.created)}</p>
+              <p className="text-sm text-gray-900 dark:text-zinc-100">{formatDate(ticket.createdAt)}</p>
             </div>
           </div>
 
