@@ -1,3 +1,0 @@
-# Knowledge Base Django App
-
-

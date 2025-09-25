@@ -29,7 +29,7 @@ const accountData = [
     size: 'Enterprise',
     health: 92,
     healthTrend: 'up',
-    revenue: '$2.4M',
+    revenue: '₹19.9Cr',
     renewal: '2024-12-15',
     status: 'Active',
     tickets: 3,
@@ -52,7 +52,7 @@ const accountData = [
     size: 'Mid-Market',
     health: 78,
     healthTrend: 'down',
-    revenue: '$890K',
+    revenue: '₹7.4Cr',
     renewal: '2025-03-20',
     status: 'At Risk',
     tickets: 7,
@@ -74,7 +74,7 @@ const accountData = [
     size: 'Enterprise',
     health: 85,
     healthTrend: 'stable',
-    revenue: '$1.8M',
+    revenue: '₹14.9Cr',
     renewal: '2024-11-30',
     status: 'Active',
     tickets: 2,
@@ -97,7 +97,7 @@ const accountData = [
     size: 'Enterprise',
     health: 95,
     healthTrend: 'up',
-    revenue: '$3.2M',
+    revenue: '₹26.6Cr',
     renewal: '2025-01-10',
     status: 'Champion',
     tickets: 1,
@@ -141,7 +141,7 @@ export default function AccountsPage() {
     return matchesStatus && matchesSearch;
   });
 
-  const totalRevenue = accountData.reduce((sum, acc) => sum + parseFloat(acc.revenue.replace('$', '').replace('M', '')), 0);
+  const totalRevenue = accountData.reduce((sum, acc) => sum + parseFloat(acc.revenue.replace('₹', '').replace('Cr', '')), 0);
   const avgHealth = Math.round(accountData.reduce((sum, acc) => sum + acc.health, 0) / accountData.length);
   const renewalRisk = accountData.filter(acc => acc.status === 'At Risk' || acc.status === 'Critical').length;
 
@@ -165,7 +165,7 @@ export default function AccountsPage() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-medium text-gray-600">Total Revenue</p>
-              <p className="text-2xl font-bold text-gray-900">${totalRevenue.toFixed(1)}M</p>
+              <p className="text-2xl font-bold text-gray-900">₹{totalRevenue.toFixed(1)}Cr</p>
               <p className="text-sm text-green-600">+12% from last quarter</p>
             </div>
             <div className="p-3 rounded-lg bg-green-50">
@@ -228,7 +228,7 @@ export default function AccountsPage() {
               <Target className="text-green-600" size={16} />
               <span className="font-medium">Upsell Opportunities</span>
             </div>
-            <p className="text-sm text-gray-600">$1.2M potential revenue identified</p>
+            <p className="text-sm text-gray-600">₹10.0Cr potential revenue identified</p>
           </div>
           <div className="bg-white p-4 rounded-lg">
             <div className="flex items-center space-x-2 mb-2">

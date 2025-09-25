@@ -318,11 +318,11 @@ export default function WorkflowsPage() {
                 <Icon size={16} />
                 <span>{tab.label}</span>
               </button>
-                        );
-                      })}
+            );
+          })}
         </nav>
-                </div>
-                
+      </div>
+      
       {/* Tab Content */}
       <div className="min-h-screen">
         {renderTabContent()}
@@ -330,6 +330,3 @@ export default function WorkflowsPage() {
     </div>
   );
 }
-
-
-

@@ -262,80 +262,80 @@ export default function ExecutionMonitoring() {
 
       {/* KPI Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-6">
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Executions</p>
-              <p className="text-2xl font-bold text-gray-900">{totalExecutions}</p>
+        <div className="card min-h-[120px]">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-gray-600 mb-1">Total Executions</p>
+              <p className="text-2xl font-bold text-gray-900 mb-1">{totalExecutions}</p>
               <p className="text-sm text-blue-600">Today</p>
             </div>
-            <div className="p-3 rounded-lg bg-blue-50">
-              <Activity className="text-blue-600" size={24} />
+            <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Activity className="text-blue-600" size={20} />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Running</p>
-              <p className="text-2xl font-bold text-gray-900">{runningExecutions}</p>
+        <div className="card min-h-[120px]">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-gray-600 mb-1">Running</p>
+              <p className="text-2xl font-bold text-gray-900 mb-1">{runningExecutions}</p>
               <p className="text-sm text-blue-600">Active now</p>
             </div>
-            <div className="p-3 rounded-lg bg-blue-50">
-              <Play className="text-blue-600" size={24} />
+            <div className="w-12 h-12 rounded-lg bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <Play className="text-blue-600" size={20} />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Completed</p>
-              <p className="text-2xl font-bold text-gray-900">{completedExecutions}</p>
+        <div className="card min-h-[120px]">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-gray-600 mb-1">Completed</p>
+              <p className="text-2xl font-bold text-gray-900 mb-1">{completedExecutions}</p>
               <p className="text-sm text-green-600">Success</p>
             </div>
-            <div className="p-3 rounded-lg bg-green-50">
-              <CheckCircle className="text-green-600" size={24} />
+            <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+              <CheckCircle className="text-green-600" size={20} />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Failed</p>
-              <p className="text-2xl font-bold text-gray-900">{failedExecutions}</p>
+        <div className="card min-h-[120px]">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-gray-600 mb-1">Failed</p>
+              <p className="text-2xl font-bold text-gray-900 mb-1">{failedExecutions}</p>
               <p className="text-sm text-red-600">Errors</p>
             </div>
-            <div className="p-3 rounded-lg bg-red-50">
-              <XCircle className="text-red-600" size={24} />
+            <div className="w-12 h-12 rounded-lg bg-red-50 flex items-center justify-center flex-shrink-0">
+              <XCircle className="text-red-600" size={20} />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Success Rate</p>
-              <p className="text-2xl font-bold text-gray-900">{avgSuccessRate}%</p>
+        <div className="card min-h-[120px]">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-gray-600 mb-1">Success Rate</p>
+              <p className="text-2xl font-bold text-gray-900 mb-1">{avgSuccessRate}%</p>
               <p className="text-sm text-green-600">Average</p>
             </div>
-            <div className="p-3 rounded-lg bg-green-50">
-              <Target className="text-green-600" size={24} />
+            <div className="w-12 h-12 rounded-lg bg-green-50 flex items-center justify-center flex-shrink-0">
+              <Target className="text-green-600" size={20} />
             </div>
           </div>
         </div>
         
-        <div className="card">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-medium text-gray-600">Total Cost</p>
-              <p className="text-2xl font-bold text-gray-900">${totalCost.toFixed(2)}</p>
+        <div className="card min-h-[120px]">
+          <div className="flex items-center justify-between h-full">
+            <div className="flex-1 pr-4">
+              <p className="text-sm font-medium text-gray-600 mb-1">Total Cost</p>
+              <p className="text-2xl font-bold text-gray-900 mb-1">${totalCost.toFixed(2)}</p>
               <p className="text-sm text-gray-600">Today</p>
             </div>
-            <div className="p-3 rounded-lg bg-gray-50">
-              <DollarSign className="text-gray-600" size={24} />
+            <div className="w-12 h-12 rounded-lg bg-gray-50 flex items-center justify-center flex-shrink-0">
+              <DollarSign className="text-gray-600" size={20} />
             </div>
           </div>
         </div>
