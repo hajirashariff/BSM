@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../components/ui/badge";
 import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 
 export type Priority = "low" | "medium" | "high" | "critical";

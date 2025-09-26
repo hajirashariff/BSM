@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
-import TopNavigation from '@/components/TopNavigation';
+import ModernLayout from '../components/ModernLayout';
 import { 
   Plus,
   Clock,
@@ -120,21 +120,13 @@ export default function Services() {
   };
 
   return (
-    <>
+    <ModernLayout>
       <Head>
         <title>Services - BSM Customer Portal</title>
         <meta name="description" content="View available services and their status" />
       </Head>
 
-      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
-        {/* Top Navigation */}
-        <TopNavigation 
-          onSearchChange={setSearchTerm}
-          notificationCount={3}
-        />
-
-        {/* Main Content */}
-        <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Page Header */}
           <div className="bg-white shadow-sm border-b border-gray-200 px-6 py-4 dark:bg-zinc-900 dark:border-zinc-800">
             <div className="flex items-center justify-between">
@@ -258,8 +250,7 @@ export default function Services() {
               </div>
             </div>
           </main>
-        </div>
       </div>
-    </>
+    </ModernLayout>
   );
 }
