@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "../components/ui/badge";
 import { CheckCircle, Clock, AlertCircle, XCircle, Pause } from "lucide-react";
 
 export type TicketStatus = "open" | "in_progress" | "resolved" | "closed" | "on_hold";

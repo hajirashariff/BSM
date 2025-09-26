@@ -1,7 +1,7 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-// import DashboardMetricCard from "@/components/dashboard-metric-card";
-// import TicketCard, { Ticket } from "@/components/ticket-card";
+import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
+import { Button } from "../components/ui/button";
+// import DashboardMetricCard from "../components/dashboard-metric-card";
+// import TicketCard, { Ticket } from "../components/ticket-card";
 import { 
   Ticket as TicketIcon, 
   Clock, 

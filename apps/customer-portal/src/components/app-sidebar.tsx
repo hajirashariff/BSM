@@ -8,7 +8,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-} from "@/components/ui/sidebar";
+} from "../components/ui/sidebar";
 
 const menuItems = [
   { title: "Home", url: "/", icon: Home },
