@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
+import Head from 'next/head';
+import Script from 'next/script';
 import { useAuth } from '../contexts/AuthContext';
 import { Eye, EyeOff, Lock, Mail, AlertCircle, Loader2, CheckCircle, User, Shield } from 'lucide-react';
 
@@ -20,6 +22,21 @@ export default function LoginPage() {
   
   const router = useRouter();
   const { signIn } = useAuth();
+
+  // Load Google API script
+  useEffect(() => {
+    const loadGoogleAPI = () => {
+      if (typeof window !== 'undefined' && !window.google) {
+        const script = document.createElement('script');
+        script.src = 'https://accounts.google.com/gsi/client';
+        script.async = true;
+        script.defer = true;
+        document.head.appendChild(script);
+      }
+    };
+
+    loadGoogleAPI();
+  }, []);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value, type } = e.target;
@@ -91,14 +108,139 @@ export default function LoginPage() {
 
   const handleGoogleAuth = async () => {
     try {
-      setError('Google authentication is not available in demo mode. Please use email/password login.');
+      setLoading(true);
+      setError('');
+      setSuccess('');
+
+      // Check if Google API is available
+      if (typeof window !== 'undefined' && window.google) {
+        // Use Google Identity Services
+        const client = window.google.accounts.oauth2.initTokenClient({
+          client_id: '301055350173-9up9t5job4gssg2c0dtt4m4rge2nlnvs.apps.googleusercontent.com',
+          scope: 'email profile',
+          callback: async (response: any) => {
+            try {
+              if (response.access_token) {
+                // Send token to backend for verification
+                const backendResponse = await fetch('http://localhost:8000/api/ai_services/auth/google/', {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    access_token: response.access_token,
+                    account_type: accountType
+                  })
+                });
+
+                const result = await backendResponse.json();
+
+                if (result.success) {
+                  setSuccess(`Successfully authenticated with Google as ${accountType}!`);
+                  
+                  // Store user data in localStorage (in real app, use proper state management)
+                  localStorage.setItem('user', JSON.stringify(result.user));
+                  localStorage.setItem('token', result.token);
+                  
+                  // Redirect based on account type
+                  setTimeout(() => {
+                    if (accountType === 'Admin') {
+                      router.push('/admin');
+                    } else {
+                      router.push('/customer-dashboard');
+                    }
+                  }, 1500);
+                } else {
+                  setError(result.error || 'Google authentication failed');
+                }
+              } else {
+                setError('Failed to get access token from Google');
+              }
+            } catch (err: any) {
+              setError('Failed to authenticate with backend');
+            } finally {
+              setLoading(false);
+            }
+          }
+        });
+
+        client.requestAccessToken();
+      } else {
+        // Fallback: Use popup window approach
+        const googleAuthUrl = `https://accounts.google.com/oauth/authorize?` +
+          `client_id=301055350173-9up9t5job4gssg2c0dtt4m4rge2nlnvs.apps.googleusercontent.com&` +
+          `redirect_uri=${encodeURIComponent(`${window.location.origin}/auth/google/callback`)}&` +
+          `scope=email profile&` +
+          `response_type=token&` +
+          `state=${accountType}`;
+
+        const popup = window.open(googleAuthUrl, 'googleAuth', 'width=500,height=600');
+        
+        if (!popup) {
+          setError('Please allow popups for Google authentication');
+          setLoading(false);
+          return;
+        }
+
+        // Listen for popup response
+        const checkClosed = setInterval(() => {
+          if (popup.closed) {
+            clearInterval(checkClosed);
+            setLoading(false);
+          }
+        }, 1000);
+
+        // Listen for message from popup
+        const messageListener = (event: MessageEvent) => {
+          if (event.origin !== window.location.origin) return;
+          
+          if (event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageListener);
+            popup.close();
+            
+            // Handle successful authentication
+            setSuccess(`Successfully authenticated with Google as ${accountType}!`);
+            localStorage.setItem('user', JSON.stringify(event.data.user));
+            localStorage.setItem('token', event.data.token);
+            
+            setTimeout(() => {
+              if (accountType === 'Admin') {
+                router.push('/admin');
+              } else {
+                router.push('/customer-dashboard');
+              }
+            }, 1500);
+            
+            setLoading(false);
+          } else if (event.data.type === 'GOOGLE_AUTH_ERROR') {
+            clearInterval(checkClosed);
+            window.removeEventListener('message', messageListener);
+            popup.close();
+            setError(event.data.error);
+            setLoading(false);
+          }
+        };
+
+        window.addEventListener('message', messageListener);
+      }
     } catch (err: any) {
-      setError(err.message);
+      setError('Google authentication failed. Please try again.');
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen flex">
+    <>
+      <Head>
+        <title>BSM Pro - Login</title>
+        <meta name="description" content="Login to BSM Pro platform" />
+      </Head>
+      <Script
+        src="https://accounts.google.com/gsi/client"
+        strategy="beforeInteractive"
+      />
+      <div className="min-h-screen flex">
       {/* Left Column - Authentication Form */}
       <div className="flex-1 flex items-center justify-center px-4 sm:px-6 lg:px-8 bg-white">
         <div className="max-w-md w-full space-y-8">
@@ -382,5 +524,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </>
   );
 }

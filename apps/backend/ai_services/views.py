@@ -5,6 +5,8 @@ from rest_framework import status
 from django.http import JsonResponse
 import json
 import logging
+import requests
+from django.conf import settings
 from .services import ticket_ai, account_ai, knowledge_ai, workflow_ai
 from .models import AIModel, AIPrediction, AIInsight
 
@@ -319,6 +321,125 @@ def ai_health_check(request):
         logger.error(f"Error in AI health check: {e}")
         return Response(
             {'error': 'AI services health check failed'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def google_auth(request):
+    """Google OAuth authentication endpoint"""
+    try:
+        data = request.data
+        access_token = data.get('access_token')
+        account_type = data.get('account_type', 'Customer')  # Customer or Admin
+        
+        if not access_token:
+            return Response(
+                {'error': 'Access token is required'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Verify the access token with Google
+        google_response = requests.get(
+            f'https://www.googleapis.com/oauth2/v2/userinfo?access_token={access_token}'
+        )
+        
+        if google_response.status_code != 200:
+            return Response(
+                {'error': 'Invalid access token'}, 
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+        
+        google_data = google_response.json()
+        
+        # Extract user information
+        user_info = {
+            'id': google_data.get('id'),
+            'email': google_data.get('email'),
+            'name': google_data.get('name'),
+            'picture': google_data.get('picture'),
+            'verified_email': google_data.get('verified_email', False)
+        }
+        
+        # Check if email is verified
+        if not user_info['verified_email']:
+            return Response(
+                {'error': 'Email not verified with Google'}, 
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # In a real application, you would:
+        # 1. Check if user exists in your database
+        # 2. Create user if doesn't exist
+        # 3. Generate JWT token for your application
+        # 4. Return user data and token
+        
+        # For demo purposes, we'll simulate a successful login
+        # You can replace this with actual user creation/login logic
+        
+        # Mock user data based on account type
+        if account_type == 'Admin':
+            # Check if email is in admin list (in real app, check database)
+            admin_emails = ['admin@example.com', 'admin@bsm.com', 'preetam@bsm.com', 'preetamkumar@gmail.com']
+            if user_info['email'] not in admin_emails:
+                return Response(
+                    {'error': 'This email is not authorized for admin access'}, 
+                    status=status.HTTP_403_FORBIDDEN
+                )
+        
+        # Generate mock JWT token (in real app, use proper JWT library)
+        mock_token = f"mock_jwt_token_{user_info['id']}_{account_type}"
+        
+        return Response({
+            'success': True,
+            'user': {
+                'id': user_info['id'],
+                'email': user_info['email'],
+                'name': user_info['name'],
+                'picture': user_info['picture'],
+                'account_type': account_type,
+                'is_verified': True
+            },
+            'token': mock_token,
+            'message': f'Successfully authenticated as {account_type}'
+        })
+        
+    except requests.RequestException as e:
+        logger.error(f"Error verifying Google token: {e}")
+        return Response(
+            {'error': 'Failed to verify Google token'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    except Exception as e:
+        logger.error(f"Error in Google authentication: {e}")
+        return Response(
+            {'error': 'Authentication failed'}, 
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def google_auth_config(request):
+    """Get Google OAuth configuration for frontend"""
+    try:
+        # In a real application, these would come from environment variables
+        config = {
+            'client_id': '301055350173-9up9t5job4gssg2c0dtt4m4rge2nlnvs.apps.googleusercontent.com',
+            'redirect_uri': 'http://localhost:3001/auth/google/callback',
+            'scope': 'email profile',
+            'response_type': 'code'
+        }
+        
+        return Response({
+            'success': True,
+            'config': config,
+            'message': 'Google OAuth configuration retrieved'
+        })
+        
+    except Exception as e:
+        logger.error(f"Error getting Google config: {e}")
+        return Response(
+            {'error': 'Failed to get Google configuration'}, 
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
 

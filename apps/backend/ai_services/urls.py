@@ -15,6 +15,10 @@ urlpatterns = [
     path('models/', views.get_ai_models, name='get_ai_models'),
     path('predictions/', views.get_ai_predictions, name='get_ai_predictions'),
     
+    # Authentication Endpoints
+    path('auth/google/', views.google_auth, name='google_auth'),
+    path('auth/google/config/', views.google_auth_config, name='google_auth_config'),
+    
     # Health Check
     path('health/', views.ai_health_check, name='ai_health_check'),
 ]
