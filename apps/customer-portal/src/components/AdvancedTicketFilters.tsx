@@ -51,7 +51,7 @@ export default function AdvancedTicketFilters({ isOpen, onClose, onApplyFilters,
   };
 
   const handleClear = () => {
-    const clearedFilters: FilterState = {
+    const clearedFilters: TicketFilters = {
       status: [],
       priority: [],
       category: [],
