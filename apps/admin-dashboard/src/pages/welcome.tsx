@@ -219,10 +219,10 @@ const WelcomePage = () => {
                       <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
                       <div className="w-3 h-3 bg-green-500 rounded-full"></div>
                     </div>
-                    <div className="text-sm text-gray-500 font-medium">BSM Pro Dashboard</div>
+                    <div className="text-sm text-gray-500 font-medium">BSM Pro Portal</div>
                   </div>
                   
-                  {/* Dashboard Stats */}
+                  {/* Portal Stats */}
                   <div className="grid grid-cols-2 gap-4">
                     <motion.div 
                       className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-xl p-4 border border-blue-200"
@@ -613,7 +613,7 @@ const WelcomePage = () => {
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-gray-900">Analytics Dashboard</h3>
+                  <h3 className="text-lg font-semibold text-gray-900">Analytics Panel</h3>
                   <TrendingUp className="w-5 h-5 text-green-500" />
                 </div>
                 

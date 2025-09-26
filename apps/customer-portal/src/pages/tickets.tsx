@@ -44,7 +44,7 @@ import AdvancedTicketFilters from '../components/AdvancedTicketFilters';
 import FilterDropdown from '../components/FilterDropdown';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: HomeIcon },
+  { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/tickets', label: 'Support Tickets', icon: TicketIcon },
   { href: '/help', label: 'Help Center', icon: HelpCircle },
   { href: '/account', label: 'My Account', icon: User },

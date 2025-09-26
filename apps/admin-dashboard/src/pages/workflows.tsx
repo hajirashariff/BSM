@@ -216,7 +216,7 @@ export default function WorkflowsPage() {
   const [activeTab, setActiveTab] = useState('dashboard');
 
   const tabs = [
-    { id: 'dashboard', label: 'Dashboard', icon: BarChart3 },
+    { id: 'dashboard', label: 'Overview', icon: BarChart3 },
     { id: 'builder', label: 'Workflow Builder', icon: Workflow },
     { id: 'executions', label: 'Executions', icon: Activity },
     { id: 'templates', label: 'Templates', icon: Layers },
@@ -281,7 +281,6 @@ export default function WorkflowsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Workflow Management System</h1>
           <p className="text-gray-600">Enterprise-grade automation platform with drag-and-drop workflow builder</p>
         </div>
         <div className="flex items-center space-x-3">

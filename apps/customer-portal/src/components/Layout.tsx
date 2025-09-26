@@ -8,7 +8,7 @@ interface LayoutProps {
 
 export default function Layout({ children, activeTab, setActiveTab }: LayoutProps) {
   const navigationItems = [
-    { id: 'dashboard', label: 'Dashboard', icon: '📊' },
+    { id: 'dashboard', label: 'Home', icon: '📊' },
     { id: 'services', label: 'Services', icon: '⚙️' },
     { id: 'incidents', label: 'Incidents', icon: '🚨' },
     { id: 'knowledge', label: 'Knowledge Base', icon: '📚' },
@@ -129,7 +129,7 @@ export default function Layout({ children, activeTab, setActiveTab }: LayoutProp
                   🔍 Filters
                 </button>
                 <button className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-lg">
-                  📊 Dashboards
+                  📊 Home
                 </button>
                 <button className="w-full text-left px-3 py-2 text-sm text-gray-300 hover:bg-gray-700 rounded-lg">
                   ⚙️ Operations

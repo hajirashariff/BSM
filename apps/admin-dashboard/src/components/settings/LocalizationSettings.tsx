@@ -187,7 +187,7 @@ export default function LocalizationSettings() {
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">Current Language</h4>
               <div className="space-y-2 text-sm">
-                <p><strong>Dashboard:</strong> Dashboard</p>
+                <p><strong>Home:</strong> Home</p>
                 <p><strong>Tickets:</strong> Tickets</p>
                 <p><strong>Settings:</strong> Settings</p>
                 <p><strong>Users:</strong> Users</p>
@@ -196,7 +196,7 @@ export default function LocalizationSettings() {
             <div>
               <h4 className="text-sm font-medium text-gray-700 mb-2">Selected Language Preview</h4>
               <div className="space-y-2 text-sm">
-                <p><strong>Dashboard:</strong> {selectedLanguage === 'hi' ? 'डैशबोर्ड' : selectedLanguage === 'ta' ? 'டாஷ்போர்டு' : 'Dashboard'}</p>
+                <p><strong>Home:</strong> {selectedLanguage === 'hi' ? 'होम' : selectedLanguage === 'ta' ? 'வீடு' : 'Home'}</p>
                 <p><strong>Tickets:</strong> {selectedLanguage === 'hi' ? 'टिकट' : selectedLanguage === 'ta' ? 'டிக்கெட்' : 'Tickets'}</p>
                 <p><strong>Settings:</strong> {selectedLanguage === 'hi' ? 'सेटिंग्स' : selectedLanguage === 'ta' ? 'அமைப்புகள்' : 'Settings'}</p>
                 <p><strong>Users:</strong> {selectedLanguage === 'hi' ? 'उपयोगकर्ता' : selectedLanguage === 'ta' ? 'பயனர்கள்' : 'Users'}</p>

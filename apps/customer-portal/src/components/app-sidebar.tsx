@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/sidebar";
 
 const menuItems = [
-  { title: "Dashboard", url: "/", icon: Home },
+  { title: "Home", url: "/", icon: Home },
   { title: "My Tickets", url: "/tickets", icon: Ticket },
   { title: "Create Ticket", url: "/tickets/new", icon: Plus },
   { title: "Service Catalog", url: "/services", icon: BarChart3 },

@@ -1,5 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { Settings, Plus, Edit3, Trash2, Play, Pause, Eye, Copy, Save, AlertCircle, CheckCircle, Clock, Filter, Key, Shield, Zap, MessageCircle, Send, Bot, User } from 'lucide-react';
+import { Settings, Plus, Edit3, Trash2, Play, Pause, Eye, Copy, Save, AlertCircle, CheckCircle, Clock, Filter, Key, Shield, Zap, MessageCircle, Send, Bot, User, History, GitBranch, ArrowRight, ArrowDown, RotateCcw } from 'lucide-react';
 
 type RuleCondition = {
   id: string;
@@ -13,6 +13,42 @@ type RuleAction = {
   type: 'approve' | 'reject' | 'assign' | 'escalate' | 'notify' | 'set_priority';
   value: string;
   target?: string;
+};
+
+type RuleExecution = {
+  id: string;
+  timestamp: string; // ISO
+  status: 'Success' | 'Failure';
+  reason?: string;
+  durationMs?: number;
+};
+
+type RuleVersion = {
+  id: string;
+  version: string;
+  ruleId: string;
+  name: string;
+  description: string;
+  category: 'Ticket Approval' | 'Priority Assignment' | 'Auto Assignment' | 'Escalation' | 'Notification' | 'Custom';
+  status: 'Active' | 'Inactive' | 'Draft';
+  priority: number;
+  conditions: RuleCondition[];
+  actions: RuleAction[];
+  createdAt: string;
+  updatedAt: string;
+  lastExecuted?: string;
+  executionCount: number;
+  successRate: number;
+  modifiedBy: string;
+  changeReason: string;
+};
+
+// Lightweight analytics container
+type RuleAnalytics = {
+  executionsByDay: { date: string; count: number }[];
+  successRateByDay: { date: string; rate: number }[];
+  lastExecutions: RuleExecution[];
+  failuresByReason: { reason: string; count: number }[];
 };
 
 type Rule = {
@@ -29,6 +65,10 @@ type Rule = {
   lastExecuted?: string;
   executionCount: number;
   successRate: number;
+  currentVersion: string;
+  versions: RuleVersion[];
+  // Optional analytics (mocked if absent)
+  analytics?: RuleAnalytics;
 };
 
 // Mock data for rules
@@ -53,7 +93,82 @@ const initialRules: Rule[] = [
     updatedAt: '2024-01-20T14:22:00Z',
     lastExecuted: '2024-01-25T09:15:00Z',
     executionCount: 45,
-    successRate: 98.2
+    successRate: 98.2,
+    currentVersion: '1.3',
+    versions: [
+      {
+        id: 'v1',
+        version: '1.0',
+        ruleId: 'R-001',
+        name: 'High Priority Ticket Auto-Approval',
+        description: 'Automatically approve high priority tickets from VIP customers',
+        category: 'Ticket Approval',
+        status: 'Active',
+        priority: 1,
+        conditions: [
+          { id: 'c1', field: 'priority', operator: 'equals', value: 'High' },
+          { id: 'c2', field: 'customer_type', operator: 'equals', value: 'VIP' }
+        ],
+        actions: [
+          { id: 'a1', type: 'approve', value: 'auto' }
+        ],
+        createdAt: '2024-01-15T10:30:00Z',
+        updatedAt: '2024-01-15T10:30:00Z',
+        executionCount: 12,
+        successRate: 95.0,
+        modifiedBy: 'admin@company.com',
+        changeReason: 'Initial rule creation'
+      },
+      {
+        id: 'v2',
+        version: '1.1',
+        ruleId: 'R-001',
+        name: 'High Priority Ticket Auto-Approval',
+        description: 'Automatically approve high priority tickets from VIP customers',
+        category: 'Ticket Approval',
+        status: 'Active',
+        priority: 1,
+        conditions: [
+          { id: 'c1', field: 'priority', operator: 'equals', value: 'High' },
+          { id: 'c2', field: 'customer_type', operator: 'equals', value: 'VIP' },
+          { id: 'c3', field: 'ticket_type', operator: 'equals', value: 'Service Request' }
+        ],
+        actions: [
+          { id: 'a1', type: 'approve', value: 'auto' }
+        ],
+        createdAt: '2024-01-18T14:15:00Z',
+        updatedAt: '2024-01-18T14:15:00Z',
+        executionCount: 28,
+        successRate: 97.1,
+        modifiedBy: 'admin@company.com',
+        changeReason: 'Added ticket type condition for better filtering'
+      },
+      {
+        id: 'v3',
+        version: '1.2',
+        ruleId: 'R-001',
+        name: 'High Priority Ticket Auto-Approval',
+        description: 'Automatically approve high priority tickets from VIP customers',
+        category: 'Ticket Approval',
+        status: 'Active',
+        priority: 1,
+        conditions: [
+          { id: 'c1', field: 'priority', operator: 'equals', value: 'High' },
+          { id: 'c2', field: 'customer_type', operator: 'equals', value: 'VIP' },
+          { id: 'c3', field: 'ticket_type', operator: 'equals', value: 'Service Request' }
+        ],
+        actions: [
+          { id: 'a1', type: 'approve', value: 'auto' },
+          { id: 'a2', type: 'notify', value: 'Customer notified of approval', target: 'customer' }
+        ],
+        createdAt: '2024-01-20T09:30:00Z',
+        updatedAt: '2024-01-20T09:30:00Z',
+        executionCount: 35,
+        successRate: 98.0,
+        modifiedBy: 'admin@company.com',
+        changeReason: 'Added customer notification action'
+      }
+    ]
   },
   {
     id: 'R-002',
@@ -74,7 +189,32 @@ const initialRules: Rule[] = [
     updatedAt: '2024-01-18T16:30:00Z',
     lastExecuted: '2024-01-25T11:45:00Z',
     executionCount: 12,
-    successRate: 100
+    successRate: 100,
+    currentVersion: '1.1',
+    versions: [
+      {
+        id: 'v4',
+        version: '1.0',
+        ruleId: 'R-002',
+        name: 'Security Issue Escalation',
+        description: 'Automatically escalate security-related tickets to security team',
+        category: 'Escalation',
+        status: 'Active',
+        priority: 2,
+        conditions: [
+          { id: 'c1', field: 'category', operator: 'contains', value: 'security' }
+        ],
+        actions: [
+          { id: 'a1', type: 'escalate', value: 'Security Team', target: 'security-team' }
+        ],
+        createdAt: '2024-01-10T08:45:00Z',
+        updatedAt: '2024-01-10T08:45:00Z',
+        executionCount: 5,
+        successRate: 100,
+        modifiedBy: 'admin@company.com',
+        changeReason: 'Initial rule creation'
+      }
+    ]
   },
   {
     id: 'R-003',
@@ -96,7 +236,35 @@ const initialRules: Rule[] = [
     updatedAt: '2024-01-22T10:15:00Z',
     lastExecuted: '2024-01-25T08:30:00Z',
     executionCount: 78,
-    successRate: 94.9
+    successRate: 94.9,
+    currentVersion: '1.0',
+    versions: [
+      {
+        id: 'v5',
+        version: '1.0',
+        ruleId: 'R-003',
+        name: 'Standard Service Request Approval',
+        description: 'Auto-approve standard service requests under $500',
+        category: 'Ticket Approval',
+        status: 'Active',
+        priority: 3,
+        conditions: [
+          { id: 'c1', field: 'ticket_type', operator: 'equals', value: 'Service Request' },
+          { id: 'c2', field: 'estimated_cost', operator: 'less_than', value: '500' },
+          { id: 'c3', field: 'complexity', operator: 'equals', value: 'Low' }
+        ],
+        actions: [
+          { id: 'a1', type: 'approve', value: 'auto' },
+          { id: 'a2', type: 'assign', value: 'Service Team', target: 'service-team' }
+        ],
+        createdAt: '2024-01-12T13:20:00Z',
+        updatedAt: '2024-01-12T13:20:00Z',
+        executionCount: 78,
+        successRate: 94.9,
+        modifiedBy: 'admin@company.com',
+        changeReason: 'Initial rule creation'
+      }
+    ]
   }
 ];
 
@@ -138,6 +306,58 @@ const API_ENDPOINTS = {
   RULE_VALIDATION: '/api/gemini-proxy',
   SMART_SUGGESTIONS: '/api/gemini-proxy'
 };
+
+// Helper to generate simple mock analytics so UI works out of the box
+function generateAnalytics(rule: Rule): RuleAnalytics {
+  const days = 14;
+  const today = new Date();
+  const executionsByDay = Array.from({ length: days }).map((_, i) => {
+    const d = new Date(today);
+    d.setDate(today.getDate() - (days - 1 - i));
+    const base = Math.max(1, Math.round(rule.executionCount / days));
+    const variance = Math.floor(Math.random() * 4) - 2;
+    return { date: d.toISOString().slice(0, 10), count: Math.max(0, base + variance) };
+  });
+  const successRateByDay = executionsByDay.map(({ date }) => ({
+    date,
+    rate: Math.min(100, Math.max(70, Math.round(rule.successRate + (Math.random() * 8 - 4))))
+  }));
+  const failureReasons = ['Condition mismatch', 'Target unavailable', 'Timeout', 'Invalid input'];
+  const lastExecutions: RuleExecution[] = Array.from({ length: 10 }).map((_, i) => {
+    const d = new Date(today);
+    d.setHours(today.getHours() - i * 6);
+    const failed = Math.random() < (100 - rule.successRate) / 100 * 0.6;
+    return {
+      id: `exec-${rule.id}-${i}`,
+      timestamp: d.toISOString(),
+      status: failed ? 'Failure' : 'Success',
+      reason: failed ? failureReasons[Math.floor(Math.random() * failureReasons.length)] : undefined,
+      durationMs: 300 + Math.floor(Math.random() * 900)
+    };
+  });
+  const failuresByReasonMap: Record<string, number> = {};
+  lastExecutions.filter(e => e.status === 'Failure').forEach(e => {
+    const r = e.reason || 'Unknown';
+    failuresByReasonMap[r] = (failuresByReasonMap[r] || 0) + 1;
+  });
+  const failuresByReason = Object.entries(failuresByReasonMap).map(([reason, count]) => ({ reason, count }));
+  return { executionsByDay, successRateByDay, lastExecutions, failuresByReason };
+}
+
+function MiniLineChart({ points, color = '#2563eb' }: { points: number[]; color?: string }) {
+  const width = 160;
+  const height = 48;
+  const max = Math.max(1, ...points);
+  const step = width / (points.length - 1 || 1);
+  const path = points
+    .map((p, i) => `${i === 0 ? 'M' : 'L'} ${i * step} ${height - (p / max) * height}`)
+    .join(' ');
+  return (
+    <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} className="overflow-visible">
+      <path d={path} fill="none" stroke={color} strokeWidth={2} />
+    </svg>
+  );
+}
 
 export default function RulesEnginePage() {
   const [rules, setRules] = useState<Rule[]>(initialRules);
@@ -696,7 +916,6 @@ What would you like to explore?`;
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Rule Based Decisions Engine</h1>
           <p className="text-gray-600 mt-1">Create and manage automated decision rules for ticket processing</p>
         </div>
         <button 
@@ -1147,6 +1366,10 @@ function RuleCard({
 function RuleDetails({ rule }: { rule: Rule }) {
   const [validationResult, setValidationResult] = useState<string>('');
   const [isValidating, setIsValidating] = useState(false);
+  const [showVersionHistory, setShowVersionHistory] = useState(false);
+  const [showVisualFlow, setShowVisualFlow] = useState(false);
+
+  const analytics = useMemo(() => rule.analytics ?? generateAnalytics(rule), [rule]);
 
   const validateRule = async () => {
     setIsValidating(true);
@@ -1199,6 +1422,94 @@ function RuleDetails({ rule }: { rule: Rule }) {
 
   return (
     <div className="space-y-6">
+      {/* Compact versioning toolbar directly under Rule Details header */}
+      <div className="flex items-center justify-between bg-white rounded-lg border border-gray-200 p-3">
+        <div className="flex items-center space-x-3">
+          <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-800">v{rule.currentVersion}</span>
+          <span className="text-xs text-gray-600">{rule.versions.length} versions</span>
+        </div>
+        <div className="flex items-center space-x-2">
+          <button
+            onClick={() => setShowVersionHistory(!showVersionHistory)}
+            className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+              showVersionHistory ? 'bg-blue-600 text-white' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+            }`}
+          >
+            History
+          </button>
+          <button
+            onClick={() => setShowVisualFlow(!showVisualFlow)}
+            className={`px-3 py-1.5 text-xs rounded-md transition-colors ${
+              showVisualFlow ? 'bg-purple-600 text-white' : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+            }`}
+          >
+            Flow
+          </button>
+        </div>
+      </div>
+
+      {/* Failure Analysis & Performance Trends */}
+      <div className="bg-white border border-gray-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-semibold text-gray-900">Failure Analysis & Performance Trends</h4>
+          <span className="text-xs text-gray-500">Last 14 days</span>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Failures by reason */}
+          <div className="col-span-1">
+            <div className="text-sm text-gray-700 mb-2 font-medium">Failures by Reason</div>
+            {analytics.failuresByReason.length === 0 ? (
+              <div className="text-xs text-gray-500">No recent failures</div>
+            ) : (
+              <div className="flex flex-wrap gap-2">
+                {analytics.failuresByReason.map(fr => (
+                  <span key={fr.reason} className="px-2 py-1 text-xs rounded-full bg-red-50 text-red-700 border border-red-200">
+                    {fr.reason}: {fr.count}
+                  </span>
+                ))}
+              </div>
+            )}
+          </div>
+          {/* Executions trend */}
+          <div>
+            <div className="text-sm text-gray-700 mb-2 font-medium">Total Executions</div>
+            <MiniLineChart points={analytics.executionsByDay.map(d => d.count)} color="#2563eb" />
+          </div>
+          {/* Success rate trend */}
+          <div>
+            <div className="text-sm text-gray-700 mb-2 font-medium">Avg Success Rate (%)</div>
+            <MiniLineChart points={analytics.successRateByDay.map(d => d.rate)} color="#16a34a" />
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="text-sm text-gray-700 mb-2 font-medium">Recent Executions</div>
+          <div className="overflow-x-auto">
+            <table className="min-w-full text-xs">
+              <thead>
+                <tr className="text-left text-gray-500">
+                  <th className="py-2 pr-4">Time</th>
+                  <th className="py-2 pr-4">Status</th>
+                  <th className="py-2 pr-4">Reason</th>
+                  <th className="py-2 pr-4">Duration</th>
+                </tr>
+              </thead>
+              <tbody>
+                {analytics.lastExecutions.map(exec => (
+                  <tr key={exec.id} className="border-t border-gray-100">
+                    <td className="py-2 pr-4 text-gray-700">{new Date(exec.timestamp).toLocaleString()}</td>
+                    <td className="py-2 pr-4">
+                      <span className={`px-2 py-1 rounded-full ${exec.status === 'Success' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{exec.status}</span>
+                    </td>
+                    <td className="py-2 pr-4 text-gray-600">{exec.reason || '-'}</td>
+                    <td className="py-2 pr-4 text-gray-600">{exec.durationMs ? `${exec.durationMs} ms` : '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
       {/* Rule Info */}
       <div>
         <div className="flex items-center justify-between mb-2">
@@ -1301,6 +1612,201 @@ function RuleDetails({ rule }: { rule: Rule }) {
             <span className="ml-2 font-medium">{new Date(rule.createdAt).toLocaleDateString()}</span>
           </div>
         </div>
+      </div>
+
+      {/* Rule Versioning & History */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center space-x-3">
+            <div className="p-2 bg-blue-100 rounded-lg">
+              <History className="w-5 h-5 text-blue-600" />
+            </div>
+            <div>
+              <h4 className="font-semibold text-gray-900">Rule Versioning & History</h4>
+              <p className="text-sm text-gray-600">Track changes, view history, and visualize rule flow</p>
+            </div>
+          </div>
+        </div>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <GitBranch className="w-4 h-4 text-green-600" />
+                <span className="font-medium text-sm">Version Info</span>
+              </div>
+              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded-full">
+                v{rule.currentVersion}
+              </span>
+            </div>
+            <div className="text-xs text-gray-600">
+              <div><span className="font-medium">Total Versions:</span> {rule.versions.length}</div>
+              <div><span className="font-medium">Last Modified:</span> {new Date(rule.updatedAt).toLocaleDateString()}</div>
+            </div>
+          </div>
+          
+          <div className="bg-white rounded-lg p-3 border border-gray-200">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center space-x-2">
+                <Eye className="w-4 h-4 text-purple-600" />
+                <span className="font-medium text-sm">Quick Actions</span>
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setShowVersionHistory(!showVersionHistory)}
+                className={`flex-1 px-3 py-2 text-xs rounded-lg transition-colors ${
+                  showVersionHistory 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                }`}
+              >
+                <History className="w-3 h-3 inline mr-1" />
+                {showVersionHistory ? 'Hide History' : 'View History'}
+              </button>
+              <button
+                onClick={() => setShowVisualFlow(!showVisualFlow)}
+                className={`flex-1 px-3 py-2 text-xs rounded-lg transition-colors ${
+                  showVisualFlow 
+                    ? 'bg-purple-600 text-white' 
+                    : 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+                }`}
+              >
+                <GitBranch className="w-3 h-3 inline mr-1" />
+                {showVisualFlow ? 'Hide Flow' : 'View Flow'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {showVersionHistory && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <History className="w-4 h-4 text-blue-600" />
+              <h5 className="font-medium text-gray-900">Version History</h5>
+            </div>
+            <div className="space-y-3 max-h-64 overflow-y-auto">
+              {rule.versions.map((version, index) => (
+                <div key={version.id} className="border border-gray-200 rounded-lg p-3 hover:bg-gray-50 transition-colors">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-medium text-sm">v{version.version}</span>
+                      {index === 0 && <span className="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Current</span>}
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <button className="text-blue-600 hover:text-blue-800 text-xs flex items-center space-x-1 px-2 py-1 rounded hover:bg-blue-50">
+                        <Eye size={12} />
+                        <span>View</span>
+                      </button>
+                      {index > 0 && (
+                        <button className="text-orange-600 hover:text-orange-800 text-xs flex items-center space-x-1 px-2 py-1 rounded hover:bg-orange-50">
+                          <RotateCcw size={12} />
+                          <span>Revert</span>
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-xs text-gray-500 space-y-1">
+                    <div><span className="font-medium">Modified by:</span> {version.modifiedBy}</div>
+                    <div><span className="font-medium">Reason:</span> {version.changeReason}</div>
+                    <div><span className="font-medium">Date:</span> {new Date(version.createdAt).toLocaleString()}</div>
+                    <div><span className="font-medium">Changes:</span> {version.conditions.length} conditions, {version.actions.length} actions</div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {showVisualFlow && (
+          <div className="bg-white rounded-lg border border-gray-200 p-4">
+            <div className="flex items-center space-x-2 mb-3">
+              <GitBranch className="w-4 h-4 text-purple-600" />
+              <h5 className="font-medium text-gray-900">Visual Rule Flow</h5>
+            </div>
+            <div className="space-y-3">
+              {/* Start Node */}
+              <div className="flex items-center justify-center">
+                <div className="bg-blue-100 text-blue-800 px-3 py-2 rounded-lg text-sm font-medium">
+                  Start
+                </div>
+              </div>
+              
+              {/* Conditions Flow */}
+              <div className="flex items-center justify-center">
+                <ArrowDown className="w-4 h-4 text-gray-400" />
+              </div>
+              
+              <div className="bg-white border border-gray-300 rounded-lg p-3">
+                <div className="text-sm font-medium text-gray-900 mb-2">IF Conditions</div>
+                <div className="space-y-2">
+                  {rule.conditions.map((condition, index) => {
+                    const field = fieldOptions.find(f => f.value === condition.field);
+                    return (
+                      <div key={condition.id} className="flex items-center space-x-2 text-xs">
+                        <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">
+                          {field?.label || condition.field}
+                        </div>
+                        <span className="text-gray-500">
+                          {operatorOptions.find(op => op.value === condition.operator)?.label}
+                        </span>
+                        <div className="bg-blue-100 text-blue-800 px-2 py-1 rounded">
+                          "{condition.value}"
+                        </div>
+                        {index < rule.conditions.length - 1 && (
+                          <span className="text-gray-400 font-medium">AND</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center">
+                <ArrowDown className="w-4 h-4 text-gray-400" />
+              </div>
+              
+              {/* Actions Flow */}
+              <div className="bg-white border border-gray-300 rounded-lg p-3">
+                <div className="text-sm font-medium text-gray-900 mb-2">THEN Actions</div>
+                <div className="space-y-2">
+                  {rule.actions.map((action, index) => {
+                    const actionType = actionTypes.find(a => a.value === action.type);
+                    return (
+                      <div key={action.id} className="flex items-center space-x-2 text-xs">
+                        <div className={`px-2 py-1 rounded text-white ${
+                          action.type === 'approve' ? 'bg-green-500' :
+                          action.type === 'reject' ? 'bg-red-500' :
+                          action.type === 'assign' ? 'bg-blue-500' :
+                          action.type === 'escalate' ? 'bg-orange-500' :
+                          action.type === 'notify' ? 'bg-purple-500' :
+                          'bg-gray-500'
+                        }`}>
+                          {actionType?.label}
+                        </div>
+                        <span className="text-gray-700">{action.value}</span>
+                        {action.target && (
+                          <span className="text-gray-500">→ {action.target}</span>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+              
+              <div className="flex items-center justify-center">
+                <ArrowDown className="w-4 h-4 text-gray-400" />
+              </div>
+              
+              {/* End Node */}
+              <div className="flex items-center justify-center">
+                <div className="bg-green-100 text-green-800 px-3 py-2 rounded-lg text-sm font-medium">
+                  End
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

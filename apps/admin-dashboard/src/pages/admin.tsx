@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
 import { useAuth } from '../contexts/AuthContext';
 import ProtectedRoute from '../components/ProtectedRoute';
 import { 
@@ -193,6 +194,7 @@ const getHealthColor = (score: number) => {
 
 export default function AdminDashboard() {
   const { user, signOut } = useAuth();
+  const router = useRouter();
   const [selectedTimeRange, setSelectedTimeRange] = useState('24h');
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [showAccountDetails, setShowAccountDetails] = useState<string | null>(null);
@@ -232,7 +234,7 @@ export default function AdminDashboard() {
       {/* Header */}
         <div className="flex items-center justify-between">
               <div>
-            <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Admin Panel</h1>
             <p className="text-gray-600 mt-1">Real-time insights and analytics</p>
               </div>
           <div className="flex items-center space-x-4">
@@ -493,27 +495,45 @@ export default function AdminDashboard() {
           </div>
           <div className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => router.push('/tickets')}
+                className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Plus className="w-6 h-6 text-blue-600" />
                 <span className="text-sm font-medium">New Ticket</span>
               </button>
-              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => router.push('/accounts')}
+                className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Building2 className="w-6 h-6 text-green-600" />
                 <span className="text-sm font-medium">Add Account</span>
               </button>
-              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => router.push('/assets')}
+                className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Server className="w-6 h-6 text-purple-600" />
                 <span className="text-sm font-medium">Add Asset</span>
               </button>
-              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => router.push('/workflows')}
+                className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Workflow className="w-6 h-6 text-orange-600" />
                 <span className="text-sm font-medium">Create Workflow</span>
               </button>
-              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => router.push('/users')}
+                className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <Users className="w-6 h-6 text-indigo-600" />
                 <span className="text-sm font-medium">Add User</span>
               </button>
-              <button className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+              <button 
+                onClick={() => router.push('/analytics')}
+                className="flex flex-col items-center space-y-2 p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+              >
                 <BarChart3 className="w-6 h-6 text-pink-600" />
                 <span className="text-sm font-medium">View Reports</span>
               </button>

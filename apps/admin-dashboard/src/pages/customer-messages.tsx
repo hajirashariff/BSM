@@ -130,10 +130,9 @@ export default function CustomerMessagesPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <div className="flex items-center">
               <MessageSquare className="mr-3 text-blue-600" size={32} />
-              Customer Messages
-            </h1>
+            </div>
             <p className="text-gray-600 mt-2">
               Manage customer inquiries, requirements, and service requests
             </p>

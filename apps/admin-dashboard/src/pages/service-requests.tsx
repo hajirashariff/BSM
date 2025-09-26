@@ -442,7 +442,7 @@ export default function ServiceRequestsPage() {
           action: 'View Assignment Analytics'
         },
         'escalation-prediction': {
-          title: 'Escalation Prediction Dashboard',
+          title: 'Escalation Prediction Panel',
           content: `• 3 tickets flagged for escalation
 • Risk level: Medium (down from High last week)
 • Average prediction accuracy: 92%
@@ -724,7 +724,7 @@ export default function ServiceRequestsPage() {
                 className="flex items-center text-gray-600 hover:text-blue-600 transition-colors"
               >
                 <ArrowLeft size={20} className="mr-2" />
-                <span className="font-medium">Back to Dashboard</span>
+                <span className="font-medium">Back to Home</span>
               </button>
               <div>
                 <h1 className="text-3xl font-bold text-gray-900">Service Request Management</h1>

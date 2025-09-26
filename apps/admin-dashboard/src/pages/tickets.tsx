@@ -327,7 +327,6 @@ export default function TicketsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Service Request Management</h1>
           <p className="text-gray-600">Multichannel intake, AI-powered triage, and intelligent routing</p>
         </div>
         <button 
@@ -638,7 +637,7 @@ export default function TicketsPage() {
       {/* AI Insights Modal */}
       {showInsights && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden">
+          <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[80vh] overflow-hidden flex flex-col">
             <div className="flex items-center justify-between p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-blue-50">
               <div className="flex items-center space-x-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
@@ -653,14 +652,14 @@ export default function TicketsPage() {
                 ×
               </button>
             </div>
-            <div className="p-6 overflow-y-auto max-h-[calc(80vh-120px)]">
+            <div className="p-6 overflow-y-auto flex-1">
               <div className="prose prose-sm max-w-none">
                 <div className="whitespace-pre-line text-gray-700 leading-relaxed">
                   {insights}
                 </div>
               </div>
             </div>
-            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50">
+            <div className="flex justify-end space-x-3 p-6 border-t border-gray-200 bg-gray-50 sticky bottom-0">
               <button
                 onClick={() => setShowInsights(false)}
                 className="btn-secondary"

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { BookOpen, FileText, Folder, TrendingUp, Eye, ThumbsUp, Search, Plus, Settings, BarChart3, CheckCircle2, Star, Edit } from 'lucide-react';
+import { BookOpen, FileText, Folder, TrendingUp, Eye, ThumbsUp, Search, Plus, BarChart3, CheckCircle2, Star, Edit } from 'lucide-react';
 
 const KnowledgePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -30,9 +30,7 @@ const KnowledgePage: React.FC = () => {
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'articles', label: 'Articles', icon: FileText },
-    { id: 'categories', label: 'Categories', icon: Folder },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'categories', label: 'Categories', icon: Folder }
   ];
 
   const renderOverview = () => (
@@ -79,6 +77,31 @@ const KnowledgePage: React.FC = () => {
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Feedback</p>
               <p className="text-2xl font-bold text-gray-900">{mockData.analytics.totalFeedback}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      {/* Moved Analytics Quick View into Overview */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Searches</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-900">how to setup account</span>
+              <span className="text-xs text-gray-500">3 results</span>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-900">billing issues</span>
+              <span className="text-xs text-gray-500">2 results</span>
+            </div>
+          </div>
+        </div>
+        <div className="bg-white rounded-lg shadow p-6">
+          <h3 className="text-lg font-semibold text-gray-900 mb-4">Zero Result Searches</h3>
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <span className="text-sm text-gray-900">mobile app download</span>
+              <span className="text-xs text-red-500">0 results</span>
             </div>
           </div>
         </div>
@@ -192,62 +215,15 @@ const KnowledgePage: React.FC = () => {
     </div>
   );
 
-  const renderAnalytics = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Analytics</h2>
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Recent Searches</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-900">how to setup account</span>
-              <span className="text-xs text-gray-500">3 results</span>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-900">billing issues</span>
-              <span className="text-xs text-gray-500">2 results</span>
-            </div>
-          </div>
-        </div>
-        <div className="bg-white rounded-lg shadow p-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">Zero Result Searches</h3>
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-900">mobile app download</span>
-              <span className="text-xs text-red-500">0 results</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // removed separate Analytics tab; content moved to Overview
 
-  const renderSettings = () => (
-    <div className="space-y-6">
-      <h2 className="text-2xl font-bold text-gray-900">Settings</h2>
-      <div className="bg-white rounded-lg shadow p-6">
-        <h3 className="text-lg font-semibold text-gray-900 mb-4">General Settings</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700">Knowledge Base Name</label>
-            <input
-              type="text"
-              className="mt-1 block w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              defaultValue="Knowledge Base"
-            />
-          </div>
-        </div>
-      </div>
-    </div>
-  );
+  // settings tab fully removed
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview': return renderOverview();
       case 'articles': return renderArticles();
       case 'categories': return renderCategories();
-      case 'analytics': return renderAnalytics();
-      case 'settings': return renderSettings();
       default: return renderOverview();
     }
   };
@@ -261,7 +237,6 @@ const KnowledgePage: React.FC = () => {
               <BookOpen className="w-6 h-6 text-blue-600" />
             </div>
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Knowledge Base</h1>
               <p className="text-sm text-gray-500">Manage articles, categories, and analytics</p>
             </div>
           </div>

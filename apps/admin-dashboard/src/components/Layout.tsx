@@ -13,12 +13,13 @@ import {
   Plug, 
   Settings,
   Search,
-  User,
+  User as UserIcon,
   Brain
 } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: Home },
+  { href: '/', label: 'Home', icon: Home },
   { href: '/tickets', label: 'Tickets', icon: Ticket },
   { href: '/accounts', label: 'Account Management', icon: Building2 },
   { href: '/assets', label: 'Asset Management', icon: Server },
@@ -33,6 +34,7 @@ const navItems = [
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { user } = useAuth();
   
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
@@ -77,7 +79,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <h2 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
-                {navItems.find(item => item.href === router.pathname)?.label || 'Dashboard'}
+                {navItems.find(item => item.href === router.pathname)?.label || 'Home'}
               </h2>
             </div>
             
@@ -91,13 +93,19 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 />
               </div>
               
-              
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center dark:bg-zinc-700">
-                  <User size={16} />
+              <Link href="/settings" className="flex items-center space-x-2 group">
+                <div className="w-8 h-8 bg-gray-200 rounded-full overflow-hidden flex items-center justify-center dark:bg-zinc-700">
+                  {user?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.avatarUrl} alt={user.displayName || 'User'} className="w-full h-full object-cover" />
+                  ) : (
+                    <UserIcon size={16} className="text-gray-600" />
+                  )}
                 </div>
-                <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Admin User</span>
-              </div>
+                <span className="text-sm font-medium text-gray-700 dark:text-zinc-300 group-hover:underline">
+                  {user?.displayName || 'Admin User'}
+                </span>
+              </Link>
             </div>
           </div>
         </header>

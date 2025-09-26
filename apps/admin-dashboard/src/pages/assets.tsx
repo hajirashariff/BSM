@@ -376,7 +376,6 @@ export default function AssetsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Asset Management</h1>
           <p className="text-gray-600">Service mapping, CMDB-lite, and asset lifecycle management</p>
         </div>
         <button 

@@ -93,7 +93,6 @@ export default function CustomerDashboard() {
                 <span className="text-white font-bold text-sm">BSM</span>
               </div>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">Customer Dashboard</h1>
                 <p className="text-sm text-gray-500">Welcome back, {user?.email}</p>
               </div>
             </div>

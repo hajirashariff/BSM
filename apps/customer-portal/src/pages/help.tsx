@@ -48,7 +48,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: HomeIcon },
+  { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/tickets', label: 'Support Tickets', icon: Ticket },
   { href: '/help', label: 'Help Center', icon: HelpCircle },
   { href: '/account', label: 'My Account', icon: User },
@@ -76,7 +76,7 @@ The BSM (Business Service Management) platform is a comprehensive solution desig
 
 ## Key Features
 - **Service Request Management**: Create, track, and manage service requests efficiently
-- **Real-time Dashboard**: Monitor key performance indicators and system health
+- **Real-time Monitoring**: Monitor key performance indicators and system health
 - **User Management**: Manage user accounts, roles, and permissions
 - **Reporting & Analytics**: Generate detailed reports and gain insights
 - **Integration Capabilities**: Connect with third-party systems and tools
@@ -314,8 +314,8 @@ const featuredArticles = [
   },
   {
     id: 'featured-2',
-    title: 'Understanding Your Dashboard',
-    summary: 'Learn how to navigate and customize your dashboard for maximum efficiency.',
+    title: 'Understanding Your Home Page',
+    summary: 'Learn how to navigate and customize your home page for maximum efficiency.',
     category: 'Getting Started',
     readTime: '4 min',
     difficulty: 'Beginner',

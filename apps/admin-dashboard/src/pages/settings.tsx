@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { 
   Search, 
   Palette, 
@@ -35,6 +35,7 @@ import RolePermissionsSettings from '../components/settings/RolePermissionsSetti
 import SecuritySettings from '../components/settings/SecuritySettings';
 import AuditLogsPlaceholder from '../components/settings/AuditLogsPlaceholder';
 import DataExportBackup from '../components/settings/DataExportBackup';
+import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsSection {
   id: string;
@@ -48,8 +49,76 @@ interface SettingsSection {
 export default function SettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['branding', 'localization']));
+  const { user, updateProfile } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const settingsSections: SettingsSection[] = [
+    {
+      id: 'profile',
+      title: 'Profile Settings',
+      icon: Users,
+      component: () => (
+        <div className="space-y-6">
+          <div className="card">
+            <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
+              <div>
+                <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
+                  {user?.avatarUrl ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={user.avatarUrl} alt={user?.displayName || 'Avatar'} className="w-full h-full object-cover" />
+                  ) : (
+                    <div className="text-gray-500 text-sm">No Photo</div>
+                  )}
+                </div>
+                <div className="mt-3 flex items-center space-x-2">
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="px-3 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300"
+                  >
+                    Upload Photo
+                  </button>
+                  {user?.avatarUrl && (
+                    <button
+                      onClick={() => updateProfile({ avatarUrl: undefined })}
+                      className="px-3 py-2 text-sm rounded-lg bg-white border border-gray-300 hover:bg-gray-50"
+                    >
+                      Remove
+                    </button>
+                  )}
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      const reader = new FileReader();
+                      reader.onload = () => updateProfile({ avatarUrl: String(reader.result) });
+                      reader.readAsDataURL(file);
+                    }}
+                  />
+                </div>
+              </div>
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Display Name</label>
+                <input
+                  type="text"
+                  defaultValue={user?.displayName || ''}
+                  placeholder="Enter your name"
+                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  onBlur={(e) => updateProfile({ displayName: e.target.value })}
+                />
+                <p className="text-xs text-gray-500 mt-1">This name is shown in the header and activity logs.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      description: 'Update your name and profile picture',
+      expanded: expandedSections.has('profile')
+    },
     {
       id: 'branding',
       title: 'Profile & Branding',
@@ -92,7 +161,7 @@ export default function SettingsPage() {
     },
     {
       id: 'dashboard',
-      title: 'Dashboard & Landing Page',
+      title: 'Home & Landing Page',
       icon: Home,
       component: () => (
         <div className="space-y-6">
@@ -102,7 +171,7 @@ export default function SettingsPage() {
               <div className="space-y-3">
                 <label className="block text-sm font-medium text-gray-700">Choose default landing page</label>
                 <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                  <option value="dashboard">Dashboard</option>
+                  <option value="dashboard">Home</option>
                   <option value="tickets">Tickets</option>
                   <option value="workflows">Workflows</option>
                   <option value="analytics">Analytics</option>
@@ -112,12 +181,12 @@ export default function SettingsPage() {
             </div>
             
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Dashboard Preferences</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Home Preferences</h3>
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <div>
-                    <label className="text-sm font-medium text-gray-700">Use Dashboard Summary on Login</label>
-                    <p className="text-xs text-gray-500">Show summary cards on dashboard</p>
+                    <label className="text-sm font-medium text-gray-700">Use Home Summary on Login</label>
+                    <p className="text-xs text-gray-500">Show summary cards on home page</p>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
                     <input type="checkbox" className="sr-only peer" defaultChecked />
@@ -195,7 +264,6 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Settings</h1>
           <p className="text-gray-600">Configure branding, fields, roles, and security for your BSM portal</p>
         </div>
         <button 

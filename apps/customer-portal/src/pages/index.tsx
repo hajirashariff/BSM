@@ -71,7 +71,7 @@ import AIAccountInsights from '../components/AIAccountInsights';
 import NotificationCenter from '../components/NotificationCenter';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: HomeIcon },
+  { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/tickets', label: 'Support Tickets', icon: Ticket },
   { href: '/help', label: 'Help Center', icon: HelpCircle },
   { href: '/account', label: 'My Account', icon: User },
@@ -259,7 +259,7 @@ const mockAnnouncements = [
   },
   {
     id: 'ANN-002',
-    title: 'New Dashboard Features Available',
+    title: 'New Home Features Available',
     type: 'Feature',
     priority: 'Medium',
     content: 'We\'ve added new customizable widgets to your dashboard. Check out the new analytics and reporting features.',
@@ -409,7 +409,7 @@ export default function Dashboard() {
   const [announcements, setAnnouncements] = useState([
     {
       id: 'ann-1',
-      title: 'New Dashboard Features Available',
+      title: 'New Home Features Available',
       type: 'info' as const,
       message: 'We\'ve added new customizable widgets and improved analytics to your dashboard.',
       startDate: '2024-01-18T00:00:00Z',
@@ -646,8 +646,8 @@ export default function Dashboard() {
   return (
     <>
       <Head>
-        <title>Dashboard - BSM Customer Portal</title>
-        <meta name="description" content="Customer Portal Dashboard" />
+        <title>Home - BSM Customer Portal</title>
+        <meta name="description" content="Customer Portal Home" />
       </Head>
 
       <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
@@ -691,7 +691,7 @@ export default function Dashboard() {
         <div className="ml-64 flex flex-col min-h-screen">
           <header className="h-16 flex items-center justify-between px-6 bg-white shadow-sm border-b border-gray-200 dark:bg-zinc-900 dark:border-zinc-800">
             <div className="flex items-center space-x-4">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">Dashboard</h2>
+              <h2 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">Home</h2>
               <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-zinc-400">
                 <Calendar size={16} />
                 <span>{new Date().toLocaleDateString('en-US', { 

@@ -107,10 +107,9 @@ export default function NotificationsPage() {
       <div className="mb-8">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
+            <div className="flex items-center">
               <Bell className="mr-3 text-blue-600" size={32} />
-              Notifications
-            </h1>
+            </div>
             <p className="text-gray-600 mt-2">
               Manage and monitor all system notifications
             </p>

@@ -92,7 +92,7 @@ export default function DashboardLayout({ onCreateTicket, onViewTicket, onSearch
       {/* Page Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">Dashboard</h1>
+          <h1 className="text-3xl font-bold">Home</h1>
           <p className="text-muted-foreground">Welcome to your BSM service portal</p>
         </div>
         <Button onClick={onCreateTicket}>

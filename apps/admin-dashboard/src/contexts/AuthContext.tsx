@@ -4,6 +4,8 @@ interface User {
   id: string;
   email: string;
   role: 'Customer' | 'Admin';
+  displayName?: string;
+  avatarUrl?: string; // data URL or remote URL
 }
 
 interface AuthContextType {
@@ -12,6 +14,7 @@ interface AuthContextType {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<void>;
+  updateProfile: (updates: { displayName?: string; avatarUrl?: string }) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -62,10 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       const foundUser = mockUsers.find(u => u.email === email && u.password === password);
       
       if (foundUser) {
-        const userData = {
+        const userData: User = {
           id: foundUser.id,
           email: foundUser.email,
-          role: foundUser.role
+          role: foundUser.role,
+          displayName: 'Admin User',
         };
         
         setUser(userData);
@@ -94,12 +98,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const updateProfile = (updates: { displayName?: string; avatarUrl?: string }) => {
+    setUser(prev => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...updates } as User;
+      localStorage.setItem('bsm_user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   const value = {
     user,
     userRole,
     loading,
     signIn,
     signOut,
+    updateProfile,
   };
 
   return (

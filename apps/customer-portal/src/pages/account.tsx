@@ -51,7 +51,7 @@ import {
 } from 'lucide-react';
 
 const navItems = [
-  { href: '/', label: 'Dashboard', icon: HomeIcon },
+  { href: '/', label: 'Home', icon: HomeIcon },
   { href: '/tickets', label: 'Support Tickets', icon: Ticket },
   { href: '/help', label: 'Help Center', icon: HelpCircle },
   { href: '/account', label: 'My Account', icon: User },
@@ -193,7 +193,7 @@ const mockSubscriptions = [
     endDate: '2024-06-01',
     price: '$19.99',
     billingCycle: 'Monthly',
-    features: ['Mobile Dashboard', 'Push Notifications', 'Offline Access']
+    features: ['Mobile Portal', 'Push Notifications', 'Offline Access']
   }
 ];
 

@@ -299,7 +299,6 @@ export default function AccountsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Account Management</h1>
           <p className="text-gray-600">Deep B2B account management with health scoring and stakeholder mapping</p>
         </div>
         <button 

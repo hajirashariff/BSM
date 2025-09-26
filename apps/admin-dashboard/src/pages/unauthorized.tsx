@@ -22,7 +22,7 @@ export default function UnauthorizedPage() {
             className="w-full flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             <Home className="h-5 w-5 mr-2" />
-            Go to Dashboard
+            Go to Home
           </button>
           
           <button
