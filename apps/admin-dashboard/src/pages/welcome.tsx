@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
+import Logo from '../components/Logo';
 import { 
   ArrowRight, 
   CheckCircle, 
@@ -254,7 +255,7 @@ const WelcomePage = () => {
       company: "TechCorp",
       avatar: "SJ",
       rating: 5,
-      text: "BSM Pro has completely transformed our operations. We've reduced manual work by 87% and improved our response time from 6 hours to 2 hours. The AI-powered insights are game-changing.",
+      text: "Ackermann has completely transformed our operations. We've reduced manual work by 87% and improved our response time from 6 hours to 2 hours. The AI-powered insights are game-changing.",
       metric: "87% reduction in manual work"
     },
     {
@@ -407,9 +408,12 @@ const WelcomePage = () => {
                 transition={{ duration: 1.5, repeat: Infinity }}
               />
             </motion.div>
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">BSM Pro</h1>
-              <p className="text-xs text-gray-500 font-medium">Enterprise Workflow Platform</p>
+            <div className="flex items-center space-x-3">
+              <Logo size={48} className="drop-shadow-xl" />
+              <div>
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Ackermann</h1>
+                <p className="text-xs text-gray-500 font-medium">Enterprise Workflow Platform</p>
+              </div>
             </div>
           </motion.div>
           
@@ -697,7 +701,7 @@ const WelcomePage = () => {
                     </div>
                     <div className="text-sm text-gray-500 font-medium flex items-center gap-2">
                       <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                      BSM Pro Dashboard - Live
+                      Ackermann Dashboard - Live
                     </div>
                   </div>
                   
@@ -1421,7 +1425,7 @@ const WelcomePage = () => {
               What Our Customers Say
             </h2>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              Join thousands of satisfied customers who have transformed their business operations with BSM Pro
+              Join thousands of satisfied customers who have transformed their business operations with Ackermann
             </p>
           </motion.div>
 
@@ -1536,7 +1540,7 @@ const WelcomePage = () => {
               Ready to transform your business operations?
             </h2>
             <p className="text-xl text-white/90 max-w-2xl mx-auto leading-relaxed">
-              Join 250+ Fortune 500 companies using BSM Pro to automate workflows, 
+              Join 250+ Fortune 500 companies using Ackermann to automate workflows, 
               manage accounts, and deliver exceptional service.
             </p>
             
@@ -1586,10 +1590,8 @@ const WelcomePage = () => {
           <div className="grid md:grid-cols-4 gap-8 mb-12">
             <div className="space-y-4">
               <div className="flex items-center space-x-3">
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <span className="text-white font-bold">BSM</span>
-                </div>
-                <h1 className="text-xl font-bold">BSM Pro</h1>
+                <Logo size={40} className="drop-shadow-xl" />
+                <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent">Ackermann</h1>
               </div>
               <p className="text-gray-400 leading-relaxed">
                 Empowering enterprises with intelligent workflow automation, 
@@ -1661,7 +1663,7 @@ const WelcomePage = () => {
           
           <div className="border-t border-gray-800 pt-8 flex flex-col md:flex-row justify-between items-center">
             <p className="text-gray-400 text-sm">
-              © 2024 BSM Pro. All rights reserved. Built with ❤️ for enterprise teams.
+              © 2024 Ackermann. All rights reserved. Built with ❤️ for enterprise teams.
             </p>
             <div className="flex items-center gap-4 mt-4 md:mt-0 text-sm text-gray-400">
               <span>🌍 Available in 50+ countries</span>
