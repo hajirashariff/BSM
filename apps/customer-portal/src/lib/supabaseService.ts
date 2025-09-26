@@ -1,9 +1,13 @@
 import { supabase, User, Account, Asset, Ticket, KnowledgeBase, Notification, ServiceRequest } from './supabase';
+import { mockSupabaseService } from './mockSupabaseService';
+
+// Always use real Supabase service
+const service = supabase;
 
 // Customer-specific services
 export const customerService = {
   async getProfile(userId: string): Promise<User | null> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('users')
       .select('*')
       .eq('id', userId)
@@ -300,6 +304,12 @@ export const customerAssetService = {
 // Customer Dashboard Analytics
 export const customerAnalyticsService = {
   async getMyDashboardStats(userId: string) {
+    if (isDemo) {
+      const { data, error } = await service.getDashboardAnalytics();
+      if (error) throw error;
+      return data;
+    }
+    
     const [
       ticketsResult,
       openTicketsResult,
