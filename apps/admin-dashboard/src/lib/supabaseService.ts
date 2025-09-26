@@ -1,9 +1,13 @@
 import { supabase, User, Account, Asset, Ticket, Workflow, KnowledgeBase, Notification, ServiceRequest, Integration, Rule } from './supabase';
+import { mockSupabaseService } from './mockSupabaseService';
+
+// Always use real Supabase service
+const service = supabase;
 
 // User Management
 export const userService = {
   async getUsers(): Promise<User[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('users')
       .select('*')
       .order('created_at', { ascending: false });
@@ -13,7 +17,7 @@ export const userService = {
   },
 
   async createUser(user: Omit<User, 'id' | 'created_at' | 'updated_at'>): Promise<User> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('users')
       .insert([user])
       .select()
@@ -24,7 +28,7 @@ export const userService = {
   },
 
   async updateUser(id: string, updates: Partial<User>): Promise<User> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('users')
       .update(updates)
       .eq('id', id)
@@ -48,7 +52,7 @@ export const userService = {
 // Account Management
 export const accountService = {
   async getAccounts(): Promise<Account[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('accounts')
       .select('*')
       .order('created_at', { ascending: false });
@@ -58,7 +62,7 @@ export const accountService = {
   },
 
   async createAccount(account: Omit<Account, 'id' | 'created_at' | 'updated_at'>): Promise<Account> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('accounts')
       .insert([account])
       .select()
@@ -69,7 +73,7 @@ export const accountService = {
   },
 
   async updateAccount(id: string, updates: Partial<Account>): Promise<Account> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('accounts')
       .update(updates)
       .eq('id', id)
@@ -93,7 +97,7 @@ export const accountService = {
 // Asset Management
 export const assetService = {
   async getAssets(): Promise<Asset[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('assets')
       .select(`
         *,
@@ -107,7 +111,7 @@ export const assetService = {
   },
 
   async createAsset(asset: Omit<Asset, 'id' | 'created_at' | 'updated_at'>): Promise<Asset> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('assets')
       .insert([asset])
       .select()
@@ -118,7 +122,7 @@ export const assetService = {
   },
 
   async updateAsset(id: string, updates: Partial<Asset>): Promise<Asset> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('assets')
       .update(updates)
       .eq('id', id)
@@ -142,7 +146,7 @@ export const assetService = {
 // Ticket Management
 export const ticketService = {
   async getTickets(): Promise<Ticket[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('tickets')
       .select(`
         *,
@@ -158,7 +162,7 @@ export const ticketService = {
   },
 
   async createTicket(ticket: Omit<Ticket, 'id' | 'created_at' | 'updated_at'>): Promise<Ticket> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('tickets')
       .insert([ticket])
       .select()
@@ -169,7 +173,7 @@ export const ticketService = {
   },
 
   async updateTicket(id: string, updates: Partial<Ticket>): Promise<Ticket> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('tickets')
       .update(updates)
       .eq('id', id)
@@ -193,7 +197,7 @@ export const ticketService = {
 // Workflow Management
 export const workflowService = {
   async getWorkflows(): Promise<Workflow[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('workflows')
       .select(`
         *,
@@ -206,7 +210,7 @@ export const workflowService = {
   },
 
   async createWorkflow(workflow: Omit<Workflow, 'id' | 'created_at' | 'updated_at'>): Promise<Workflow> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('workflows')
       .insert([workflow])
       .select()
@@ -217,7 +221,7 @@ export const workflowService = {
   },
 
   async updateWorkflow(id: string, updates: Partial<Workflow>): Promise<Workflow> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('workflows')
       .update(updates)
       .eq('id', id)
@@ -241,7 +245,7 @@ export const workflowService = {
 // Knowledge Base Management
 export const knowledgeBaseService = {
   async getArticles(): Promise<KnowledgeBase[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('knowledge_base')
       .select(`
         *,
@@ -254,7 +258,7 @@ export const knowledgeBaseService = {
   },
 
   async createArticle(article: Omit<KnowledgeBase, 'id' | 'created_at' | 'updated_at'>): Promise<KnowledgeBase> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('knowledge_base')
       .insert([article])
       .select()
@@ -265,7 +269,7 @@ export const knowledgeBaseService = {
   },
 
   async updateArticle(id: string, updates: Partial<KnowledgeBase>): Promise<KnowledgeBase> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('knowledge_base')
       .update(updates)
       .eq('id', id)
@@ -309,7 +313,7 @@ export const notificationService = {
   },
 
   async createNotification(notification: Omit<Notification, 'id' | 'created_at'>): Promise<Notification> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('notifications')
       .insert([notification])
       .select()
@@ -342,7 +346,7 @@ export const notificationService = {
 // Service Request Management
 export const serviceRequestService = {
   async getServiceRequests(): Promise<ServiceRequest[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('service_requests')
       .select(`
         *,
@@ -357,7 +361,7 @@ export const serviceRequestService = {
   },
 
   async createServiceRequest(request: Omit<ServiceRequest, 'id' | 'created_at' | 'updated_at'>): Promise<ServiceRequest> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('service_requests')
       .insert([request])
       .select()
@@ -368,7 +372,7 @@ export const serviceRequestService = {
   },
 
   async updateServiceRequest(id: string, updates: Partial<ServiceRequest>): Promise<ServiceRequest> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('service_requests')
       .update(updates)
       .eq('id', id)
@@ -392,7 +396,7 @@ export const serviceRequestService = {
 // Integration Management
 export const integrationService = {
   async getIntegrations(): Promise<Integration[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('integrations')
       .select(`
         *,
@@ -405,7 +409,7 @@ export const integrationService = {
   },
 
   async createIntegration(integration: Omit<Integration, 'id' | 'created_at' | 'updated_at'>): Promise<Integration> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('integrations')
       .insert([integration])
       .select()
@@ -416,7 +420,7 @@ export const integrationService = {
   },
 
   async updateIntegration(id: string, updates: Partial<Integration>): Promise<Integration> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('integrations')
       .update(updates)
       .eq('id', id)
@@ -440,7 +444,7 @@ export const integrationService = {
 // Rule Management
 export const ruleService = {
   async getRules(): Promise<Rule[]> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('rules')
       .select(`
         *,
@@ -453,7 +457,7 @@ export const ruleService = {
   },
 
   async createRule(rule: Omit<Rule, 'id' | 'created_at' | 'updated_at'>): Promise<Rule> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('rules')
       .insert([rule])
       .select()
@@ -464,7 +468,7 @@ export const ruleService = {
   },
 
   async updateRule(id: string, updates: Partial<Rule>): Promise<Rule> {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('rules')
       .update(updates)
       .eq('id', id)
@@ -488,6 +492,12 @@ export const ruleService = {
 // Analytics and Dashboard Data
 export const analyticsService = {
   async getDashboardStats() {
+    if (isDemo) {
+      const { data, error } = await service.getDashboardAnalytics();
+      if (error) throw error;
+      return data;
+    }
+    
     const [
       usersResult,
       accountsResult,
@@ -531,7 +541,7 @@ export const analyticsService = {
   },
 
   async getRecentActivity() {
-    const { data, error } = await supabase
+    const { data, error } = await service
       .from('tickets')
       .select(`
         id,
