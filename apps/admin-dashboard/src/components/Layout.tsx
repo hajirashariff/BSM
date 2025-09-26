@@ -17,6 +17,7 @@ import {
   Brain
 } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
+import Logo from './Logo';
 
 const navItems = [
   { href: '/', label: 'Home', icon: Home },
@@ -42,8 +43,10 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 dark:bg-zinc-900 dark:border-zinc-800">
         <div className="p-6">
           <div className="flex items-center space-x-3">
-            <img src="/ackermann-logo.svg" alt="Ackermann" className="w-8 h-8 rounded-lg" />
-            <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Ackermann</h1>
+            <Logo size={48} className="drop-shadow-xl" />
+            <h1 className="text-xl font-bold bg-gradient-to-r from-blue-600 to-cyan-500 bg-clip-text text-transparent dark:from-blue-400 dark:to-cyan-400">
+              Ackermann
+            </h1>
           </div>
         </div>
         

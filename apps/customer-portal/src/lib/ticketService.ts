@@ -8,6 +8,8 @@ export interface Ticket {
   category: 'technical' | 'billing' | 'general' | 'feature_request' | 'bug_report';
   assignee?: string;
   createdBy: string;
+  createdByEmail?: string;
+  createdByAvatar?: string;
   createdAt: string;
   updatedAt: string;
   dueDate?: string;
@@ -71,6 +73,9 @@ export interface CreateTicketData {
   category: 'technical' | 'billing' | 'general' | 'feature_request' | 'bug_report';
   attachments?: File[];
   tags?: string[];
+  createdBy?: string;
+  createdByEmail?: string;
+  createdByAvatar?: string;
 }
 
 export interface UpdateTicketData {
@@ -335,7 +340,7 @@ class TicketService {
   }
 
   // Create new ticket
-  async createTicket(data: CreateTicketData, createdBy: string): Promise<Ticket> {
+  async createTicket(data: CreateTicketData): Promise<Ticket> {
     const newTicket: Ticket = {
       id: `TKT-${String(this.tickets.length + 1).padStart(3, '0')}`,
       subject: data.subject,
@@ -343,7 +348,9 @@ class TicketService {
       status: 'open',
       priority: data.priority,
       category: data.category,
-      createdBy,
+      createdBy: data.createdBy || 'Unknown User',
+      createdByEmail: data.createdByEmail,
+      createdByAvatar: data.createdByAvatar,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       dueDate: this.calculateDueDate(data.priority),
@@ -355,14 +362,14 @@ class TicketService {
         type: file.type,
         url: URL.createObjectURL(file),
         uploadedAt: new Date().toISOString(),
-        uploadedBy: createdBy
+        uploadedBy: data.createdBy || 'Unknown User'
       })) : [],
       comments: [],
       history: [{
         id: `hist-${Date.now()}`,
         action: 'created',
         description: 'Ticket created',
-        user: createdBy,
+        user: data.createdBy || 'Unknown User',
         timestamp: new Date().toISOString()
       }],
       escalationLevel: 0,

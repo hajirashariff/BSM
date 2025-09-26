@@ -1,92 +1,101 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useRouter } from 'next/router';
-import Head from 'next/head';
 
-export default function GoogleAuthCallback() {
+export default function GoogleCallback() {
   const router = useRouter();
 
   useEffect(() => {
-    const handleGoogleCallback = async () => {
+    // Handle Google OAuth callback
+    const handleCallback = () => {
       try {
         // Get URL parameters
         const urlParams = new URLSearchParams(window.location.hash.substring(1));
         const accessToken = urlParams.get('access_token');
+        const state = urlParams.get('state');
         const error = urlParams.get('error');
-        const state = urlParams.get('state'); // This contains the account type
 
         if (error) {
           // Send error to parent window
-          window.opener?.postMessage({
-            type: 'GOOGLE_AUTH_ERROR',
-            error: 'Authentication was cancelled or failed'
-          }, window.location.origin);
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_ERROR',
+              error: 'Authentication failed: ' + error
+            }, window.location.origin);
+          }
           window.close();
           return;
         }
 
-        if (accessToken && state) {
-          // Send token to backend for verification
-          const backendResponse = await fetch('http://localhost:8000/api/ai_services/auth/google/', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              access_token: accessToken,
-              account_type: state
+        if (accessToken) {
+          // Get user info from Google
+          fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${accessToken}`)
+            .then(response => response.json())
+            .then(userInfo => {
+              if (userInfo.email) {
+                // Create mock user data
+                const mockUser = {
+                  id: userInfo.id || 'google_' + Date.now(),
+                  email: userInfo.email,
+                  name: userInfo.name || userInfo.email.split('@')[0],
+                  picture: userInfo.picture,
+                  accountType: state || 'Customer',
+                  verified: true
+                };
+
+                // Send success to parent window
+                if (window.opener) {
+                  window.opener.postMessage({
+                    type: 'GOOGLE_AUTH_SUCCESS',
+                    user: mockUser,
+                    token: accessToken
+                  }, window.location.origin);
+                }
+                window.close();
+              } else {
+                throw new Error('Failed to get user information');
+              }
             })
-          });
-
-          const result = await backendResponse.json();
-
-          if (result.success) {
-            // Send success to parent window
-            window.opener?.postMessage({
-              type: 'GOOGLE_AUTH_SUCCESS',
-              user: result.user,
-              token: result.token
-            }, window.location.origin);
-          } else {
-            // Send error to parent window
-            window.opener?.postMessage({
-              type: 'GOOGLE_AUTH_ERROR',
-              error: result.error || 'Authentication failed'
-            }, window.location.origin);
-          }
+            .catch(err => {
+              // Send error to parent window
+              if (window.opener) {
+                window.opener.postMessage({
+                  type: 'GOOGLE_AUTH_ERROR',
+                  error: 'Failed to get user information from Google'
+                }, window.location.origin);
+              }
+              window.close();
+            });
         } else {
           // Send error to parent window
-          window.opener?.postMessage({
-            type: 'GOOGLE_AUTH_ERROR',
-            error: 'No access token received'
-          }, window.location.origin);
+          if (window.opener) {
+            window.opener.postMessage({
+              type: 'GOOGLE_AUTH_ERROR',
+              error: 'No access token received'
+            }, window.location.origin);
+          }
+          window.close();
         }
-
-        // Close the popup
-        window.close();
       } catch (err) {
         // Send error to parent window
-        window.opener?.postMessage({
-          type: 'GOOGLE_AUTH_ERROR',
-          error: 'Authentication failed'
-        }, window.location.origin);
+        if (window.opener) {
+          window.opener.postMessage({
+            type: 'GOOGLE_AUTH_ERROR',
+            error: 'Authentication failed'
+          }, window.location.origin);
+        }
         window.close();
       }
     };
 
-    handleGoogleCallback();
-  }, []);
+    handleCallback();
+  }, [router]);
 
   return (
-    <>
-      <Head>
-        <title>Google Authentication - BSM Pro</title>
-      </Head>
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Completing Google authentication...</p>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+        <p className="mt-4 text-gray-600">Completing Google authentication...</p>
       </div>
-    </>
+    </div>
   );
 }

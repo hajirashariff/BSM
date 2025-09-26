@@ -1,41 +1,23 @@
-import React, { useRef, useState } from 'react';
+import React, { useState } from 'react';
 import { 
-  Search, 
-  Palette, 
-  Globe, 
-  Puzzle, 
   Settings as SettingsIcon, 
   Shield, 
   Users, 
-  Home, 
-  FileText, 
-  Download,
-  ChevronDown,
-  ChevronRight,
-  Info,
+  Bell,
+  Globe,
+  Database,
+  Zap,
+  BarChart3,
+  Mail,
+  Phone,
+  MessageSquare,
+  FileText,
   Save,
-  Upload,
-  Eye,
-  EyeOff,
-  Clock,
-  Lock,
-  Key,
-  AlertTriangle,
+  RefreshCw,
   CheckCircle,
-  XCircle
+  AlertTriangle,
+  Info
 } from 'lucide-react';
-
-// Import individual settings components
-import SearchSettings from '../components/settings/SearchSettings';
-import BrandingSettings from '../components/settings/BrandingSettings';
-import LocalizationSettings from '../components/settings/LocalizationSettings';
-import PluginManagement from '../components/settings/PluginManagement';
-import AdvancedSettings from '../components/settings/AdvancedSettings';
-import RolePermissionsSettings from '../components/settings/RolePermissionsSettings';
-import SecuritySettings from '../components/settings/SecuritySettings';
-import AuditLogsPlaceholder from '../components/settings/AuditLogsPlaceholder';
-import DataExportBackup from '../components/settings/DataExportBackup';
-import { useAuth } from '../contexts/AuthContext';
 
 interface SettingsSection {
   id: string;
@@ -48,193 +30,525 @@ interface SettingsSection {
 
 export default function SettingsPage() {
   const [searchTerm, setSearchTerm] = useState('');
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['branding', 'localization']));
-  const { user, updateProfile } = useAuth();
-  const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['platform', 'tickets', 'ai']));
+  const [saving, setSaving] = useState(false);
+  const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
 
   const settingsSections: SettingsSection[] = [
     {
-      id: 'profile',
-      title: 'Profile Settings',
-      icon: Users,
-      component: () => (
-        <div className="space-y-6">
-          <div className="card">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Personal Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-              <div>
-                <div className="w-20 h-20 rounded-full bg-gray-200 overflow-hidden flex items-center justify-center">
-                  {user?.avatarUrl ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img src={user.avatarUrl} alt={user?.displayName || 'Avatar'} className="w-full h-full object-cover" />
-                  ) : (
-                    <div className="text-gray-500 text-sm">No Photo</div>
-                  )}
-                </div>
-                <div className="mt-3 flex items-center space-x-2">
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    className="px-3 py-2 text-sm rounded-lg bg-gray-100 hover:bg-gray-200 border border-gray-300"
-                  >
-                    Upload Photo
-                  </button>
-                  {user?.avatarUrl && (
-                    <button
-                      onClick={() => updateProfile({ avatarUrl: undefined })}
-                      className="px-3 py-2 text-sm rounded-lg bg-white border border-gray-300 hover:bg-gray-50"
-                    >
-                      Remove
-                    </button>
-                  )}
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (!file) return;
-                      const reader = new FileReader();
-                      reader.onload = () => updateProfile({ avatarUrl: String(reader.result) });
-                      reader.readAsDataURL(file);
-                    }}
-                  />
-                </div>
-              </div>
-              <div className="md:col-span-2">
-                <label className="block text-sm font-medium text-gray-700">Display Name</label>
-                <input
-                  type="text"
-                  defaultValue={user?.displayName || ''}
-                  placeholder="Enter your name"
-                  className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
-                  onBlur={(e) => updateProfile({ displayName: e.target.value })}
-                />
-                <p className="text-xs text-gray-500 mt-1">This name is shown in the header and activity logs.</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      ),
-      description: 'Update your name and profile picture',
-      expanded: expandedSections.has('profile')
-    },
-    {
-      id: 'branding',
-      title: 'Profile & Branding',
-      icon: Palette,
-      component: BrandingSettings,
-      description: 'Configure app appearance, logo, and theme settings',
-      expanded: expandedSections.has('branding')
-    },
-    {
-      id: 'localization',
-      title: 'Localization & Language',
-      icon: Globe,
-      component: LocalizationSettings,
-      description: 'Language settings and translation options',
-      expanded: expandedSections.has('localization')
-    },
-    {
-      id: 'plugins',
-      title: 'Plugin & Integration Management',
-      icon: Puzzle,
-      component: PluginManagement,
-      description: 'Manage plugins, integrations, and add-ons',
-      expanded: expandedSections.has('plugins')
-    },
-    {
-      id: 'advanced',
-      title: 'Advanced Settings',
+      id: 'platform',
+      title: 'Platform Configuration',
       icon: SettingsIcon,
-      component: AdvancedSettings,
-      description: 'System properties and advanced configuration',
-      expanded: expandedSections.has('advanced')
-    },
-    {
-      id: 'permissions',
-      title: 'Permissions & Role Management',
-      icon: Users,
-      component: RolePermissionsSettings,
-      description: 'Configure user roles and permissions',
-      expanded: expandedSections.has('permissions')
-    },
-    {
-      id: 'dashboard',
-      title: 'Home & Landing Page',
-      icon: Home,
       component: () => (
         <div className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Default Landing Page</h3>
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">Choose default landing page</label>
-                <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
-                  <option value="dashboard">Home</option>
-                  <option value="tickets">Tickets</option>
-                  <option value="workflows">Workflows</option>
-                  <option value="analytics">Analytics</option>
-                  <option value="settings">Settings</option>
-                </select>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Basic Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Platform Name</label>
+                  <input
+                    type="text"
+                    defaultValue="BSM Platform"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Platform URL</label>
+                  <input
+                    type="url"
+                    defaultValue="https://bsm-platform.com"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Support Email</label>
+                  <input
+                    type="email"
+                    defaultValue="support@bsm-platform.com"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Timezone</label>
+                  <select className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="UTC">UTC</option>
+                    <option value="EST">Eastern Time</option>
+                    <option value="PST">Pacific Time</option>
+                    <option value="IST">Indian Standard Time</option>
+                  </select>
+                </div>
               </div>
             </div>
             
             <div className="card">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Home Preferences</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">System Status</h3>
               <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Use Home Summary on Login</label>
-                    <p className="text-xs text-gray-500">Show summary cards on home page</p>
+                <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <span className="text-sm font-medium text-green-800">System Health</span>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                  </label>
+                  <span className="text-sm text-green-600">Operational</span>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div>
-                    <label className="text-sm font-medium text-gray-700">Show Recent Activity</label>
-                    <p className="text-xs text-gray-500">Display recent tickets and workflows</p>
+                <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <Database className="w-5 h-5 text-blue-600" />
+                    <span className="text-sm font-medium text-blue-800">Database</span>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-primary-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-600"></div>
-                  </label>
+                  <span className="text-sm text-blue-600">Connected</span>
+                </div>
+                <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                  <div className="flex items-center space-x-2">
+                    <AlertTriangle className="w-5 h-5 text-yellow-600" />
+                    <span className="text-sm font-medium text-yellow-800">Last Backup</span>
+                  </div>
+                  <span className="text-sm text-yellow-600">2 hours ago</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
       ),
-      description: 'Configure dashboard and landing page settings',
-      expanded: expandedSections.has('dashboard')
+      description: 'Configure basic platform settings and monitor system status',
+      expanded: expandedSections.has('platform')
+    },
+    {
+      id: 'tickets',
+      title: 'Ticket Management',
+      icon: FileText,
+      component: () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Ticket Settings</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Default Priority</label>
+                  <select className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="medium">Medium</option>
+                    <option value="low">Low</option>
+                    <option value="high">High</option>
+                    <option value="critical">Critical</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Auto-Assignment</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Enable automatic ticket assignment</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Round-robin assignment</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">SLA Settings</label>
+                  <div className="mt-2 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">Critical: </span>
+                      <input type="number" defaultValue="1" className="w-20 px-2 py-1 border border-gray-300 rounded text-sm" />
+                      <span className="text-sm text-gray-500">hours</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">High: </span>
+                      <input type="number" defaultValue="4" className="w-20 px-2 py-1 border border-gray-300 rounded text-sm" />
+                      <span className="text-sm text-gray-500">hours</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-700">Medium: </span>
+                      <input type="number" defaultValue="24" className="w-20 px-2 py-1 border border-gray-300 rounded text-sm" />
+                      <span className="text-sm text-gray-500">hours</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Approval Workflow</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Human Approval Required</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">High priority tickets</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Security-related tickets</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">All tickets</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Auto-Approval Rules</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Standard service requests</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Password reset requests</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      description: 'Configure ticket management, SLA settings, and approval workflows',
+      expanded: expandedSections.has('tickets')
+    },
+    {
+      id: 'ai',
+      title: 'AI & Automation',
+      icon: Zap,
+      component: () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">AI Features</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Ticket Classification</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Enable AI-powered categorization</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Auto-generate responses</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Sentiment analysis</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">AI Model</label>
+                  <select className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="gpt-4">GPT-4</option>
+                    <option value="gpt-3.5">GPT-3.5 Turbo</option>
+                    <option value="claude">Claude</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Confidence Threshold</label>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    defaultValue="80"
+                    className="mt-1 w-full"
+                  />
+                  <div className="flex justify-between text-xs text-gray-500 mt-1">
+                    <span>Low</span>
+                    <span>High</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Automation Rules</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Auto-Escalation</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Escalate overdue tickets</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Escalate critical tickets</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Auto-Resolution</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Auto-close resolved tickets</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Auto-assign based on keywords</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Notification Rules</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Send alerts for new tickets</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Send alerts for escalations</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      description: 'Configure AI features, automation rules, and intelligent workflows',
+      expanded: expandedSections.has('ai')
+    },
+    {
+      id: 'notifications',
+      title: 'Notifications',
+      icon: Bell,
+      component: () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Email Notifications</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">SMTP Settings</label>
+                  <div className="mt-2 space-y-2">
+                    <input
+                      type="text"
+                      placeholder="SMTP Server"
+                      defaultValue="smtp.gmail.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="number"
+                      placeholder="Port"
+                      defaultValue="587"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                    <input
+                      type="email"
+                      placeholder="Email"
+                      defaultValue="noreply@bsm-platform.com"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Notification Types</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">New ticket alerts</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Status updates</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Daily summaries</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">SMS & Push Notifications</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">SMS Provider</label>
+                  <select className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="twilio">Twilio</option>
+                    <option value="aws">AWS SNS</option>
+                    <option value="none">Disabled</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Push Notifications</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Enable push notifications</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Critical alerts only</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Webhook URL</label>
+                  <input
+                    type="url"
+                    placeholder="https://your-webhook-url.com"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      description: 'Configure email, SMS, and push notification settings',
+      expanded: expandedSections.has('notifications')
     },
     {
       id: 'security',
-      title: 'Security & Authentication',
+      title: 'Security & Access',
       icon: Shield,
-      component: SecuritySettings,
-      description: 'Password policies, MFA, and security settings',
+      component: () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Authentication</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Password Policy</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Require strong passwords</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Password expiration (90 days)</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Two-factor authentication</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Session Timeout</label>
+                  <select className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="30">30 minutes</option>
+                    <option value="60">1 hour</option>
+                    <option value="240">4 hours</option>
+                    <option value="480">8 hours</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Access Control</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">IP Whitelist</label>
+                  <textarea
+                    placeholder="192.168.1.0/24&#10;10.0.0.0/8"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">API Access</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Enable API access</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Rate limiting</span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      description: 'Configure security settings, authentication, and access control',
       expanded: expandedSections.has('security')
     },
     {
-      id: 'audit',
-      title: 'Audit & Logs',
-      icon: FileText,
-      component: AuditLogsPlaceholder,
-      description: 'View system audit logs and changes',
-      expanded: expandedSections.has('audit')
-    },
-    {
-      id: 'export',
-      title: 'Data Export & Backup',
-      icon: Download,
-      component: DataExportBackup,
-      description: 'Export settings and backup data',
-      expanded: expandedSections.has('export')
+      id: 'analytics',
+      title: 'Analytics & Reporting',
+      icon: BarChart3,
+      component: () => (
+        <div className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Data Collection</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Analytics</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Track user interactions</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Performance metrics</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Error tracking</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Data Retention</label>
+                  <select className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                    <option value="30">30 days</option>
+                    <option value="90">90 days</option>
+                    <option value="365">1 year</option>
+                    <option value="0">Indefinite</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+            
+            <div className="card">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Reports</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Automated Reports</label>
+                  <div className="mt-2 space-y-2">
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Daily ticket summary</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" defaultChecked className="mr-2" />
+                      <span className="text-sm text-gray-700">Weekly performance report</span>
+                    </label>
+                    <label className="flex items-center">
+                      <input type="checkbox" className="mr-2" />
+                      <span className="text-sm text-gray-700">Monthly analytics</span>
+                    </label>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700">Report Recipients</label>
+                  <input
+                    type="email"
+                    placeholder="admin@bsm-platform.com"
+                    className="mt-1 w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      ),
+      description: 'Configure analytics, data collection, and reporting settings',
+      expanded: expandedSections.has('analytics')
     }
   ];
 
@@ -253,10 +567,19 @@ export default function SettingsPage() {
     setExpandedSections(newExpanded);
   };
 
-  const handleSaveAll = () => {
-    console.log('Saving all settings...');
-    // Mock save functionality
-    alert('All settings saved successfully! (Mock)');
+  const handleSaveAll = async () => {
+    setSaving(true);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      setMessage({ type: 'success', text: 'All settings saved successfully!' });
+      setTimeout(() => setMessage(null), 3000);
+    } catch (error) {
+      setMessage({ type: 'error', text: 'Failed to save settings. Please try again.' });
+      setTimeout(() => setMessage(null), 3000);
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -264,23 +587,58 @@ export default function SettingsPage() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <p className="text-gray-600">Configure branding, fields, roles, and security for your BSM portal</p>
+          <h1 className="text-2xl font-bold text-gray-900">BSM Platform Settings</h1>
+          <p className="text-gray-600">Configure your BSM platform settings and preferences</p>
         </div>
         <button 
           onClick={handleSaveAll}
+          disabled={saving}
           className="btn-primary flex items-center space-x-2"
         >
-          <Save size={20} />
-          <span>Save All Changes</span>
+          {saving ? (
+            <>
+              <RefreshCw className="w-4 h-4 animate-spin" />
+              <span>Saving...</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-4 h-4" />
+              <span>Save All Changes</span>
+            </>
+          )}
         </button>
       </div>
 
+      {/* Message Notification */}
+      {message && (
+        <div className={`p-4 rounded-lg ${
+          message.type === 'success' 
+            ? 'bg-green-100 text-green-800 border border-green-200' 
+            : 'bg-red-100 text-red-800 border border-red-200'
+        }`}>
+          <div className="flex items-center space-x-2">
+            {message.type === 'success' ? (
+              <CheckCircle className="w-5 h-5" />
+            ) : (
+              <AlertTriangle className="w-5 h-5" />
+            )}
+            <span className="font-medium">{message.text}</span>
+          </div>
+        </div>
+      )}
+
       {/* Search Bar */}
       <div className="card">
-        <SearchSettings 
-          searchTerm={searchTerm} 
-          onSearchChange={setSearchTerm} 
-        />
+        <div className="relative">
+          <input
+            type="text"
+            placeholder="Search settings..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full px-4 py-3 pl-10 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <SettingsIcon className="absolute left-3 top-3.5 w-4 h-4 text-gray-400" />
+        </div>
       </div>
 
       {/* Settings Sections */}
@@ -297,8 +655,8 @@ export default function SettingsPage() {
                 onClick={() => toggleSection(section.id)}
               >
                 <div className="flex items-center space-x-4">
-                  <div className="p-2 bg-primary-100 rounded-lg">
-                    <Icon className="text-primary-600" size={24} />
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Icon className="text-blue-600" size={24} />
                   </div>
                   <div>
                     <h2 className="text-xl font-semibold text-gray-900">{section.title}</h2>
@@ -307,9 +665,9 @@ export default function SettingsPage() {
                 </div>
                 <div className="flex items-center space-x-2">
                   {isExpanded ? (
-                    <ChevronDown className="text-gray-400" size={24} />
+                    <span className="text-gray-400 text-sm">Hide</span>
                   ) : (
-                    <ChevronRight className="text-gray-400" size={24} />
+                    <span className="text-gray-400 text-sm">Show</span>
                   )}
                 </div>
               </div>
@@ -329,7 +687,7 @@ export default function SettingsPage() {
       {/* No Results */}
       {filteredSections.length === 0 && (
         <div className="card text-center py-12">
-          <Search className="mx-auto h-12 w-12 text-gray-400" />
+          <SettingsIcon className="mx-auto h-12 w-12 text-gray-400" />
           <h3 className="mt-2 text-sm font-medium text-gray-900">No settings found</h3>
           <p className="mt-1 text-sm text-gray-500">Try adjusting your search terms</p>
         </div>

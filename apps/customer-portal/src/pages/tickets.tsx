@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Home as HomeIcon, 
   Ticket as TicketIcon, 
@@ -77,6 +78,7 @@ const categoryOptions = [
 ];
 
 export default function TicketsPage() {
+  const { user } = useAuth();
   const router = useRouter();
   const [isClient, setIsClient] = useState(false);
   const [tickets, setTickets] = useState<Ticket[]>([]);
@@ -183,7 +185,14 @@ export default function TicketsPage() {
 
   const handleCreateTicket = async (data: CreateTicketData) => {
     try {
-      await ticketService.createTicket(data);
+      // Add user information to the ticket data
+      const ticketData = {
+        ...data,
+        createdBy: user?.name || 'Unknown User',
+        createdByEmail: user?.email || 'unknown@example.com',
+        createdByAvatar: user?.picture || ''
+      };
+      await ticketService.createTicket(ticketData);
       await loadTickets();
       setShowCreateModal(false);
     } catch (error) {

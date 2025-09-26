@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/router';
 import TicketCreationModal from '../components/TicketCreationModal';
 import ModernLayout from '../components/ModernLayout';
+import { useAuth } from '../contexts/AuthContext';
 import { 
   Plus,
   Ticket,
@@ -37,13 +38,15 @@ const formatTimeAgo = (timestamp: string) => {
 
 // Dashboard component
 const Dashboard: React.FC = () => {
+  const { user } = useAuth();
   const [isTicketModalOpen, setIsTicketModalOpen] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    console.log('🔍 Dashboard: User data:', user);
+  }, [user]);
 
   // Mock data for demonstration
   const stats = {
@@ -145,7 +148,7 @@ const Dashboard: React.FC = () => {
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
-            Welcome to Your Dashboard
+            Welcome back, {user?.name || 'User'}!
           </h1>
           <p className="text-gray-600 dark:text-gray-400">
             Manage your support tickets and access our services

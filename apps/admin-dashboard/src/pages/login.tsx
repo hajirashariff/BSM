@@ -85,19 +85,39 @@ export default function LoginPage() {
           setSuccess('');
         }, 3000);
       } else {
-        // Sign in logic
-        const { error: authError } = await signIn(formData.email, formData.password);
+        // Sign in logic - Mock authentication for demo
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate API call
+        
+        // Create mock user data
+        const mockUser = {
+          id: 'user_' + Date.now(),
+          email: formData.email,
+          name: formData.email.split('@')[0],
+          accountType: accountType,
+          verified: true,
+          authMethod: 'email'
+        };
 
-        if (authError) {
-          throw new Error(authError.message || 'Sign in failed');
-        }
+        console.log('🔍 Email Auth: Created mock user:', mockUser);
+
+        // Store user data in localStorage
+        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('token', 'mock_token_' + Date.now());
+        localStorage.setItem('authMethod', 'email');
+        
+        console.log('🔍 Email Auth: Stored user data in localStorage');
+
+        setSuccess(`Successfully signed in as ${accountType}!`);
 
         // Redirect based on account type
-        if (accountType === 'Admin') {
-          router.push('/admin');
-        } else {
-          router.push('/customer-dashboard');
-        }
+        setTimeout(() => {
+          if (accountType === 'Admin') {
+            router.push('/admin');
+          } else {
+            // Redirect to customer portal on port 3000
+            window.location.href = 'http://localhost:3000';
+          }
+        }, 1500);
       }
     } catch (err: any) {
       setError(err.message || (isSignup ? 'An error occurred during signup' : 'Invalid email or password'));
@@ -121,43 +141,51 @@ export default function LoginPage() {
           callback: async (response: any) => {
             try {
               if (response.access_token) {
-                // Send token to backend for verification
-                const backendResponse = await fetch('http://localhost:8000/api/ai_services/auth/google/', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    access_token: response.access_token,
-                    account_type: accountType
-                  })
-                });
+                // Get user info from Google
+                const userInfoResponse = await fetch(`https://www.googleapis.com/oauth2/v2/userinfo?access_token=${response.access_token}`);
+                const userInfo = await userInfoResponse.json();
 
-                const result = await backendResponse.json();
+                if (userInfo.email) {
+                  // Create mock user data
+                  const mockUser = {
+                    id: userInfo.id || 'google_' + Date.now(),
+                    email: userInfo.email,
+                    name: userInfo.name || userInfo.email.split('@')[0],
+                    picture: userInfo.picture,
+                    accountType: accountType,
+                    verified: true,
+                    authMethod: 'google'
+                  };
 
-                if (result.success) {
+                  console.log('🔍 Google Auth: User info from Google:', userInfo);
+                  console.log('🔍 Google Auth: Created mock user:', mockUser);
+
                   setSuccess(`Successfully authenticated with Google as ${accountType}!`);
                   
-                  // Store user data in localStorage (in real app, use proper state management)
-                  localStorage.setItem('user', JSON.stringify(result.user));
-                  localStorage.setItem('token', result.token);
+                  // Store user data in localStorage
+                  localStorage.setItem('user', JSON.stringify(mockUser));
+                  localStorage.setItem('token', response.access_token);
+                  localStorage.setItem('authMethod', 'google');
+                  
+                  console.log('🔍 Google Auth: Stored user data in localStorage');
                   
                   // Redirect based on account type
                   setTimeout(() => {
                     if (accountType === 'Admin') {
                       router.push('/admin');
                     } else {
-                      router.push('/customer-dashboard');
+                      // Redirect to customer portal on port 3000
+                      window.location.href = 'http://localhost:3000';
                     }
                   }, 1500);
                 } else {
-                  setError(result.error || 'Google authentication failed');
+                  setError('Failed to get user information from Google');
                 }
               } else {
                 setError('Failed to get access token from Google');
               }
             } catch (err: any) {
-              setError('Failed to authenticate with backend');
+              setError('Google authentication failed. Please try again.');
             } finally {
               setLoading(false);
             }
@@ -203,12 +231,14 @@ export default function LoginPage() {
             setSuccess(`Successfully authenticated with Google as ${accountType}!`);
             localStorage.setItem('user', JSON.stringify(event.data.user));
             localStorage.setItem('token', event.data.token);
+            localStorage.setItem('authMethod', 'google');
             
             setTimeout(() => {
               if (accountType === 'Admin') {
                 router.push('/admin');
               } else {
-                router.push('/customer-dashboard');
+                // Redirect to customer portal on port 3000
+                window.location.href = 'http://localhost:3000';
               }
             }, 1500);
             

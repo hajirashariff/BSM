@@ -48,7 +48,6 @@ const settingsSections = [
   { id: 'profile', label: 'Profile', icon: User },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'security', label: 'Security', icon: Shield },
-  { id: 'preferences', label: 'Preferences', icon: SettingsIcon },
   { id: 'integrations', label: 'Integrations', icon: Activity },
 ];
 
@@ -81,12 +80,6 @@ export default function SettingsPage() {
     weeklyDigest: true
   });
 
-  const [preferences, setPreferences] = useState({
-    theme: 'light',
-    timezone: 'UTC-5',
-    dateFormat: 'MM/DD/YYYY',
-    itemsPerPage: 25
-  });
 
   const [security, setSecurity] = useState({
     twoFactorEnabled: false,
@@ -408,188 +401,6 @@ export default function SettingsPage() {
     </div>
   );
 
-  const renderPreferencesSection = () => (
-    <div className="space-y-6">
-      <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100">Preferences</h3>
-      
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Theme</label>
-          <select
-            value={preferences.theme}
-            onChange={(e) => setPreferences({...preferences, theme: e.target.value})}
-            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-          >
-            <option value="light">Light</option>
-            <option value="dark">Dark</option>
-            <option value="auto">Auto</option>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Language</label>
-          <select
-            value="en"
-            disabled
-            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-          >
-            {/* Major International Languages */}
-            <optgroup label="Major Languages">
-              <option value="en">English</option>
-              <option value="es">Español (Spanish)</option>
-              <option value="fr">Français (French)</option>
-              <option value="de">Deutsch (German)</option>
-              <option value="it">Italiano (Italian)</option>
-              <option value="pt">Português (Portuguese)</option>
-              <option value="ru">Русский (Russian)</option>
-              <option value="ja">日本語 (Japanese)</option>
-              <option value="ko">한국어 (Korean)</option>
-              <option value="zh">中文 (Chinese)</option>
-              <option value="ar">العربية (Arabic)</option>
-            </optgroup>
-            
-            {/* Indian Languages */}
-            <optgroup label="Indian Languages">
-              <option value="hi">हिन्दी (Hindi)</option>
-              <option value="bn">বাংলা (Bengali)</option>
-              <option value="te">తెలుగు (Telugu)</option>
-              <option value="mr">मराठी (Marathi)</option>
-              <option value="ta">தமிழ் (Tamil)</option>
-              <option value="gu">ગુજરાતી (Gujarati)</option>
-              <option value="kn">ಕನ್ನಡ (Kannada)</option>
-              <option value="ml">മലയാളം (Malayalam)</option>
-              <option value="pa">ਪੰਜਾਬੀ (Punjabi)</option>
-              <option value="or">ଓଡ଼ିଆ (Odia)</option>
-              <option value="as">অসমীয়া (Assamese)</option>
-              <option value="ne">नेपाली (Nepali)</option>
-            </optgroup>
-            
-            {/* Other Asian Languages */}
-            <optgroup label="Other Asian Languages">
-              <option value="th">ไทย (Thai)</option>
-              <option value="vi">Tiếng Việt (Vietnamese)</option>
-              <option value="id">Bahasa Indonesia (Indonesian)</option>
-              <option value="ms">Bahasa Melayu (Malay)</option>
-              <option value="tl">Filipino (Tagalog)</option>
-            </optgroup>
-            
-            {/* European Languages */}
-            <optgroup label="Other European Languages">
-              <option value="nl">Nederlands (Dutch)</option>
-              <option value="sv">Svenska (Swedish)</option>
-              <option value="no">Norsk (Norwegian)</option>
-              <option value="da">Dansk (Danish)</option>
-              <option value="fi">Suomi (Finnish)</option>
-              <option value="pl">Polski (Polish)</option>
-              <option value="tr">Türkçe (Turkish)</option>
-              <option value="el">Ελληνικά (Greek)</option>
-            </optgroup>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Timezone</label>
-          <select
-            value={preferences.timezone}
-            onChange={(e) => setPreferences({...preferences, timezone: e.target.value})}
-            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-          >
-            {/* Indian Timezones */}
-            <optgroup label="Indian Timezones">
-              <option value="UTC+5:30">UTC+5:30 (IST - Indian Standard Time)</option>
-            </optgroup>
-            
-            {/* North American Timezones */}
-            <optgroup label="North America">
-              <option value="UTC-10">UTC-10 (HST - Hawaii)</option>
-              <option value="UTC-9">UTC-9 (AKST - Alaska)</option>
-              <option value="UTC-8">UTC-8 (PST - Pacific)</option>
-              <option value="UTC-7">UTC-7 (MST - Mountain)</option>
-              <option value="UTC-6">UTC-6 (CST - Central)</option>
-              <option value="UTC-5">UTC-5 (EST - Eastern)</option>
-              <option value="UTC-4">UTC-4 (AST - Atlantic)</option>
-            </optgroup>
-            
-            {/* European Timezones */}
-            <optgroup label="Europe">
-              <option value="UTC+0">UTC+0 (GMT - London)</option>
-              <option value="UTC+1">UTC+1 (CET - Central Europe)</option>
-              <option value="UTC+2">UTC+2 (EET - Eastern Europe)</option>
-              <option value="UTC+3">UTC+3 (MSK - Moscow)</option>
-            </optgroup>
-            
-            {/* Asian Timezones */}
-            <optgroup label="Asia">
-              <option value="UTC+5:30">UTC+5:30 (IST - India)</option>
-              <option value="UTC+6">UTC+6 (BST - Bangladesh)</option>
-              <option value="UTC+7">UTC+7 (ICT - Thailand/Vietnam)</option>
-              <option value="UTC+8">UTC+8 (CST - China/Singapore)</option>
-              <option value="UTC+9">UTC+9 (JST - Japan/Korea)</option>
-              <option value="UTC+10">UTC+10 (AEST - Australia East)</option>
-              <option value="UTC+11">UTC+11 (AEDT - Australia East DST)</option>
-              <option value="UTC+12">UTC+12 (NZST - New Zealand)</option>
-            </optgroup>
-            
-            {/* Middle East & Africa */}
-            <optgroup label="Middle East & Africa">
-              <option value="UTC+2">UTC+2 (EET - Cairo/Johannesburg)</option>
-              <option value="UTC+3">UTC+3 (AST - Dubai/Nairobi)</option>
-              <option value="UTC+4">UTC+4 (GST - Gulf Standard)</option>
-            </optgroup>
-            
-            {/* Other Major Timezones */}
-            <optgroup label="Other Major Timezones">
-              <option value="UTC-3">UTC-3 (BRT - Brazil)</option>
-              <option value="UTC+0">UTC+0 (GMT - Greenwich)</option>
-            </optgroup>
-          </select>
-        </div>
-        
-        <div>
-          <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Date Format</label>
-          <select
-            value={preferences.dateFormat}
-            onChange={(e) => setPreferences({...preferences, dateFormat: e.target.value})}
-            className="input-field dark:bg-zinc-800 dark:border-zinc-700 dark:text-zinc-100"
-          >
-            {/* International Formats */}
-            <optgroup label="International Formats">
-              <option value="YYYY-MM-DD">YYYY-MM-DD (ISO 8601)</option>
-              <option value="DD/MM/YYYY">DD/MM/YYYY (European)</option>
-              <option value="MM/DD/YYYY">MM/DD/YYYY (US)</option>
-            </optgroup>
-            
-            {/* Indian Formats */}
-            <optgroup label="Indian Formats">
-              <option value="DD-MM-YYYY">DD-MM-YYYY (Indian)</option>
-              <option value="DD/MM/YYYY">DD/MM/YYYY (Indian with slashes)</option>
-              <option value="DD-MMM-YYYY">DD-MMM-YYYY (e.g., 15-Jan-2024)</option>
-              <option value="DD MMM YYYY">DD MMM YYYY (e.g., 15 Jan 2024)</option>
-            </optgroup>
-            
-            {/* Other Regional Formats */}
-            <optgroup label="Other Regional Formats">
-              <option value="YYYY/MM/DD">YYYY/MM/DD (Japanese)</option>
-              <option value="DD.MM.YYYY">DD.MM.YYYY (German)</option>
-              <option value="DD-MM-YYYY">DD-MM-YYYY (European)</option>
-            </optgroup>
-          </select>
-        </div>
-      </div>
-      
-      <div className="mt-6 p-4 bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg">
-        <div className="flex items-start space-x-3">
-          <CheckCircle size={20} className="text-green-600 dark:text-green-400 mt-0.5" />
-          <div>
-            <h4 className="font-medium text-green-900 dark:text-green-100">Preferences Saved</h4>
-            <p className="text-sm text-green-700 dark:text-green-300 mt-1">
-              Your preferences are automatically saved and will be applied across all devices.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
 
   const renderIntegrationsSection = () => (
     <div className="space-y-6">
@@ -667,8 +478,6 @@ export default function SettingsPage() {
         return renderNotificationsSection();
       case 'security':
         return renderSecuritySection();
-      case 'preferences':
-        return renderPreferencesSection();
       case 'integrations':
         return renderIntegrationsSection();
       default:
