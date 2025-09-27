@@ -599,7 +599,11 @@ export default function WorkflowTemplates() {
           {categories.slice(1).map((category) => {
             const count = workflowTemplates.filter(t => t.category === category).length;
             return (
-              <div key={category} className="bg-white p-4 rounded-lg">
+              <button
+                key={category}
+                onClick={() => setFilterCategory(category)}
+                className="bg-white p-4 rounded-lg hover:shadow-md transition-all duration-200 hover:scale-105 cursor-pointer text-left w-full"
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="font-medium text-gray-900">{category}</span>
                   <span className="text-sm text-gray-600">{count} templates</span>
@@ -611,7 +615,7 @@ export default function WorkflowTemplates() {
                     .join(', ')}
                   {count > 3 && '...'}
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -675,7 +679,10 @@ export default function WorkflowTemplates() {
                 <List size={16} />
               </button>
             </div>
-            <button className="btn-secondary flex items-center space-x-2">
+            <button 
+              onClick={() => alert('Advanced filters functionality coming soon!')}
+              className="btn-secondary flex items-center space-x-2"
+            >
               <Filter size={16} />
               <span>Advanced</span>
             </button>

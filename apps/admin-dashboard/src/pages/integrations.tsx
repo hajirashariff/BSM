@@ -471,6 +471,8 @@ export default function IntegrationsPage() {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set(['CRM & Customer Platforms', 'Communication & Collaboration']));
   const [selectedIntegration, setSelectedIntegration] = useState<Integration | null>(null);
   const [integrations, setIntegrations] = useState<Integration[]>(integrationsData);
+  const [showAddIntegrationModal, setShowAddIntegrationModal] = useState(false);
+  const [showAdvancedFilters, setShowAdvancedFilters] = useState(false);
 
   const toggleCategory = (category: string) => {
     const newExpanded = new Set(expandedCategories);
@@ -538,6 +540,22 @@ export default function IntegrationsPage() {
     alert('Integration status refreshed! (Mock)');
   };
 
+  const handleAddIntegration = () => {
+    setShowAddIntegrationModal(true);
+  };
+
+  const handleAdvancedFilters = () => {
+    setShowAdvancedFilters(true);
+  };
+
+  const handleCloseAddIntegrationModal = () => {
+    setShowAddIntegrationModal(false);
+  };
+
+  const handleCloseAdvancedFilters = () => {
+    setShowAdvancedFilters(false);
+  };
+
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'connected':
@@ -592,7 +610,10 @@ export default function IntegrationsPage() {
             <RefreshCw size={20} />
             <span>Refresh</span>
           </button>
-          <button className="btn-primary flex items-center space-x-2">
+          <button 
+            onClick={handleAddIntegration}
+            className="btn-primary flex items-center space-x-2"
+          >
             <Plus size={20} />
             <span>Add Integration</span>
           </button>
@@ -685,10 +706,13 @@ export default function IntegrationsPage() {
               ))}
             </select>
           </div>
-          <div className="flex items-center space-x-2">
+          <button 
+            onClick={handleAdvancedFilters}
+            className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-800 transition-colors"
+          >
             <Filter size={20} className="text-gray-400" />
-            <span className="text-sm text-gray-600">Advanced Filters</span>
-          </div>
+            <span>Advanced Filters</span>
+          </button>
         </div>
       </div>
 
@@ -1014,6 +1038,161 @@ export default function IntegrationsPage() {
                     Save Settings
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Add Integration Modal */}
+      {showAddIntegrationModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Add New Integration</h3>
+                <button 
+                  onClick={handleCloseAddIntegrationModal}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Integration Name</label>
+                  <input
+                    type="text"
+                    placeholder="Enter integration name"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    {categories.map(category => (
+                      <option key={category} value={category}>{category}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                  <textarea
+                    placeholder="Enter integration description"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 h-24"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">API Endpoint</label>
+                  <input
+                    type="url"
+                    placeholder="https://api.example.com"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button 
+                  onClick={handleCloseAddIntegrationModal}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('Adding new integration...');
+                    alert('Integration added successfully! (Mock)');
+                    handleCloseAddIntegrationModal();
+                  }}
+                  className="btn-primary"
+                >
+                  Add Integration
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Advanced Filters Modal */}
+      {showAdvancedFilters && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-gray-900">Advanced Filters</h3>
+                <button 
+                  onClick={handleCloseAdvancedFilters}
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  ×
+                </button>
+              </div>
+              
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Health Status</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="all">All Health Status</option>
+                    <option value="healthy">Healthy</option>
+                    <option value="warning">Warning</option>
+                    <option value="error">Error</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Tags</label>
+                  <input
+                    type="text"
+                    placeholder="Filter by tags (comma separated)"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Last Updated</label>
+                  <select className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500">
+                    <option value="all">Any Time</option>
+                    <option value="today">Today</option>
+                    <option value="week">This Week</option>
+                    <option value="month">This Month</option>
+                    <option value="year">This Year</option>
+                  </select>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="recommended" className="rounded" />
+                  <label htmlFor="recommended" className="text-sm text-gray-700">Show only recommended</label>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <input type="checkbox" id="coming-soon" className="rounded" />
+                  <label htmlFor="coming-soon" className="text-sm text-gray-700">Include coming soon</label>
+                </div>
+              </div>
+              
+              <div className="flex justify-end space-x-3 mt-6">
+                <button 
+                  onClick={handleCloseAdvancedFilters}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={() => {
+                    console.log('Applying advanced filters...');
+                    alert('Advanced filters applied! (Mock)');
+                    handleCloseAdvancedFilters();
+                  }}
+                  className="btn-primary"
+                >
+                  Apply Filters
+                </button>
               </div>
             </div>
           </div>

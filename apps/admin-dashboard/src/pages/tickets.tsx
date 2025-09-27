@@ -242,13 +242,13 @@ export default function AdminTicketsPage() {
       {/* Header */}
       <div className="bg-white shadow-sm border-b border-gray-200">
         <div className="px-6 py-4">
-      <div className="flex items-center justify-between">
-        <div>
+          <div className="flex items-center justify-between">
+            <div>
               <h1 className="text-2xl font-bold text-gray-900">Ticket Management</h1>
               <p className="text-gray-600">Manage and track all support tickets</p>
-        </div>
+            </div>
             <div className="flex items-center gap-4">
-        <button 
+              <button 
                 onClick={loadTickets}
                 className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
               >
@@ -258,7 +258,76 @@ export default function AdminTicketsPage() {
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors">
                 <Plus className="w-4 h-4" />
                 Create Ticket
-        </button>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* AI Insights Panel */}
+      <div className="px-6 py-4">
+        <div className="relative overflow-hidden bg-gradient-to-br from-indigo-200 via-purple-200 to-pink-200 rounded-3xl p-8 shadow-2xl">
+          <div className="absolute inset-0 bg-white/10"></div>
+          <div className="relative">
+            <div className="flex items-center justify-between mb-8">
+              <div className="flex items-center space-x-4">
+                <div className="p-4 bg-white/30 backdrop-blur-sm rounded-2xl shadow-lg">
+                  <Brain className="text-purple-600" size={28} />
+                </div>
+                <div>
+                  <h3 className="text-2xl font-bold text-gray-800 mb-2">AI Insights & Automation</h3>
+                  <p className="text-gray-600">Intelligent ticket processing and automation</p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  const generatedInsights = generateTicketInsights();
+                  setInsights(generatedInsights);
+                  setShowInsights(true);
+                }}
+                className="group relative px-6 py-3 bg-white/30 backdrop-blur-sm text-purple-600 font-semibold rounded-xl hover:bg-white/40 transition-all duration-200 hover:scale-105 shadow-lg"
+              >
+                <Brain size={20} className="inline mr-2 group-hover:animate-pulse" />
+                <span>Get Detailed Insights</span>
+              </button>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+              <div className="group bg-white/20 backdrop-blur-sm p-6 rounded-2xl hover:bg-white/30 transition-all duration-300 hover:scale-105 border border-white/30">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Zap className="text-blue-500" size={20} />
+                  </div>
+                  <span className="font-semibold text-gray-800">Auto-Assignment</span>
+                </div>
+                <p className="text-gray-600 text-sm">87% accuracy rate</p>
+              </div>
+              <div className="group bg-white/20 backdrop-blur-sm p-6 rounded-2xl hover:bg-white/30 transition-all duration-300 hover:scale-105 border border-white/30">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Bot className="text-blue-500" size={20} />
+                  </div>
+                  <span className="font-semibold text-gray-800">Rule-Based Approvals</span>
+                </div>
+                <p className="text-gray-600 text-sm">{tickets.filter(t => t.status === 'Open').length} tickets pending</p>
+              </div>
+              <div className="group bg-white/20 backdrop-blur-sm p-6 rounded-2xl hover:bg-white/30 transition-all duration-300 hover:scale-105 border border-white/30">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <AlertCircle className="text-orange-500" size={20} />
+                  </div>
+                  <span className="font-semibold text-gray-800">Escalation Prediction</span>
+                </div>
+                <p className="text-gray-600 text-sm">3 tickets flagged for escalation</p>
+              </div>
+              <div className="group bg-white/20 backdrop-blur-sm p-6 rounded-2xl hover:bg-white/30 transition-all duration-300 hover:scale-105 border border-white/30">
+                <div className="flex items-center space-x-3 mb-3">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="text-green-500" size={20} />
+                  </div>
+                  <span className="font-semibold text-gray-800">Duplicate Detection</span>
+                </div>
+                <p className="text-gray-600 text-sm">5 duplicates prevented</p>
+              </div>
             </div>
           </div>
         </div>

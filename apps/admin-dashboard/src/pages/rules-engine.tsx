@@ -1871,7 +1871,13 @@ function CreateRuleModal({ onClose, onCreate }: { onClose: () => void; onCreate:
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       executionCount: 0,
-      successRate: 0
+      successRate: 0,
+      currentVersion: '1.0.0',
+      versions: [{
+        version: '1.0.0',
+        createdAt: new Date().toISOString(),
+        status: 'Draft'
+      }] as any
     };
 
     onCreate(newRule);

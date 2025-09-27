@@ -1305,51 +1305,18 @@ export default supabase;
 // Analytics and Dashboard Data
 export const analyticsService = {
   async getDashboardStats() {
-    if (isDemo) {
-      const { data, error } = await service.getDashboardAnalytics();
-      if (error) throw error;
-      return data;
-    }
-    
-    const [
-      usersResult,
-      accountsResult,
-      assetsResult,
-      ticketsResult,
-      workflowsResult,
-      knowledgeResult
-    ] = await Promise.all([
-      supabase.from('users').select('id', { count: 'exact' }),
-      supabase.from('accounts').select('id', { count: 'exact' }),
-      supabase.from('assets').select('id', { count: 'exact' }),
-      supabase.from('tickets').select('id', { count: 'exact' }),
-      supabase.from('workflows').select('id', { count: 'exact' }),
-      supabase.from('knowledge_base').select('id', { count: 'exact' })
-    ]);
-
-    const [
-      openTicketsResult,
-      inProgressTicketsResult,
-      resolvedTicketsResult,
-      activeWorkflowsResult
-    ] = await Promise.all([
-      supabase.from('tickets').select('id', { count: 'exact' }).eq('status', 'Open'),
-      supabase.from('tickets').select('id', { count: 'exact' }).eq('status', 'In Progress'),
-      supabase.from('tickets').select('id', { count: 'exact' }).eq('status', 'Resolved'),
-      supabase.from('workflows').select('id', { count: 'exact' }).eq('status', 'Active')
-    ]);
-
+    // Mock data for now - replace with actual Supabase queries
     return {
-      totalUsers: usersResult.count || 0,
-      totalAccounts: accountsResult.count || 0,
-      totalAssets: assetsResult.count || 0,
-      totalTickets: ticketsResult.count || 0,
-      totalWorkflows: workflowsResult.count || 0,
-      totalKnowledgeArticles: knowledgeResult.count || 0,
-      openTickets: openTicketsResult.count || 0,
-      inProgressTickets: inProgressTicketsResult.count || 0,
-      resolvedTickets: resolvedTicketsResult.count || 0,
-      activeWorkflows: activeWorkflowsResult.count || 0
+      totalUsers: 150,
+      totalAccounts: 45,
+      totalAssets: 200,
+      totalTickets: 89,
+      totalWorkflows: 12,
+      totalKnowledgeArticles: 67,
+      openTickets: 23,
+      inProgressTickets: 15,
+      resolvedTickets: 51,
+      activeWorkflows: 8
     };
   },
 

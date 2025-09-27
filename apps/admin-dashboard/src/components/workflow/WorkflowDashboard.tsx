@@ -192,7 +192,11 @@ const healthColors: { [key: string]: string } = {
   'Unknown': 'bg-gray-100 text-gray-800'
 };
 
-export default function WorkflowDashboard() {
+interface WorkflowDashboardProps {
+  setActiveTab: (tab: string) => void;
+}
+
+export default function WorkflowDashboard({ setActiveTab }: WorkflowDashboardProps) {
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [filterStatus, setFilterStatus] = useState('All');
   const [filterCategory, setFilterCategory] = useState('All');
@@ -228,20 +232,51 @@ export default function WorkflowDashboard() {
           <h1 className="text-3xl font-bold text-gray-900">Workflow</h1>
           <p className="text-gray-600">Enterprise-grade automation platform with drag-and-drop workflow builder</p>
         </div>
+        {/* Action Buttons */}
         <div className="flex items-center space-x-3">
-          <button className="btn-secondary flex items-center space-x-2">
+          <button 
+            onClick={() => {
+              const input = document.createElement('input');
+              input.type = 'file';
+              input.accept = '.json,.yaml,.yml';
+              input.onchange = (e) => {
+                const file = (e.target as HTMLInputElement).files?.[0];
+                if (file) {
+                  console.log('Importing workflow file:', file.name);
+                  // TODO: Implement actual import logic
+                }
+              };
+              input.click();
+            }}
+            className="btn-secondary flex items-center space-x-2"
+          >
             <Upload size={20} />
             <span>Import</span>
           </button>
-          <button className="btn-secondary flex items-center space-x-2">
+          <button 
+            onClick={() => {
+              const workflows = [
+                { name: 'Sample Workflow 1', status: 'active' },
+                { name: 'Sample Workflow 2', status: 'inactive' }
+              ];
+              const dataStr = JSON.stringify(workflows, null, 2);
+              const dataBlob = new Blob([dataStr], { type: 'application/json' });
+              const url = URL.createObjectURL(dataBlob);
+              const link = document.createElement('a');
+              link.href = url;
+              link.download = 'workflows-export.json';
+              link.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="btn-secondary flex items-center space-x-2"
+          >
             <Download size={20} />
             <span>Export</span>
           </button>
-          <button className="btn-secondary flex items-center space-x-2">
-            <Settings size={20} />
-            <span>Templates</span>
-          </button>
-          <button className="btn-primary flex items-center space-x-2">
+          <button 
+            onClick={() => setActiveTab('builder')}
+            className="btn-primary flex items-center space-x-2"
+          >
             <Plus size={20} />
             <span>Create Workflow</span>
           </button>

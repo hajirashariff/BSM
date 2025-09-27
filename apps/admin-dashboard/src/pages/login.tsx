@@ -26,7 +26,7 @@ export default function LoginPage() {
   // Load Google API script
   useEffect(() => {
     const loadGoogleAPI = () => {
-      if (typeof window !== 'undefined' && !window.google) {
+      if (typeof window !== 'undefined' && !(window as any).google) {
         const script = document.createElement('script');
         script.src = 'https://accounts.google.com/gsi/client';
         script.async = true;
@@ -92,8 +92,10 @@ export default function LoginPage() {
         const mockUser = {
           id: 'user_' + Date.now(),
           email: formData.email,
-          name: formData.email.split('@')[0],
+          role: accountType,
           accountType: accountType,
+          name: formData.email.split('@')[0],
+          displayName: formData.email.split('@')[0],
           verified: true,
           authMethod: 'email'
         };
@@ -101,7 +103,7 @@ export default function LoginPage() {
         console.log('🔍 Email Auth: Created mock user:', mockUser);
 
         // Store user data in localStorage
-        localStorage.setItem('user', JSON.stringify(mockUser));
+        localStorage.setItem('bsm_user', JSON.stringify(mockUser));
         localStorage.setItem('token', 'mock_token_' + Date.now());
         localStorage.setItem('authMethod', 'email');
         
@@ -133,9 +135,9 @@ export default function LoginPage() {
       setSuccess('');
 
       // Check if Google API is available
-      if (typeof window !== 'undefined' && window.google) {
+      if (typeof window !== 'undefined' && (window as any).google) {
         // Use Google Identity Services
-        const client = window.google.accounts.oauth2.initTokenClient({
+        const client = (window as any).google.accounts.oauth2.initTokenClient({
           client_id: '301055350173-9up9t5job4gssg2c0dtt4m4rge2nlnvs.apps.googleusercontent.com',
           scope: 'email profile',
           callback: async (response: any) => {
@@ -150,9 +152,11 @@ export default function LoginPage() {
                   const mockUser = {
                     id: userInfo.id || 'google_' + Date.now(),
                     email: userInfo.email,
-                    name: userInfo.name || userInfo.email.split('@')[0],
-                    picture: userInfo.picture,
+                    role: accountType,
                     accountType: accountType,
+                    name: userInfo.name || userInfo.email.split('@')[0],
+                    displayName: userInfo.name || userInfo.email.split('@')[0],
+                    avatarUrl: userInfo.picture,
                     verified: true,
                     authMethod: 'google'
                   };
@@ -163,7 +167,7 @@ export default function LoginPage() {
                   setSuccess(`Successfully authenticated with Google as ${accountType}!`);
                   
                   // Store user data in localStorage
-                  localStorage.setItem('user', JSON.stringify(mockUser));
+                  localStorage.setItem('bsm_user', JSON.stringify(mockUser));
                   localStorage.setItem('token', response.access_token);
                   localStorage.setItem('authMethod', 'google');
                   
@@ -229,7 +233,7 @@ export default function LoginPage() {
             
             // Handle successful authentication
             setSuccess(`Successfully authenticated with Google as ${accountType}!`);
-            localStorage.setItem('user', JSON.stringify(event.data.user));
+            localStorage.setItem('bsm_user', JSON.stringify(event.data.user));
             localStorage.setItem('token', event.data.token);
             localStorage.setItem('authMethod', 'google');
             

@@ -117,32 +117,32 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
   }
 
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-amber-500 via-orange-500 to-red-500 rounded-3xl p-8 shadow-2xl">
-      <div className="absolute inset-0 bg-black/10"></div>
+    <div className="relative overflow-hidden bg-gradient-to-br from-blue-200 via-indigo-200 to-cyan-200 rounded-3xl p-8 shadow-2xl">
+      <div className="absolute inset-0 bg-white/10"></div>
       <div className="relative">
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div className="flex items-center space-x-4">
-            <div className="p-4 bg-white/20 backdrop-blur-sm rounded-2xl shadow-lg">
-              <UserCheck className="w-8 h-8 text-white" />
+            <div className="p-4 bg-white/30 backdrop-blur-sm rounded-2xl shadow-lg">
+              <UserCheck className="w-8 h-8 text-blue-600" />
             </div>
             <div>
-              <h2 className="text-2xl font-bold text-white mb-2">
+              <h2 className="text-2xl font-bold text-gray-800 mb-2">
                 Human Approval Chamber
               </h2>
-              <p className="text-white/80">
+              <p className="text-gray-600">
                 Review and approve tickets requiring human intervention
               </p>
             </div>
           </div>
           <div className="flex items-center space-x-4">
             <div className="flex items-center space-x-2">
-              <div className="w-3 h-3 bg-white rounded-full animate-pulse"></div>
-              <span className="text-white font-medium">
+              <div className="w-3 h-3 bg-blue-500 rounded-full animate-pulse"></div>
+              <span className="text-gray-800 font-medium">
                 Active
               </span>
             </div>
-            <div className="px-6 py-3 bg-white/20 backdrop-blur-sm text-white rounded-xl text-sm font-semibold shadow-lg">
+            <div className="px-6 py-3 bg-white/30 backdrop-blur-sm text-blue-600 rounded-xl text-sm font-semibold shadow-lg">
               {pendingTickets.length} Pending
             </div>
           </div>
@@ -151,34 +151,34 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
         {/* Tickets List */}
         <div className="space-y-6">
           {pendingTickets.map((ticket) => (
-            <div key={ticket.id} className="group bg-white/10 backdrop-blur-sm p-6 rounded-2xl hover:bg-white/20 transition-all duration-300 hover:scale-[1.02] border border-white/20">
+            <div key={ticket.id} className="group bg-white/20 backdrop-blur-sm p-6 rounded-2xl hover:bg-white/30 transition-all duration-300 hover:scale-[1.02] border border-white/30">
               <div className="flex items-start justify-between">
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center space-x-4 mb-4">
-                    <span className="font-mono text-sm text-white/80 bg-white/20 px-3 py-1 rounded-lg">
+                    <span className="font-mono text-sm text-gray-600 bg-white/30 px-3 py-1 rounded-lg">
                       #{ticket.id}
                     </span>
                     <span className={`inline-flex px-3 py-1 text-xs font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
                       {ticket.priority}
                     </span>
-                    <span className="text-sm text-white/80 flex items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
                       <Clock className="w-4 h-4 mr-1" />
                       {formatDate(ticket.created)}
                     </span>
-                    <span className="text-sm text-white/80 flex items-center">
+                    <span className="text-sm text-gray-600 flex items-center">
                       {getChannelIcon(ticket.channel)} {ticket.channel}
                     </span>
                   </div>
                   
-                  <h4 className="text-xl font-bold text-white mb-3">
+                  <h4 className="text-xl font-bold text-gray-800 mb-3">
                     {ticket.subject}
                   </h4>
                   
-                  <p className="text-white/80 mb-4 line-clamp-2">
+                  <p className="text-gray-600 mb-4 line-clamp-2">
                     {ticket.description}
                   </p>
                   
-                  <div className="flex items-center space-x-6 text-sm text-white/70 mb-4">
+                  <div className="flex items-center space-x-6 text-sm text-gray-500 mb-4">
                     <div className="flex items-center space-x-2">
                       <User className="w-4 h-4" />
                       <span>{ticket.requester}</span>
@@ -196,7 +196,7 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
                   {ticket.tags && ticket.tags.length > 0 && (
                     <div className="flex flex-wrap gap-2">
                       {ticket.tags.map((tag, index) => (
-                        <span key={index} className="px-3 py-1 bg-white/20 text-white text-xs rounded-full">
+                        <span key={index} className="px-3 py-1 bg-white/30 text-gray-600 text-xs rounded-full">
                           {tag}
                         </span>
                       ))}
@@ -207,21 +207,21 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
                 <div className="flex items-center space-x-3 ml-6">
                   <button
                     onClick={() => onViewDetails(ticket)}
-                    className="p-3 text-white/80 hover:text-white hover:bg-white/20 transition-all duration-200 rounded-xl"
+                    className="p-3 text-gray-600 hover:text-gray-800 hover:bg-white/30 transition-all duration-200 rounded-xl"
                     title="View Details"
                   >
                     <Eye className="w-5 h-5" />
                   </button>
                   <button
                     onClick={() => onApprove(ticket.id)}
-                    className="group inline-flex items-center px-6 py-3 bg-green-500/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-green-500/30 transition-all duration-200 hover:scale-105 shadow-lg border border-green-400/30"
+                    className="group inline-flex items-center px-6 py-3 bg-green-100 backdrop-blur-sm text-green-600 font-semibold rounded-xl hover:bg-green-200 transition-all duration-200 hover:scale-105 shadow-lg border border-green-200"
                   >
                     <ThumbsUp className="w-5 h-5 mr-2 group-hover:animate-bounce" />
                     Approve
                   </button>
                   <button
                     onClick={() => onReject(ticket.id)}
-                    className="group inline-flex items-center px-6 py-3 bg-red-500/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-red-500/30 transition-all duration-200 hover:scale-105 shadow-lg border border-red-400/30"
+                    className="group inline-flex items-center px-6 py-3 bg-red-100 backdrop-blur-sm text-red-600 font-semibold rounded-xl hover:bg-red-200 transition-all duration-200 hover:scale-105 shadow-lg border border-red-200"
                   >
                     <ThumbsDown className="w-5 h-5 mr-2 group-hover:animate-bounce" />
                     Reject
@@ -233,9 +233,9 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="mt-8 pt-6 border-t border-white/20">
+        <div className="mt-8 pt-6 border-t border-white/30">
           <div className="flex items-center justify-between">
-            <div className="text-white/80 font-medium">
+            <div className="text-gray-600 font-medium">
               {pendingTickets.length} ticket{pendingTickets.length !== 1 ? 's' : ''} pending approval
             </div>
             <div className="flex items-center space-x-4">
@@ -245,7 +245,7 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
                     pendingTickets.forEach(ticket => onApprove(ticket.id));
                   }
                 }}
-                className="group inline-flex items-center px-6 py-3 bg-green-500/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-green-500/30 transition-all duration-200 hover:scale-105 shadow-lg border border-green-400/30"
+                className="group inline-flex items-center px-6 py-3 bg-green-100 backdrop-blur-sm text-green-600 font-semibold rounded-xl hover:bg-green-200 transition-all duration-200 hover:scale-105 shadow-lg border border-green-200"
               >
                 <CheckCircle className="w-5 h-5 mr-2 group-hover:animate-pulse" />
                 Approve All
@@ -256,7 +256,7 @@ const HumanApprovalChamber: React.FC<HumanApprovalChamberProps> = ({
                     pendingTickets.forEach(ticket => onReject(ticket.id));
                   }
                 }}
-                className="group inline-flex items-center px-6 py-3 bg-red-500/20 backdrop-blur-sm text-white font-semibold rounded-xl hover:bg-red-500/30 transition-all duration-200 hover:scale-105 shadow-lg border border-red-400/30"
+                className="group inline-flex items-center px-6 py-3 bg-red-100 backdrop-blur-sm text-red-600 font-semibold rounded-xl hover:bg-red-200 transition-all duration-200 hover:scale-105 shadow-lg border border-red-200"
               >
                 <XCircle className="w-5 h-5 mr-2 group-hover:animate-pulse" />
                 Reject All

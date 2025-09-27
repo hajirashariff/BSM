@@ -3,6 +3,10 @@ import { BookOpen, FileText, Folder, TrendingUp, Eye, ThumbsUp, Search, Plus, Ba
 
 const KnowledgePage: React.FC = () => {
   const [activeTab, setActiveTab] = useState('overview');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showNewArticleModal, setShowNewArticleModal] = useState(false);
+  const [showNewCategoryModal, setShowNewCategoryModal] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState(null);
 
   const mockData = {
     articles: [
@@ -27,6 +31,86 @@ const KnowledgePage: React.FC = () => {
     }
   };
 
+  const [articles, setArticles] = useState(mockData.articles);
+  const [categories, setCategories] = useState(mockData.categories);
+  const [newArticleForm, setNewArticleForm] = useState({
+    title: '',
+    category: 'Getting Started',
+    content: ''
+  });
+  const [newCategoryForm, setNewCategoryForm] = useState({
+    name: '',
+    description: ''
+  });
+
+  // Handler functions
+  const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleNewArticle = () => {
+    setShowNewArticleModal(true);
+  };
+
+  const handleNewCategory = () => {
+    setShowNewCategoryModal(true);
+  };
+
+  const handleEditArticle = (article: any) => {
+    setSelectedArticle(article);
+    alert(`Editing article: ${article.title}`);
+  };
+
+  const handleViewArticle = (article: any) => {
+    alert(`Viewing article: ${article.title}\nStatus: ${article.status}\nViews: ${article.views}\nHelpful: ${article.helpful}%`);
+  };
+
+  const handleCloseModal = () => {
+    setShowNewArticleModal(false);
+    setShowNewCategoryModal(false);
+    setSelectedArticle(null);
+    setNewArticleForm({ title: '', category: 'Getting Started', content: '' });
+    setNewCategoryForm({ name: '', description: '' });
+  };
+
+  const handleCreateArticle = () => {
+    if (!newArticleForm.title.trim()) {
+      alert('Please enter a title for the article');
+      return;
+    }
+
+    const newArticle = {
+      id: (articles.length + 1).toString(),
+      title: newArticleForm.title,
+      status: 'review',
+      views: 0,
+      helpful: 0,
+      category: newArticleForm.category,
+      featured: false
+    };
+
+    setArticles([...articles, newArticle]);
+    alert('Article created successfully!');
+    handleCloseModal();
+  };
+
+  const handleCreateCategory = () => {
+    if (!newCategoryForm.name.trim()) {
+      alert('Please enter a category name');
+      return;
+    }
+
+    const newCategory = {
+      id: (categories.length + 1).toString(),
+      name: newCategoryForm.name,
+      count: 0
+    };
+
+    setCategories([...categories, newCategory]);
+    alert('Category created successfully!');
+    handleCloseModal();
+  };
+
   const tabs = [
     { id: 'overview', label: 'Overview', icon: BarChart3 },
     { id: 'articles', label: 'Articles', icon: FileText },
@@ -43,7 +127,7 @@ const KnowledgePage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Articles</p>
-              <p className="text-2xl font-bold text-gray-900">{mockData.analytics.totalArticles}</p>
+              <p className="text-2xl font-bold text-gray-900">{articles.length}</p>
             </div>
           </div>
         </div>
@@ -54,7 +138,7 @@ const KnowledgePage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Published</p>
-              <p className="text-2xl font-bold text-gray-900">{mockData.analytics.publishedArticles}</p>
+              <p className="text-2xl font-bold text-gray-900">{articles.filter(a => a.status === 'published').length}</p>
             </div>
           </div>
         </div>
@@ -65,7 +149,7 @@ const KnowledgePage: React.FC = () => {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-gray-600">Total Views</p>
-              <p className="text-2xl font-bold text-gray-900">{mockData.analytics.totalViews.toLocaleString()}</p>
+              <p className="text-2xl font-bold text-gray-900">{articles.reduce((sum, article) => sum + article.views, 0).toLocaleString()}</p>
             </div>
           </div>
         </div>
@@ -119,11 +203,16 @@ const KnowledgePage: React.FC = () => {
               <input
                 type="text"
                 placeholder="Search articles..."
+                value={searchTerm}
+                onChange={handleSearch}
                 className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
           </div>
-          <button className="btn-primary flex items-center space-x-2">
+          <button 
+            onClick={handleNewArticle}
+            className="btn-primary flex items-center space-x-2"
+          >
             <Plus className="w-4 h-4" />
             <span>New Article</span>
           </button>
@@ -143,7 +232,7 @@ const KnowledgePage: React.FC = () => {
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {mockData.articles.map((article) => (
+            {articles.map((article) => (
               <tr key={article.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="flex items-center">
@@ -154,7 +243,12 @@ const KnowledgePage: React.FC = () => {
                     </div>
                     <div className="ml-4">
                       <div className="flex items-center space-x-2">
-                        <div className="text-sm font-medium text-gray-900">{article.title}</div>
+                        <button 
+                          onClick={() => handleViewArticle(article)}
+                          className="text-sm font-medium text-gray-900 hover:text-blue-600 cursor-pointer"
+                        >
+                          {article.title}
+                        </button>
                         {article.featured && <Star className="w-4 h-4 text-yellow-500" />}
                       </div>
                     </div>
@@ -172,10 +266,18 @@ const KnowledgePage: React.FC = () => {
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{article.helpful}%</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <div className="flex space-x-2">
-                    <button className="text-blue-600 hover:text-blue-900">
+                    <button 
+                      onClick={() => handleEditArticle(article)}
+                      className="text-blue-600 hover:text-blue-900"
+                      title="Edit Article"
+                    >
                       <Edit className="w-4 h-4" />
                     </button>
-                    <button className="text-green-600 hover:text-green-900">
+                    <button 
+                      onClick={() => handleViewArticle(article)}
+                      className="text-green-600 hover:text-green-900"
+                      title="View Article"
+                    >
                       <Eye className="w-4 h-4" />
                     </button>
                   </div>
@@ -192,13 +294,16 @@ const KnowledgePage: React.FC = () => {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-gray-900">Categories</h2>
-        <button className="btn-primary flex items-center space-x-2">
+        <button 
+          onClick={handleNewCategory}
+          className="btn-primary flex items-center space-x-2"
+        >
           <Plus className="w-4 h-4" />
           <span>New Category</span>
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {mockData.categories.map((category) => (
+        {categories.map((category) => (
           <div key={category.id} className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center space-x-3">
               <div className="p-2 bg-blue-100 rounded-lg">
@@ -270,6 +375,106 @@ const KnowledgePage: React.FC = () => {
       <div className="px-6 py-8">
         {renderTabContent()}
       </div>
+
+      {/* New Article Modal */}
+      {showNewArticleModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Create New Article</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Title</label>
+                <input 
+                  type="text" 
+                  value={newArticleForm.title}
+                  onChange={(e) => setNewArticleForm({...newArticleForm, title: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter article title"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                <select 
+                  value={newArticleForm.category}
+                  onChange={(e) => setNewArticleForm({...newArticleForm, category: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                >
+                  {categories.map(cat => (
+                    <option key={cat.id} value={cat.name}>{cat.name}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Content</label>
+                <textarea 
+                  value={newArticleForm.content}
+                  onChange={(e) => setNewArticleForm({...newArticleForm, content: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-32"
+                  placeholder="Enter article content"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button 
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCreateArticle}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create Article
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* New Category Modal */}
+      {showNewCategoryModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Create New Category</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Category Name</label>
+                <input 
+                  type="text" 
+                  value={newCategoryForm.name}
+                  onChange={(e) => setNewCategoryForm({...newCategoryForm, name: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter category name"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <textarea 
+                  value={newCategoryForm.description}
+                  onChange={(e) => setNewCategoryForm({...newCategoryForm, description: e.target.value})}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 h-24"
+                  placeholder="Enter category description"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end space-x-3 mt-6">
+              <button 
+                onClick={handleCloseModal}
+                className="px-4 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50"
+              >
+                Cancel
+              </button>
+              <button 
+                onClick={handleCreateCategory}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+              >
+                Create Category
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
