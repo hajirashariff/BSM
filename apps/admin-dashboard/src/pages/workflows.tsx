@@ -220,17 +220,13 @@ export default function WorkflowsPage() {
     { id: 'builder', label: 'Workflow Builder', icon: Workflow },
     { id: 'executions', label: 'Executions', icon: Activity },
     { id: 'templates', label: 'Templates', icon: Layers },
-    { id: 'ai-features', label: 'AI Features', icon: Brain },
-    { id: 'analytics', label: 'Analytics', icon: TrendingUp },
-    { id: 'security', label: 'Security', icon: Shield },
-    { id: 'rbac', label: 'Access Control', icon: Users },
-    { id: 'settings', label: 'Settings', icon: Settings }
+    { id: 'ai-features', label: 'AI Features', icon: Brain }
   ];
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <WorkflowDashboard />;
+        return <WorkflowDashboard setActiveTab={setActiveTab} />;
       case 'builder':
         return <WorkflowBuilder />;
       case 'executions':
@@ -239,65 +235,13 @@ export default function WorkflowsPage() {
         return <WorkflowTemplates />;
       case 'ai-features':
         return <AIEnhancedWorkflow />;
-      case 'analytics':
-        return (
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <TrendingUp className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Advanced Analytics</h3>
-              <p className="mt-1 text-sm text-gray-500">Coming soon - Detailed workflow analytics and insights</p>
-            </div>
-          </div>
-        );
-      case 'security':
-        return (
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <Shield className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Security & Governance</h3>
-              <p className="mt-1 text-sm text-gray-500">Coming soon - Advanced security controls and compliance</p>
-            </div>
-          </div>
-        );
-      case 'rbac':
-        return <RoleBasedAccess />;
-      case 'settings':
-        return (
-          <div className="space-y-6">
-            <div className="text-center py-12">
-              <Settings className="mx-auto h-12 w-12 text-gray-400" />
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Workflow Settings</h3>
-              <p className="mt-1 text-sm text-gray-500">Coming soon - Global workflow configuration</p>
-            </div>
-          </div>
-        );
       default:
-        return <WorkflowDashboard />;
+        return <WorkflowDashboard setActiveTab={setActiveTab} />;
     }
   };
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="text-gray-600">Enterprise-grade automation platform with drag-and-drop workflow builder</p>
-        </div>
-        <div className="flex items-center space-x-3">
-          <button className="btn-secondary flex items-center space-x-2">
-            <Upload size={20} />
-            <span>Import</span>
-          </button>
-          <button className="btn-secondary flex items-center space-x-2">
-            <Download size={20} />
-            <span>Export</span>
-          </button>
-          <button className="btn-primary flex items-center space-x-2">
-            <Plus size={20} />
-            <span>Create Workflow</span>
-          </button>
-        </div>
-      </div>
 
       {/* Tab Navigation */}
       <div className="border-b border-gray-200">

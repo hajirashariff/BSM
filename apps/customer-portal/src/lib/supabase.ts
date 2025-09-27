@@ -1,13 +1,16 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-key';
+// Real Supabase project for BSM Platform
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://fcdfwqengcmtsatrkwin.supabase.co';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZjZGZ3cWVuZ2NtdHNhdHJrd2luIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTc3MTI1MjAsImV4cCI6MjA3MzI4ODUyMH0.e0VLoxpCLdXzPX0ihTcJiXPmnf3mn9o1Go1hKYvXENE';
 
-// Check if we're using placeholder values
-const isPlaceholder = supabaseUrl === 'https://placeholder.supabase.co' || supabaseAnonKey === 'placeholder-key';
+// Check if we're using real Supabase
+const isRealSupabase = supabaseUrl === 'https://fcdfwqengcmtsatrkwin.supabase.co';
 
-if (isPlaceholder) {
-  console.warn('⚠️  Supabase environment variables not configured. Please update .env.local with your actual Supabase credentials.');
+if (isRealSupabase) {
+  console.log('🚀 Connected to real Supabase project for BSM Platform');
+} else {
+  console.log('⚠️ Using fallback Supabase configuration');
 }
 
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);

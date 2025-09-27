@@ -2,814 +2,432 @@ import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
+import ModernLayout from '../components/ModernLayout';
+
 import { 
-  Home as HomeIcon, 
-  Ticket, 
   HelpCircle,
-  CreditCard,
-  User,
-  FileText,
-  Download,
-  Settings,
-  Bell,
-  Search,
-  Plus,
-  Clock,
-  TrendingUp,
-  CheckCircle,
-  AlertTriangle,
-  Activity,
-  Filter,
-  SortAsc,
-  ExternalLink,
-  Star,
-  Eye,
-  ThumbsUp,
   Phone,
   Mail,
-  Calendar,
+  MessageSquare,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Search,
+  BookOpen,
+  FileText,
+  Video,
+  Download,
+  Star,
+  ThumbsUp,
   ChevronDown,
   ChevronUp,
-  BookOpen,
-  Share2,
-  Bookmark,
-  SortDesc,
-  X,
-  Play,
-  Pause,
-  Volume2,
-  VolumeX,
-  Shield,
+  ExternalLink,
+  Ticket,
+  User,
+  Settings,
+  Bell,
   Zap,
-  Globe,
-  Database,
-  Server,
-  Monitor
+  Shield,
+  Globe
 } from 'lucide-react';
 
-const navItems = [
-  { href: '/', label: 'Home', icon: HomeIcon },
-  { href: '/tickets', label: 'Support Tickets', icon: Ticket },
-  { href: '/help', label: 'Help Center', icon: HelpCircle },
-  { href: '/account', label: 'My Account', icon: User },
-  { href: '/settings', label: 'Settings', icon: Settings },
+const supportMethods = [
+  {
+    id: 'ticket',
+    title: 'Create Support Ticket',
+    description: 'Submit a detailed support request and track its progress',
+    icon: Ticket,
+    color: 'from-blue-500 to-cyan-500',
+    href: '/tickets',
+    action: 'Create Ticket'
+  },
+  {
+    id: 'phone',
+    title: 'Call Support',
+    description: 'Speak directly with our support team',
+    icon: Phone,
+    color: 'from-green-500 to-emerald-500',
+    contact: '+1 (555) 123-4567',
+    availability: 'Mon-Fri 9AM-6PM EST'
+  },
+  {
+    id: 'email',
+    title: 'Email Support',
+    description: 'Send us an email and we\'ll respond within 24 hours',
+    icon: Mail,
+    color: 'from-purple-500 to-pink-500',
+    contact: 'support@bsm.com',
+    response: '24 hours'
+  },
+  {
+    id: 'chat',
+    title: 'Live Chat',
+    description: 'Chat with our support team in real-time',
+    icon: MessageSquare,
+    color: 'from-orange-500 to-red-500',
+    availability: 'Mon-Fri 9AM-6PM EST',
+    status: 'Online'
+  }
 ];
 
-const helpCategories = [
+const faqCategories = [
   {
-    id: 'getting-started',
-    title: 'Getting Started',
-    description: 'Learn the basics of using our platform',
-    icon: BookOpen,
-    articles: 12,
+    id: 'account',
+    title: 'Account & Profile',
+    icon: User,
     color: 'text-blue-600',
     bgColor: 'bg-blue-100 dark:bg-blue-100/20',
-    articles: [
+    questions: [
       {
-        id: 'welcome-to-bsm',
-        title: 'Welcome to BSM Platform',
-        summary: 'Get started with our Business Service Management platform and learn the fundamentals.',
-        content: `# Welcome to BSM Platform
-
-## Overview
-The BSM (Business Service Management) platform is a comprehensive solution designed to streamline your business operations, manage service requests, and provide real-time insights into your organization's performance.
-
-## Key Features
-- **Service Request Management**: Create, track, and manage service requests efficiently
-- **Real-time Monitoring**: Monitor key performance indicators and system health
-- **User Management**: Manage user accounts, roles, and permissions
-- **Reporting & Analytics**: Generate detailed reports and gain insights
-- **Integration Capabilities**: Connect with third-party systems and tools
-
-## Getting Started
-1. **Account Setup**: Complete your profile information
-2. **Team Configuration**: Set up your team and assign roles
-3. **Service Catalog**: Configure your service offerings
-4. **Workflow Setup**: Define your business processes
-5. **Go Live**: Start using the platform for your daily operations
-
-## Best Practices
-- Regularly update your profile information
-- Set up proper notification preferences
-- Use the search functionality to find information quickly
-- Bookmark frequently used articles
-- Provide feedback to help us improve
-
-## Support
-If you need assistance, please contact our support team or create a support ticket through the platform.`,
-        author: 'BSM Team',
-        lastUpdated: '2024-01-15',
-        readTime: '5 min',
-        difficulty: 'Beginner',
-        tags: ['getting-started', 'basics', 'overview'],
-        views: 1250,
-        likes: 89,
-        isBookmarked: false
+        question: 'How do I update my profile information?',
+        answer: 'Go to Settings > Profile to update your personal information, contact details, and preferences.'
       },
       {
-        id: 'first-login',
-        title: 'Your First Login',
-        summary: 'Step-by-step guide for your first login experience.',
-        content: `# Your First Login
-
-## Prerequisites
-- Valid email address
-- Temporary password (sent via email)
-- Internet connection
-
-## Login Process
-1. Navigate to the login page
-2. Enter your email address
-3. Enter the temporary password
-4. Click "Sign In"
-5. You'll be prompted to change your password
-6. Complete your profile setup
-
-## Password Requirements
-- Minimum 8 characters
-- At least one uppercase letter
-- At least one lowercase letter
-- At least one number
-- At least one special character
-
-## Troubleshooting
-If you're having trouble logging in:
-- Check your email for the temporary password
-- Ensure you're using the correct email address
-- Clear your browser cache and cookies
-- Try using a different browser
-- Contact support if issues persist`,
-        author: 'BSM Team',
-        lastUpdated: '2024-01-10',
-        readTime: '3 min',
-        difficulty: 'Beginner',
-        tags: ['login', 'authentication', 'first-time'],
-        views: 980,
-        likes: 67,
-        isBookmarked: false
-      }
-    ]
-  },
-  {
-    id: 'troubleshooting',
-    title: 'Troubleshooting',
-    description: 'Common issues and their solutions',
-    icon: AlertTriangle,
-    articles: 8,
-    color: 'text-red-600',
-    bgColor: 'bg-red-100 dark:bg-red-100/20',
-    articles: [
+        question: 'How do I change my password?',
+        answer: 'Navigate to Settings > Security > Change Password. You\'ll need to enter your current password and create a new one.'
+      },
       {
-        id: 'login-issues',
-        title: 'Login Issues and Solutions',
-        summary: 'Resolve common login problems and authentication issues.',
-        content: `# Login Issues and Solutions
-
-## Common Login Problems
-
-### Forgot Password
-1. Click "Forgot Password" on the login page
-2. Enter your email address
-3. Check your email for reset instructions
-4. Follow the link to create a new password
-
-### Account Locked
-If your account is locked due to multiple failed attempts:
-1. Wait 15 minutes before trying again
-2. Contact your administrator to unlock the account
-3. Ensure you're using the correct credentials
-
-### Browser Issues
-- Clear browser cache and cookies
-- Disable browser extensions temporarily
-- Try incognito/private mode
-- Update your browser to the latest version
-
-### Network Issues
-- Check your internet connection
-- Try accessing from a different network
-- Contact your IT department if on corporate network
-- Check firewall settings
-
-## Still Having Issues?
-Contact our support team with:
-- Your email address
-- Error messages (if any)
-- Browser and version
-- Steps you've already tried`,
-        author: 'Support Team',
-        lastUpdated: '2024-01-12',
-        readTime: '4 min',
-        difficulty: 'Intermediate',
-        tags: ['troubleshooting', 'login', 'authentication'],
-        views: 2100,
-        likes: 156,
-        isBookmarked: false
+        question: 'How do I update my notification preferences?',
+        answer: 'Visit Settings > Notifications to customize which notifications you receive and how you receive them.'
       }
     ]
   },
   {
-    id: 'account-management',
-    title: 'Account Management',
-    description: 'Manage your account and settings',
-    icon: User,
-    articles: 15,
+    id: 'tickets',
+    title: 'Support Tickets',
+    icon: Ticket,
     color: 'text-green-600',
     bgColor: 'bg-green-100 dark:bg-green-100/20',
-    articles: [
+    questions: [
       {
-        id: 'profile-settings',
-        title: 'Managing Your Profile',
-        summary: 'Learn how to update your profile information and preferences.',
-        content: `# Managing Your Profile
-
-## Profile Information
-Your profile contains important information that helps personalize your experience:
-
-### Personal Details
-- **Name**: Your full name as it appears in the system
-- **Email**: Primary contact email (cannot be changed by users)
-- **Phone**: Contact number for notifications
-- **Title**: Your job title or role
-- **Department**: Your organizational department
-
-### Professional Information
-- **Company**: Your organization name
-- **Location**: Your work location
-- **Manager**: Your direct supervisor
-- **Team**: Your team or group
-
-## Updating Your Profile
-1. Navigate to Account > Profile
-2. Click "Edit" to modify information
-3. Update the fields you want to change
-4. Click "Save" to apply changes
-5. Changes are reflected immediately
-
-## Profile Picture
-- Supported formats: JPG, PNG, GIF
-- Maximum size: 5MB
-- Recommended dimensions: 200x200 pixels
-- Click on the profile picture to upload a new one
-
-## Privacy Settings
-- Control who can see your information
-- Set notification preferences
-- Manage data sharing options
-- Configure security settings`,
-        author: 'BSM Team',
-        lastUpdated: '2024-01-08',
-        readTime: '6 min',
-        difficulty: 'Beginner',
-        tags: ['profile', 'account', 'settings'],
-        views: 1800,
-        likes: 134,
-        isBookmarked: false
+        question: 'How do I create a support ticket?',
+        answer: 'Click on "Create Ticket" in the navigation or go to the Tickets page and click the "New Ticket" button.'
+      },
+      {
+        question: 'How can I track my ticket status?',
+        answer: 'All your tickets are visible on the Tickets page with real-time status updates and progress tracking.'
+      },
+      {
+        question: 'Can I attach files to my ticket?',
+        answer: 'Yes, you can attach files, screenshots, and documents when creating or updating a ticket.'
       }
     ]
   },
   {
     id: 'billing',
     title: 'Billing & Payments',
-    description: 'Billing information and payment methods',
-    icon: CreditCard,
-    articles: 6,
+    icon: CheckCircle,
     color: 'text-purple-600',
     bgColor: 'bg-purple-100 dark:bg-purple-100/20',
-    articles: []
+    questions: [
+      {
+        question: 'How do I view my billing history?',
+        answer: 'Go to Settings > Billing to view your invoices, payment history, and billing information.'
+      },
+      {
+        question: 'What payment methods do you accept?',
+        answer: 'We accept all major credit cards, PayPal, and bank transfers for enterprise accounts.'
+      },
+      {
+        question: 'How do I update my payment method?',
+        answer: 'Navigate to Settings > Billing > Payment Methods to add, update, or remove payment methods.'
+      }
+    ]
   },
   {
-    id: 'api',
-    title: 'API Documentation',
-    description: 'Integrate with our API',
-    icon: FileText,
-    articles: 20,
+    id: 'technical',
+    title: 'Technical Support',
+    icon: Settings,
     color: 'text-orange-600',
     bgColor: 'bg-orange-100 dark:bg-orange-100/20',
-    articles: []
-  },
-  {
-    id: 'security',
-    title: 'Security',
-    description: 'Security best practices and guidelines',
-    icon: Shield,
-    articles: 10,
-    color: 'text-indigo-600',
-    bgColor: 'bg-indigo-100 dark:bg-indigo-100/20',
-    articles: []
+    questions: [
+      {
+        question: 'What are the system requirements?',
+        answer: 'Our platform works on all modern browsers. We recommend Chrome, Firefox, Safari, or Edge with JavaScript enabled.'
+      },
+      {
+        question: 'How do I troubleshoot login issues?',
+        answer: 'Try clearing your browser cache, check your internet connection, or reset your password if needed.'
+      },
+      {
+        question: 'Is there a mobile app available?',
+        answer: 'Yes, our mobile app is available for iOS and Android devices. Download it from the App Store or Google Play.'
+      }
+    ]
   }
 ];
 
-const featuredArticles = [
+const quickLinks = [
   {
-    id: 'featured-1',
-    title: 'How to Create Your First Service Request',
-    summary: 'Step-by-step guide to creating and managing service requests effectively.',
-    category: 'Getting Started',
-    readTime: '3 min',
-    difficulty: 'Beginner',
-    views: 3200,
-    likes: 245,
-    isBookmarked: false
+    title: 'User Guide',
+    description: 'Complete guide to using our platform',
+    icon: BookOpen,
+    href: '#',
+    color: 'from-indigo-500 to-blue-500'
   },
   {
-    id: 'featured-2',
-    title: 'Understanding Your Home Page',
-    summary: 'Learn how to navigate and customize your home page for maximum efficiency.',
-    category: 'Getting Started',
-    readTime: '4 min',
-    difficulty: 'Beginner',
-    views: 2800,
-    likes: 198,
-    isBookmarked: false
+    title: 'API Documentation',
+    description: 'Technical documentation for developers',
+    icon: FileText,
+    href: '#',
+    color: 'from-green-500 to-teal-500'
   },
   {
-    id: 'featured-3',
-    title: 'Troubleshooting Common Issues',
-    summary: 'Quick solutions to the most frequently encountered problems.',
-    category: 'Troubleshooting',
-    readTime: '5 min',
-    difficulty: 'Intermediate',
-    views: 4500,
-    likes: 312,
-    isBookmarked: false
+    title: 'Video Tutorials',
+    description: 'Step-by-step video guides',
+    icon: Video,
+    href: '#',
+    color: 'from-purple-500 to-pink-500'
+  },
+  {
+    title: 'System Status',
+    description: 'Check current system status and uptime',
+    icon: Globe,
+    href: '/services',
+    color: 'from-orange-500 to-red-500'
   }
 ];
 
-const supportChannels = [
-  {
-    name: 'Email Support',
-    description: 'Send us a detailed message',
-    icon: Mail,
-    available: true,
-    responseTime: 'Within 2 hours'
-  },
-  {
-    name: 'Phone Support',
-    description: 'Speak directly with our experts',
-    icon: Phone,
-    available: true,
-    responseTime: 'Immediate'
-  }
-];
-
-export default function Help() {
-  const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState('');
+export default function HelpPage() {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
-  const [selectedCategory, setSelectedCategory] = useState(null);
-  const [expandedArticle, setExpandedArticle] = useState(null);
-  const [sortBy, setSortBy] = useState('relevance');
-  const [filterDifficulty, setFilterDifficulty] = useState('all');
-  const [showFilters, setShowFilters] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  const handleArticleExpand = (articleId) => {
-    setExpandedArticle(expandedArticle === articleId ? null : articleId);
+  const handleFaqToggle = (faqId: string) => {
+    setExpandedFaq(expandedFaq === faqId ? null : faqId);
   };
 
-  const handleBookmark = (articleId) => {
-    // Toggle bookmark status
-    console.log('Bookmark toggled for article:', articleId);
-  };
+  const filteredFaqs = faqCategories.map(category => ({
+    ...category,
+    questions: category.questions.filter(q => 
+      q.question.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      q.answer.toLowerCase().includes(searchQuery.toLowerCase())
+    )
+  })).filter(category => category.questions.length > 0);
 
-  const handleLike = (articleId) => {
-    // Handle like functionality
-    console.log('Liked article:', articleId);
-  };
-
-  const handleShare = (articleId) => {
-    // Handle share functionality
-    console.log('Shared article:', articleId);
-  };
-
-  const filteredCategories = helpCategories.filter(category => 
-    category.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    category.description.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredSupportMethods = supportMethods.filter(method =>
+    method.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    method.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  const allArticles = helpCategories.flatMap(category => 
-    category.articles.map(article => ({ ...article, category: category.title }))
+  const filteredQuickLinks = quickLinks.filter(link =>
+    link.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    link.description.toLowerCase().includes(searchQuery.toLowerCase())
   );
-
-  const filteredArticles = allArticles.filter(article => {
-    const matchesSearch = article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.summary.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         article.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-    
-    const matchesDifficulty = filterDifficulty === 'all' || article.difficulty.toLowerCase() === filterDifficulty;
-    
-    return matchesSearch && matchesDifficulty;
-  });
 
   if (!isClient) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-slate-800 dark:to-slate-900 flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600 dark:text-zinc-400">Loading...</p>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600 dark:text-gray-400">Loading...</p>
         </div>
       </div>
     );
   }
 
-  const ArticleCard = ({ article, isExpanded, onExpand, onBookmark, onLike, onShare }) => (
-    <div className="card dark:bg-zinc-900 dark:border-zinc-800">
-      <div className="flex items-start justify-between mb-4">
-        <div className="flex-1">
-          <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-2">
-            {article.title}
-          </h3>
-          <p className="text-gray-600 dark:text-zinc-400 mb-3">
-            {article.summary}
-          </p>
-          
-          <div className="flex items-center space-x-4 text-sm text-gray-500 dark:text-zinc-400 mb-4">
-            <div className="flex items-center space-x-1">
-              <Clock size={14} />
-              <span>{article.readTime}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Eye size={14} />
-              <span>{article.views.toLocaleString()}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <ThumbsUp size={14} />
-              <span>{article.likes}</span>
-            </div>
-            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-              article.difficulty === 'Beginner' ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300' :
-              article.difficulty === 'Intermediate' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-300' :
-              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-300'
-            }`}>
-              {article.difficulty}
-            </span>
-          </div>
+  return (
+    <ModernLayout>
+      <Head>
+        <title>Customer Support - BSM Customer Portal</title>
+        <meta name="description" content="Get help and support for your BSM platform" />
+      </Head>
 
-          <div className="flex flex-wrap gap-2 mb-4">
-            {article.tags.map((tag, index) => (
-              <span
-                key={index}
-                className="px-2 py-1 text-xs bg-gray-100 text-gray-700 rounded-full dark:bg-zinc-800 dark:text-zinc-300"
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            Customer Support
+          </h1>
+          <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
+            We're here to help! Get support through multiple channels and find answers to common questions.
+          </p>
+        </div>
+
+        {/* Search Bar */}
+        <div className="max-w-2xl mx-auto mb-12">
+          <div className="relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <input
+              type="text"
+              placeholder="Search for help articles, FAQs, or topics..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
+            />
+          </div>
+        </div>
+
+        {/* Support Methods */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            How can we help you?
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredSupportMethods.map((method) => (
+              <div
+                key={method.id}
+                className="bg-blue-600 hover:bg-blue-700 rounded-lg p-6 text-white hover:shadow-md transition-all duration-200"
               >
-                {tag}
-              </span>
+                <div className="flex items-center mb-4">
+                  <method.icon className="w-8 h-8 mr-3" />
+                  <h3 className="text-lg font-semibold">{method.title}</h3>
+                </div>
+                <p className="text-white/90 mb-4">{method.description}</p>
+                {method.href ? (
+                  <Link
+                    href={method.href}
+                    className="inline-flex items-center text-white font-medium hover:text-white/80 transition-colors"
+                  >
+                    {method.action}
+                    <ExternalLink className="w-4 h-4 ml-2" />
+                  </Link>
+                ) : (
+                  <div className="space-y-2">
+                    <p className="text-white/90 font-medium">{method.contact}</p>
+                    {method.availability && (
+                      <p className="text-white/70 text-sm">{method.availability}</p>
+                    )}
+                    {method.response && (
+                      <p className="text-white/70 text-sm">Response time: {method.response}</p>
+                    )}
+                    {method.status && (
+                      <span className="inline-flex items-center text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                        {method.status}
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
             ))}
           </div>
         </div>
 
-        <div className="flex items-center space-x-2 ml-4">
-          <button
-            onClick={() => onBookmark(article.id)}
-            className={`p-2 rounded-lg transition-colors ${
-              article.isBookmarked
-                ? 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300'
-                : 'text-gray-400 hover:text-yellow-600 hover:bg-yellow-100 dark:hover:bg-yellow-900 dark:hover:text-yellow-300'
-            }`}
-          >
-            <Bookmark size={16} />
-          </button>
-          <button
-            onClick={() => onLike(article.id)}
-            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-100 dark:hover:bg-blue-900 dark:hover:text-blue-300 rounded-lg transition-colors"
-          >
-            <ThumbsUp size={16} />
-          </button>
-          <button
-            onClick={() => onShare(article.id)}
-            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-100 dark:hover:bg-green-900 dark:hover:text-green-300 rounded-lg transition-colors"
-          >
-            <Share2 size={16} />
-          </button>
-        </div>
-      </div>
-
-      <button
-        onClick={() => onExpand(article.id)}
-        className="w-full flex items-center justify-center space-x-2 py-2 px-4 border border-gray-300 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 transition-colors"
-      >
-        <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">
-          {isExpanded ? 'Show Less' : 'Read More'}
-        </span>
-        {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-      </button>
-
-      {isExpanded && (
-        <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
-          <div className="prose prose-sm max-w-none dark:prose-invert">
-            <div className="whitespace-pre-wrap text-gray-700 dark:text-zinc-300">
-              {article.content}
-            </div>
-          </div>
-          
-          <div className="mt-4 flex items-center justify-between text-sm text-gray-500 dark:text-zinc-400">
-            <div className="flex items-center space-x-4">
-              <span>By {article.author}</span>
-              <span>Updated {new Date(article.lastUpdated).toLocaleDateString()}</span>
-            </div>
-            <div className="flex items-center space-x-2">
-              <button className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300">
-                <ExternalLink size={14} className="mr-1" />
-                Open in New Tab
-              </button>
-            </div>
+        {/* Quick Links */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            Quick Resources
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {filteredQuickLinks.map((link, index) => (
+              <Link
+                key={index}
+                href={link.href}
+                className="bg-blue-600 hover:bg-blue-700 rounded-lg p-6 text-white hover:shadow-md transition-all duration-200 group"
+              >
+                <div className="flex items-center mb-4">
+                  <link.icon className="w-8 h-8 mr-3" />
+                  <h3 className="text-lg font-semibold">{link.title}</h3>
+                </div>
+                <p className="text-white/90 mb-4">{link.description}</p>
+                <div className="flex items-center text-white font-medium group-hover:text-white/80 transition-colors">
+                  Learn More
+                  <ExternalLink className="w-4 h-4 ml-2" />
+                </div>
+              </Link>
+            ))}
           </div>
         </div>
-      )}
-    </div>
-  );
 
-  return (
-    <>
-      <Head>
-        <title>Help Center - BSM Customer Portal</title>
-        <meta name="description" content="Get help and support for BSM platform" />
-      </Head>
-
-      <div className="min-h-screen bg-gray-50 dark:bg-zinc-950">
-        {/* Sidebar */}
-        <aside className="fixed left-0 top-0 h-full w-64 bg-white shadow-lg border-r border-gray-200 z-50 dark:bg-zinc-900 dark:border-zinc-800">
-          <div className="p-6">
-            <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
-                <span className="text-white font-bold text-sm">BSM</span>
+        {/* FAQ Section */}
+        <div className="mb-16">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+            Frequently Asked Questions
+          </h2>
+          {searchQuery && (
+            <div className="text-center text-gray-600 dark:text-gray-400 mb-8">
+              <p className="text-lg font-medium mb-2">
+                Search results for "{searchQuery}"
+              </p>
+              <div className="flex justify-center space-x-6 text-sm">
+                <span>{filteredSupportMethods.length} support methods</span>
+                <span>{filteredQuickLinks.length} resources</span>
+                <span>{filteredFaqs.reduce((total, category) => total + category.questions.length, 0)} FAQs</span>
               </div>
-              <h1 className="text-xl font-bold text-gray-900 dark:text-zinc-100">Customer Portal</h1>
-            </div>
-          </div>
-          
-          <nav className="px-4 pb-4">
-            <ul className="space-y-2">
-              {navItems.map((item) => {
-                const active = router.pathname === item.href;
-                const Icon = item.icon;
-                return (
-                  <li key={item.href}>
-                    <Link 
-                      href={item.href} 
-                      className={`flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors duration-200 ${
-                        active 
-                          ? 'bg-primary-50 text-primary-700 border-r-2 border-primary-600 dark:bg-primary-900 dark:text-primary-300 dark:border-primary-400' 
-                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-zinc-300 dark:hover:bg-zinc-800 dark:hover:text-zinc-100'
-                      }`}
-                    >
-                      <Icon size={20} />
-                      <span className="font-medium">{item.label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-        </aside>
-
-        {/* Main Content */}
-        <div className="ml-64">
-          {/* Header */}
-          <header className="bg-white dark:bg-zinc-900 shadow-sm border-b border-gray-200 dark:border-zinc-800 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <h2 className="text-2xl font-semibold text-gray-900 dark:text-zinc-100">
-                  Help Center
-                </h2>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <button className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 dark:text-zinc-300 dark:hover:text-zinc-100 dark:hover:bg-zinc-800 rounded-lg">
-                  <Bell size={20} />
-                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">3</span>
-                </button>
-
-                <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-300 dark:bg-zinc-700 rounded-full flex items-center justify-center">
-                    <User size={16} />
-                  </div>
-                  <span className="text-sm font-medium text-gray-700 dark:text-zinc-300">Customer User</span>
-                </div>
-              </div>
-            </div>
-          </header>
-
-          {/* Page Content */}
-          <main className="p-6">
-            <div className="space-y-6">
-              {/* Search and Filters */}
-              <div className="card dark:bg-zinc-900 dark:border-zinc-800">
-                <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                      <input
-                        type="text"
-                        placeholder="Search help articles..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent dark:bg-zinc-800 dark:text-zinc-100"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex items-center space-x-2">
-                    <button
-                      onClick={() => setShowFilters(!showFilters)}
-                      className="flex items-center space-x-2 px-4 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg hover:bg-gray-50 dark:hover:bg-zinc-800 dark:text-zinc-300 dark:hover:text-zinc-100"
-                    >
-                      <Filter size={20} />
-                      <span>Filters</span>
-                    </button>
-
-                    <select
-                      value={sortBy}
-                      onChange={(e) => setSortBy(e.target.value)}
-                      className="px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:text-zinc-100"
-                    >
-                      <option value="relevance">Sort by Relevance</option>
-                      <option value="views">Sort by Views</option>
-                      <option value="likes">Sort by Likes</option>
-                      <option value="recent">Sort by Recent</option>
-                    </select>
-                  </div>
-                </div>
-
-                {showFilters && (
-                  <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-1">Difficulty</label>
-                        <select
-                          value={filterDifficulty}
-                          onChange={(e) => setFilterDifficulty(e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 dark:border-zinc-700 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-500 dark:bg-zinc-800 dark:text-zinc-100"
-                        >
-                          <option value="all">All Levels</option>
-                          <option value="beginner">Beginner</option>
-                          <option value="intermediate">Intermediate</option>
-                          <option value="advanced">Advanced</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-
-              {/* Featured Articles */}
-              {!searchTerm && (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-4">Featured Articles</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {featuredArticles.map((article) => (
-                      <div key={article.id} className="card dark:bg-zinc-900 dark:border-zinc-800">
-                        <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-medium text-gray-900 dark:text-zinc-100">{article.title}</h4>
-                          <button
-                            onClick={() => handleBookmark(article.id)}
-                            className={`p-1 rounded ${
-                              article.isBookmarked
-                                ? 'text-yellow-600 bg-yellow-100 dark:bg-yellow-900 dark:text-yellow-300'
-                                : 'text-gray-400 hover:text-yellow-600'
-                            }`}
-                          >
-                            <Bookmark size={16} />
-                          </button>
-                        </div>
-                        <p className="text-sm text-gray-600 dark:text-zinc-400 mb-3">{article.summary}</p>
-                        <div className="flex items-center justify-between text-xs text-gray-500 dark:text-zinc-400">
-                          <div className="flex items-center space-x-3">
-                            <span>{article.readTime}</span>
-                            <span>{article.views.toLocaleString()} views</span>
-                          </div>
-                          <span className="text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
-                            Read More
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+              {filteredSupportMethods.length === 0 && filteredQuickLinks.length === 0 && filteredFaqs.reduce((total, category) => total + category.questions.length, 0) === 0 && (
+                <div className="mt-8 p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
+                  <p className="text-yellow-800 dark:text-yellow-200 font-medium">
+                    No results found for "{searchQuery}". Try different keywords or browse our support methods below.
+                  </p>
                 </div>
               )}
-
-              {/* Search Results or Categories */}
-              {searchTerm ? (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-4">
-                    Search Results ({filteredArticles.length})
-                  </h3>
+            </div>
+          )}
+          <div className="space-y-6">
+            {filteredFaqs.map((category) => (
+              <div key={category.id} className="bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700">
+                <div className="p-6">
+                  <div className="flex items-center mb-4">
+                    <div className={`w-10 h-10 ${category.bgColor} rounded-lg flex items-center justify-center mr-4`}>
+                      <category.icon className={`w-5 h-5 ${category.color}`} />
+                    </div>
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
+                      {category.title}
+                    </h3>
+                  </div>
                   <div className="space-y-4">
-                    {filteredArticles.map((article) => (
-                      <ArticleCard
-                        key={article.id}
-                        article={article}
-                        isExpanded={expandedArticle === article.id}
-                        onExpand={handleArticleExpand}
-                        onBookmark={handleBookmark}
-                        onLike={handleLike}
-                        onShare={handleShare}
-                      />
+                    {category.questions.map((faq, index) => (
+                      <div key={index} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
+                        <button
+                          onClick={() => handleFaqToggle(`${category.id}-${index}`)}
+                          className="w-full text-left py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-2 -mx-2 transition-colors"
+                        >
+                          <span className="font-medium text-gray-900 dark:text-white pr-4">
+                            {faq.question}
+                          </span>
+                          {expandedFaq === `${category.id}-${index}` ? (
+                            <ChevronUp className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          ) : (
+                            <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
+                          )}
+                        </button>
+                        {expandedFaq === `${category.id}-${index}` && (
+                          <div className="pb-4 px-2 -mx-2">
+                            <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
+                              {faq.answer}
+                            </p>
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 </div>
-              ) : (
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-4">Help Categories</h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {filteredCategories.map((category) => {
-                      const Icon = category.icon;
-                      return (
-                        <div
-                          key={category.id}
-                          className="card dark:bg-zinc-900 dark:border-zinc-800 cursor-pointer hover:shadow-lg transition-shadow"
-                          onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
-                        >
-                          <div className="flex items-start space-x-4">
-                            <div className={`w-12 h-12 ${category.bgColor} rounded-lg flex items-center justify-center`}>
-                              <Icon size={24} className={category.color} />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="font-semibold text-gray-900 dark:text-zinc-100 mb-1">
-                                {category.title}
-                              </h4>
-                              <p className="text-sm text-gray-600 dark:text-zinc-400 mb-2">
-                                {category.description}
-                              </p>
-                              <div className="flex items-center justify-between">
-                                <span className="text-xs text-gray-500 dark:text-zinc-400">
-                                  {category.articles.length} articles
-                                </span>
-                                <ChevronDown 
-                                  size={16} 
-                                  className={`text-gray-400 transition-transform ${
-                                    selectedCategory === category.id ? 'rotate-180' : ''
-                                  }`} 
-                                />
-                              </div>
-                            </div>
-                          </div>
-
-                          {selectedCategory === category.id && (
-                            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-700">
-                              <div className="space-y-3">
-                                {category.articles.map((article) => (
-                                  <ArticleCard
-                                    key={article.id}
-                                    article={article}
-                                    isExpanded={expandedArticle === article.id}
-                                    onExpand={handleArticleExpand}
-                                    onBookmark={handleBookmark}
-                                    onLike={handleLike}
-                                    onShare={handleShare}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              {/* Support Channels */}
-              <div>
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-zinc-100 mb-4">Need More Help?</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  {supportChannels.map((channel, index) => {
-                    const Icon = channel.icon;
-                    return (
-                      <div key={index} className="card dark:bg-zinc-900 dark:border-zinc-800">
-                        <div className="flex items-center space-x-3 mb-3">
-                          <div className="w-10 h-10 bg-primary-100 dark:bg-primary-900/30 rounded-lg flex items-center justify-center">
-                            <Icon size={20} className="text-primary-600 dark:text-primary-400" />
-                          </div>
-                          <div>
-                            <h4 className="font-medium text-gray-900 dark:text-zinc-100">{channel.name}</h4>
-                            <p className="text-sm text-gray-600 dark:text-zinc-400">{channel.description}</p>
-                          </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <span className="text-sm text-gray-500 dark:text-zinc-400">
-                            {channel.responseTime}
-                          </span>
-                          <button className={`px-3 py-1 text-sm font-medium rounded-full ${
-                            channel.available
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300'
-                              : 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-300'
-                          }`}>
-                            {channel.available ? 'Available' : 'Unavailable'}
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
               </div>
-            </div>
-          </main>
+            ))}
+          </div>
+        </div>
+
+        {/* Contact Information */}
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-8 text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            Still need help?
+          </h2>
+          <p className="text-gray-600 dark:text-gray-300 mb-6">
+            Our support team is available 24/7 to assist you with any questions or issues.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Link
+              href="/tickets"
+              className="inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <Ticket className="w-5 h-5 mr-2" />
+              Create Support Ticket
+            </Link>
+            <a
+              href="mailto:support@bsm.com"
+              className="inline-flex items-center justify-center px-6 py-3 bg-gray-600 text-white font-medium rounded-lg hover:bg-gray-700 transition-colors"
+            >
+              <Mail className="w-5 h-5 mr-2" />
+              Email Support
+            </a>
+          </div>
         </div>
       </div>
-    </>
+    </ModernLayout>
   );
 }

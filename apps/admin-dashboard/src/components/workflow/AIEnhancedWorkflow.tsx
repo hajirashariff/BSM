@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Brain, 
   Bot, 
@@ -27,10 +27,138 @@ import {
   Download,
   Upload,
   Filter,
-  Search
+  Search,
+  X,
+  Save,
+  Loader2
 } from 'lucide-react';
 
-const aiFeatures = [
+// AI Feature Configuration Interface
+interface AIFeatureConfig {
+  id: string;
+  name: string;
+  description: string;
+  status: 'Active' | 'Beta' | 'Inactive';
+  accuracy: number;
+  usage: number;
+  category: string;
+  icon: any;
+  color: string;
+  config: {
+    enabled: boolean;
+    threshold: number;
+    autoExecute: boolean;
+    notifications: boolean;
+    customPrompt?: string;
+    parameters?: Record<string, any>;
+  };
+}
+
+// Gemini API Service
+class GeminiAIService {
+  private static async callGeminiAPI(prompt: string, context?: any) {
+    try {
+      const response = await fetch('/api/gemini-proxy', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          contents: [{
+            parts: [{
+              text: prompt + (context ? `\n\nContext: ${JSON.stringify(context)}` : '')
+            }]
+          }]
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`API request failed: ${response.status}`);
+      }
+
+      const data = await response.json();
+      return data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+    } catch (error) {
+      console.error('Gemini API Error:', error);
+      throw error;
+    }
+  }
+
+  static async analyzeSentiment(text: string) {
+    const prompt = `Analyze the sentiment of this text and return a JSON response with:
+    - sentiment: "positive", "negative", or "neutral"
+    - confidence: number between 0-1
+    - urgency: "low", "medium", or "high"
+    - category: suggested category for routing
+    
+    Text: "${text}"`;
+    
+    return await this.callGeminiAPI(prompt);
+  }
+
+  static async predictRouting(ticketData: any) {
+    const prompt = `Based on this ticket data, predict the best routing and return JSON with:
+    - suggestedAssignee: team or person
+    - priority: "low", "medium", "high", "critical"
+    - estimatedResolutionTime: in hours
+    - confidence: number between 0-1
+    
+    Ticket Data: ${JSON.stringify(ticketData)}`;
+    
+    return await this.callGeminiAPI(prompt);
+  }
+
+  static async detectAnomaly(patterns: any[]) {
+    const prompt = `Analyze these patterns for anomalies and return JSON with:
+    - isAnomaly: boolean
+    - anomalyType: description
+    - severity: "low", "medium", "high"
+    - recommendedAction: suggested response
+    
+    Patterns: ${JSON.stringify(patterns)}`;
+    
+    return await this.callGeminiAPI(prompt);
+  }
+
+  static async categorizeTicket(ticketData: any) {
+    const prompt = `Categorize this ticket and return JSON with:
+    - category: main category
+    - subcategory: specific subcategory
+    - tags: array of relevant tags
+    - confidence: number between 0-1
+    
+    Ticket: ${JSON.stringify(ticketData)}`;
+    
+    return await this.callGeminiAPI(prompt);
+  }
+
+  static async optimizeWorkflow(workflowData: any) {
+    const prompt = `Analyze this workflow and suggest optimizations. Return JSON with:
+    - bottlenecks: array of identified bottlenecks
+    - suggestions: array of improvement suggestions
+    - estimatedImprovement: percentage improvement expected
+    - priority: "low", "medium", "high"
+    
+    Workflow: ${JSON.stringify(workflowData)}`;
+    
+    return await this.callGeminiAPI(prompt);
+  }
+
+  static async scheduleOptimally(resources: any[], tasks: any[]) {
+    const prompt = `Optimize scheduling for these resources and tasks. Return JSON with:
+    - schedule: optimized schedule
+    - utilization: resource utilization percentage
+    - conflicts: any scheduling conflicts
+    - efficiency: overall efficiency score
+    
+    Resources: ${JSON.stringify(resources)}
+    Tasks: ${JSON.stringify(tasks)}`;
+    
+    return await this.callGeminiAPI(prompt);
+  }
+}
+
+const aiFeatures: AIFeatureConfig[] = [
   {
     id: 'sentiment-analysis',
     name: 'Sentiment Analysis',
@@ -40,7 +168,19 @@ const aiFeatures = [
     usage: 1234,
     category: 'Text Processing',
     icon: Brain,
-    color: 'bg-blue-100 text-blue-800'
+    color: 'bg-blue-100 text-blue-800',
+    config: {
+      enabled: true,
+      threshold: 0.8,
+      autoExecute: true,
+      notifications: true,
+      customPrompt: 'Analyze sentiment and determine urgency level',
+      parameters: {
+        model: 'gemini-pro',
+        maxTokens: 1000,
+        temperature: 0.3
+      }
+    }
   },
   {
     id: 'predictive-routing',
@@ -51,7 +191,19 @@ const aiFeatures = [
     usage: 856,
     category: 'Decision Making',
     icon: Target,
-    color: 'bg-green-100 text-green-800'
+    color: 'bg-green-100 text-green-800',
+    config: {
+      enabled: true,
+      threshold: 0.75,
+      autoExecute: true,
+      notifications: true,
+      customPrompt: 'Route tickets to the most appropriate team based on content and history',
+      parameters: {
+        model: 'gemini-pro',
+        maxTokens: 1500,
+        temperature: 0.2
+      }
+    }
   },
   {
     id: 'anomaly-detection',
@@ -62,7 +214,19 @@ const aiFeatures = [
     usage: 445,
     category: 'Monitoring',
     icon: AlertTriangle,
-    color: 'bg-yellow-100 text-yellow-800'
+    color: 'bg-yellow-100 text-yellow-800',
+    config: {
+      enabled: true,
+      threshold: 0.85,
+      autoExecute: true,
+      notifications: true,
+      customPrompt: 'Identify unusual patterns and potential issues in system data',
+      parameters: {
+        model: 'gemini-pro',
+        maxTokens: 1200,
+        temperature: 0.1
+      }
+    }
   },
   {
     id: 'auto-categorization',
@@ -73,7 +237,19 @@ const aiFeatures = [
     usage: 2103,
     category: 'Classification',
     icon: FileText,
-    color: 'bg-purple-100 text-purple-800'
+    color: 'bg-purple-100 text-purple-800',
+    config: {
+      enabled: true,
+      threshold: 0.8,
+      autoExecute: true,
+      notifications: false,
+      customPrompt: 'Categorize tickets into appropriate categories and subcategories',
+      parameters: {
+        model: 'gemini-pro',
+        maxTokens: 1000,
+        temperature: 0.2
+      }
+    }
   },
   {
     id: 'workflow-optimization',
@@ -84,7 +260,19 @@ const aiFeatures = [
     usage: 234,
     category: 'Optimization',
     icon: TrendingUp,
-    color: 'bg-orange-100 text-orange-800'
+    color: 'bg-orange-100 text-orange-800',
+    config: {
+      enabled: true,
+      threshold: 0.7,
+      autoExecute: false,
+      notifications: true,
+      customPrompt: 'Analyze workflows and suggest optimizations for better efficiency',
+      parameters: {
+        model: 'gemini-pro',
+        maxTokens: 2000,
+        temperature: 0.4
+      }
+    }
   },
   {
     id: 'smart-scheduling',
@@ -95,7 +283,19 @@ const aiFeatures = [
     usage: 567,
     category: 'Scheduling',
     icon: Calendar,
-    color: 'bg-indigo-100 text-indigo-800'
+    color: 'bg-indigo-100 text-indigo-800',
+    config: {
+      enabled: true,
+      threshold: 0.8,
+      autoExecute: true,
+      notifications: true,
+      customPrompt: 'Optimize scheduling based on resource availability and task priorities',
+      parameters: {
+        model: 'gemini-pro',
+        maxTokens: 1800,
+        temperature: 0.3
+      }
+    }
   }
 ];
 
@@ -140,7 +340,11 @@ const aiWorkflows = [
 
 export default function AIEnhancedWorkflow() {
   const [activeView, setActiveView] = useState('features');
-  const [selectedFeature, setSelectedFeature] = useState(null);
+  const [selectedFeature, setSelectedFeature] = useState<AIFeatureConfig | null>(null);
+  const [showConfigModal, setShowConfigModal] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+  const [aiResults, setAiResults] = useState<Record<string, any>>({});
+  const [testInput, setTestInput] = useState('');
 
   const views = [
     { id: 'features', label: 'AI Features', icon: Brain },
@@ -148,6 +352,273 @@ export default function AIEnhancedWorkflow() {
     { id: 'analytics', label: 'AI Analytics', icon: BarChart3 },
     { id: 'models', label: 'Model Management', icon: Settings }
   ];
+
+  // AI Processing Functions
+  const processAI = async (featureId: string, input: any) => {
+    setIsProcessing(true);
+    try {
+      let result;
+      switch (featureId) {
+        case 'sentiment-analysis':
+          result = await GeminiAIService.analyzeSentiment(input);
+          break;
+        case 'predictive-routing':
+          result = await GeminiAIService.predictRouting(input);
+          break;
+        case 'anomaly-detection':
+          result = await GeminiAIService.detectAnomaly(input);
+          break;
+        case 'auto-categorization':
+          result = await GeminiAIService.categorizeTicket(input);
+          break;
+        case 'workflow-optimization':
+          result = await GeminiAIService.optimizeWorkflow(input);
+          break;
+        case 'smart-scheduling':
+          result = await GeminiAIService.scheduleOptimally(input.resources, input.tasks);
+          break;
+        default:
+          throw new Error('Unknown AI feature');
+      }
+      
+      setAiResults(prev => ({ ...prev, [featureId]: result }));
+      return result;
+    } catch (error) {
+      console.error('AI Processing Error:', error);
+      setAiResults(prev => ({ 
+        ...prev, 
+        [featureId]: { error: 'Failed to process AI request' } 
+      }));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleConfigure = (feature: AIFeatureConfig) => {
+    setSelectedFeature(feature);
+    setShowConfigModal(true);
+  };
+
+  const handleTestFeature = async (feature: AIFeatureConfig) => {
+    if (!testInput.trim()) return;
+    
+    const mockData = {
+      text: testInput,
+      ticketData: { subject: testInput, description: testInput },
+      patterns: [{ data: testInput, timestamp: new Date().toISOString() }],
+      workflowData: { name: testInput, steps: [] },
+      resources: [{ name: 'Team A', capacity: 100 }],
+      tasks: [{ name: testInput, duration: 60 }]
+    };
+    
+    await processAI(feature.id, mockData);
+  };
+
+  const ConfigurationModal = () => {
+    if (!selectedFeature) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-xl font-semibold">Configure {selectedFeature.name}</h3>
+            <button
+              onClick={() => setShowConfigModal(false)}
+              className="text-gray-400 hover:text-gray-600"
+            >
+              <X size={24} />
+            </button>
+          </div>
+
+          <div className="space-y-6">
+            {/* Basic Configuration */}
+            <div>
+              <h4 className="text-lg font-medium mb-4">Basic Configuration</h4>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Confidence Threshold
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    max="1"
+                    step="0.1"
+                    value={selectedFeature.config.threshold}
+                    onChange={(e) => {
+                      const updatedFeature = {
+                        ...selectedFeature,
+                        config: {
+                          ...selectedFeature.config,
+                          threshold: parseFloat(e.target.value)
+                        }
+                      };
+                      setSelectedFeature(updatedFeature);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Status
+                  </label>
+                  <select
+                    value={selectedFeature.status}
+                    onChange={(e) => {
+                      const updatedFeature = {
+                        ...selectedFeature,
+                        status: e.target.value as 'Active' | 'Beta' | 'Inactive'
+                      };
+                      setSelectedFeature(updatedFeature);
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Beta">Beta</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            {/* Advanced Settings */}
+            <div>
+              <h4 className="text-lg font-medium mb-4">Advanced Settings</h4>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">
+                    Auto Execute
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={selectedFeature.config.autoExecute}
+                    onChange={(e) => {
+                      const updatedFeature = {
+                        ...selectedFeature,
+                        config: {
+                          ...selectedFeature.config,
+                          autoExecute: e.target.checked
+                        }
+                      };
+                      setSelectedFeature(updatedFeature);
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-700">
+                    Enable Notifications
+                  </label>
+                  <input
+                    type="checkbox"
+                    checked={selectedFeature.config.notifications}
+                    onChange={(e) => {
+                      const updatedFeature = {
+                        ...selectedFeature,
+                        config: {
+                          ...selectedFeature.config,
+                          notifications: e.target.checked
+                        }
+                      };
+                      setSelectedFeature(updatedFeature);
+                    }}
+                    className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Custom Prompt */}
+            <div>
+              <h4 className="text-lg font-medium mb-4">Custom Prompt</h4>
+              <textarea
+                value={selectedFeature.config.customPrompt || ''}
+                onChange={(e) => {
+                  const updatedFeature = {
+                    ...selectedFeature,
+                    config: {
+                      ...selectedFeature.config,
+                      customPrompt: e.target.value
+                    }
+                  };
+                  setSelectedFeature(updatedFeature);
+                }}
+                rows={4}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Enter custom prompt for this AI feature..."
+              />
+            </div>
+
+            {/* Test Section */}
+            <div>
+              <h4 className="text-lg font-medium mb-4">Test Feature</h4>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Test Input
+                  </label>
+                  <textarea
+                    value={testInput}
+                    onChange={(e) => setTestInput(e.target.value)}
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter test data..."
+                  />
+                </div>
+                <button
+                  onClick={() => handleTestFeature(selectedFeature)}
+                  disabled={isProcessing || !testInput.trim()}
+                  className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isProcessing ? (
+                    <Loader2 className="animate-spin" size={16} />
+                  ) : (
+                    <Play size={16} />
+                  )}
+                  <span>{isProcessing ? 'Processing...' : 'Test Feature'}</span>
+                </button>
+                
+                {aiResults[selectedFeature.id] && (
+                  <div className="mt-4 p-4 bg-gray-50 rounded-md">
+                    <h5 className="font-medium mb-2">AI Result:</h5>
+                    <pre className="text-sm text-gray-700 whitespace-pre-wrap">
+                      {typeof aiResults[selectedFeature.id] === 'string' 
+                        ? aiResults[selectedFeature.id] 
+                        : JSON.stringify(aiResults[selectedFeature.id], null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Save Button */}
+            <div className="flex justify-end space-x-3 pt-6 border-t">
+              <button
+                onClick={() => setShowConfigModal(false)}
+                className="px-4 py-2 text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  // Update the feature in the array
+                  const featureIndex = aiFeatures.findIndex(f => f.id === selectedFeature.id);
+                  if (featureIndex !== -1) {
+                    aiFeatures[featureIndex] = selectedFeature;
+                  }
+                  setShowConfigModal(false);
+                }}
+                className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+              >
+                <Save size={16} />
+                <span>Save Configuration</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
 
   const renderFeatures = () => (
     <div className="space-y-6">
@@ -182,9 +653,48 @@ export default function AIEnhancedWorkflow() {
                     <span className="ml-1 font-medium text-gray-900">{feature.usage.toLocaleString()}</span>
                   </div>
                 </div>
-                <button className="text-primary-600 hover:text-primary-700 text-sm font-medium">
-                  Configure
+                <button 
+                  onClick={() => handleConfigure(feature)}
+                  className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center space-x-1"
+                >
+                  <Settings size={14} />
+                  <span>Configure</span>
                 </button>
+              </div>
+              
+              {/* Quick Test Section */}
+              <div className="mt-4 pt-4 border-t border-gray-100">
+                <div className="flex items-center space-x-2">
+                  <input
+                    type="text"
+                    placeholder="Quick test..."
+                    className="flex-1 px-3 py-1 text-sm border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    onChange={(e) => setTestInput(e.target.value)}
+                  />
+                  <button
+                    onClick={() => handleTestFeature(feature)}
+                    disabled={isProcessing || !testInput.trim()}
+                    className="px-3 py-1 text-xs bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-1"
+                  >
+                    {isProcessing ? (
+                      <Loader2 className="animate-spin" size={12} />
+                    ) : (
+                      <Play size={12} />
+                    )}
+                    <span>Test</span>
+                  </button>
+                </div>
+                
+                {aiResults[feature.id] && (
+                  <div className="mt-2 p-2 bg-gray-50 rounded text-xs">
+                    <div className="font-medium text-gray-700 mb-1">AI Result:</div>
+                    <div className="text-gray-600 max-h-20 overflow-y-auto">
+                      {typeof aiResults[feature.id] === 'string' 
+                        ? aiResults[feature.id].substring(0, 100) + (aiResults[feature.id].length > 100 ? '...' : '')
+                        : JSON.stringify(aiResults[feature.id]).substring(0, 100) + '...'}
+                    </div>
+                  </div>
+                )}
               </div>
             </div>
           );
@@ -413,6 +923,9 @@ export default function AIEnhancedWorkflow() {
       <div className="min-h-screen">
         {renderContent()}
       </div>
+
+      {/* Configuration Modal */}
+      {showConfigModal && <ConfigurationModal />}
     </div>
   );
 }

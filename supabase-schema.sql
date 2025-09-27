@@ -1,217 +1,327 @@
--- BSM Platform Complete Database Schema
--- Run this SQL in your Supabase SQL editor
+-- BSM Platform Database Schema
+-- Run this in Supabase SQL Editor
 
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Create users table
+-- Users table
 CREATE TABLE IF NOT EXISTS users (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) UNIQUE NOT NULL,
-  role VARCHAR(50) DEFAULT 'Customer' CHECK (role IN ('Customer', 'Admin')),
-  avatar_url TEXT,
-  phone VARCHAR(20),
-  department VARCHAR(100),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    email VARCHAR(255) UNIQUE NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'customer', 'agent')),
+    company VARCHAR(255),
+    avatar_url TEXT,
+    phone VARCHAR(20),
+    department VARCHAR(100),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create accounts table
+-- Accounts table
 CREATE TABLE IF NOT EXISTS accounts (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  account_type VARCHAR(50) NOT NULL CHECK (account_type IN ('Enterprise', 'SMB', 'Startup', 'Individual')),
-  status VARCHAR(50) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Suspended', 'Pending')),
-  industry VARCHAR(100),
-  size VARCHAR(50),
-  address TEXT,
-  phone VARCHAR(20),
-  email VARCHAR(255),
-  website VARCHAR(255),
-  description TEXT,
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('enterprise', 'small_business', 'individual')),
+    status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
+    industry VARCHAR(100),
+    size VARCHAR(50),
+    contact_email VARCHAR(255),
+    contact_phone VARCHAR(20),
+    address TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create assets table
+-- Assets table
 CREATE TABLE IF NOT EXISTS assets (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  type VARCHAR(50) NOT NULL CHECK (type IN ('Hardware', 'Software', 'Service', 'License', 'Document')),
-  category VARCHAR(100),
-  status VARCHAR(50) DEFAULT 'Active' CHECK (status IN ('Active', 'Inactive', 'Maintenance', 'Retired')),
-  value DECIMAL(15,2),
-  location VARCHAR(255),
-  assigned_to UUID REFERENCES users(id),
-  account_id UUID REFERENCES accounts(id),
-  purchase_date DATE,
-  warranty_expiry DATE,
-  description TEXT,
-  serial_number VARCHAR(255),
-  vendor VARCHAR(255),
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('server', 'network', 'application', 'database', 'storage')),
+    status VARCHAR(50) NOT NULL DEFAULT 'operational' CHECK (status IN ('operational', 'degraded', 'outage', 'maintenance')),
+    priority VARCHAR(50) NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),
+    location VARCHAR(255),
+    ip_address INET,
+    os VARCHAR(100),
+    version VARCHAR(50),
+    owner_id UUID REFERENCES users(id),
+    account_id UUID REFERENCES accounts(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create tickets table
+-- Tickets table
 CREATE TABLE IF NOT EXISTS tickets (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  status VARCHAR(50) DEFAULT 'Open' CHECK (status IN ('Open', 'In Progress', 'Resolved', 'Closed', 'Cancelled')),
-  priority VARCHAR(50) DEFAULT 'Medium' CHECK (priority IN ('Low', 'Medium', 'High', 'Critical')),
-  category VARCHAR(100),
-  subcategory VARCHAR(100),
-  assigned_to UUID REFERENCES users(id),
-  created_by UUID REFERENCES users(id),
-  account_id UUID REFERENCES accounts(id),
-  asset_id UUID REFERENCES assets(id),
-  due_date TIMESTAMP WITH TIME ZONE,
-  resolution TEXT,
-  tags TEXT[],
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    subject VARCHAR(255) NOT NULL,
+    description TEXT,
+    status VARCHAR(50) NOT NULL DEFAULT 'Open' CHECK (status IN ('Open', 'In Progress', 'Pending', 'Resolved', 'Closed')),
+    priority VARCHAR(50) NOT NULL DEFAULT 'Medium' CHECK (priority IN ('Low', 'Medium', 'High', 'Critical')),
+    category VARCHAR(100),
+    subcategory VARCHAR(100),
+    assigned_to UUID REFERENCES users(id),
+    created_by UUID REFERENCES users(id),
+    account_id UUID REFERENCES accounts(id),
+    asset_id UUID REFERENCES assets(id),
+    resolution_notes TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create workflows table
-CREATE TABLE IF NOT EXISTS workflows (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  status VARCHAR(50) DEFAULT 'Draft' CHECK (status IN ('Draft', 'Active', 'Inactive', 'Archived')),
-  category VARCHAR(100),
-  trigger_type VARCHAR(100),
-  conditions JSONB,
-  actions JSONB,
-  execution_count INTEGER DEFAULT 0,
-  success_rate DECIMAL(5,2) DEFAULT 0,
-  last_executed TIMESTAMP WITH TIME ZONE,
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- Dashboard stats table
+CREATE TABLE IF NOT EXISTS dashboard_stats (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    metric_name VARCHAR(100) NOT NULL,
+    metric_value DECIMAL(10,2) NOT NULL,
+    metric_unit VARCHAR(20),
+    recorded_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create workflow_executions table
-CREATE TABLE IF NOT EXISTS workflow_executions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  workflow_id UUID REFERENCES workflows(id),
-  status VARCHAR(50) NOT NULL CHECK (status IN ('Success', 'Failure', 'Running', 'Cancelled')),
-  input_data JSONB,
-  output_data JSONB,
-  error_message TEXT,
-  execution_time_ms INTEGER,
-  started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  completed_at TIMESTAMP WITH TIME ZONE
-);
-
--- Create knowledge_base table
+-- Knowledge base table
 CREATE TABLE IF NOT EXISTS knowledge_base (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  content TEXT NOT NULL,
-  category VARCHAR(100),
-  tags TEXT[],
-  status VARCHAR(50) DEFAULT 'Draft' CHECK (status IN ('Draft', 'Published', 'Archived')),
-  views INTEGER DEFAULT 0,
-  helpful_votes INTEGER DEFAULT 0,
-  not_helpful_votes INTEGER DEFAULT 0,
-  featured BOOLEAN DEFAULT FALSE,
-  author_id UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    content TEXT NOT NULL,
+    category VARCHAR(100),
+    tags TEXT[],
+    author_id UUID REFERENCES users(id),
+    views INTEGER DEFAULT 0,
+    helpful_votes INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'published' CHECK (status IN ('draft', 'published', 'archived')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create notifications table
+-- Notifications table
 CREATE TABLE IF NOT EXISTS notifications (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  user_id UUID REFERENCES users(id),
-  title VARCHAR(255) NOT NULL,
-  message TEXT,
-  type VARCHAR(50) NOT NULL CHECK (type IN ('Info', 'Warning', 'Error', 'Success')),
-  read BOOLEAN DEFAULT FALSE,
-  action_url VARCHAR(500),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES users(id),
+    title VARCHAR(255) NOT NULL,
+    message TEXT NOT NULL,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('info', 'warning', 'error', 'success')),
+    read BOOLEAN DEFAULT FALSE,
+    action_url TEXT,
+    priority VARCHAR(50) DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create service_requests table
+-- Service requests table
 CREATE TABLE IF NOT EXISTS service_requests (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  title VARCHAR(255) NOT NULL,
-  description TEXT,
-  service_type VARCHAR(100),
-  status VARCHAR(50) DEFAULT 'Pending' CHECK (status IN ('Pending', 'Approved', 'Rejected', 'In Progress', 'Completed')),
-  priority VARCHAR(50) DEFAULT 'Medium' CHECK (priority IN ('Low', 'Medium', 'High', 'Critical')),
-  requested_by UUID REFERENCES users(id),
-  assigned_to UUID REFERENCES users(id),
-  account_id UUID REFERENCES accounts(id),
-  due_date TIMESTAMP WITH TIME ZONE,
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    title VARCHAR(255) NOT NULL,
+    description TEXT,
+    type VARCHAR(50) NOT NULL CHECK (type IN ('incident', 'request', 'change', 'problem')),
+    status VARCHAR(50) NOT NULL DEFAULT 'new' CHECK (status IN ('new', 'assigned', 'in_progress', 'resolved', 'closed')),
+    priority VARCHAR(50) NOT NULL DEFAULT 'medium' CHECK (priority IN ('low', 'medium', 'high', 'critical')),
+    requester_id UUID REFERENCES users(id),
+    assignee_id UUID REFERENCES users(id),
+    account_id UUID REFERENCES accounts(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create integrations table
+-- Workflows table
+CREATE TABLE IF NOT EXISTS workflows (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    trigger_event VARCHAR(100),
+    conditions JSONB,
+    actions JSONB,
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'draft')),
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Integrations table
 CREATE TABLE IF NOT EXISTS integrations (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  type VARCHAR(100) NOT NULL,
-  status VARCHAR(50) DEFAULT 'Inactive' CHECK (status IN ('Active', 'Inactive', 'Error', 'Pending')),
-  configuration JSONB,
-  last_sync TIMESTAMP WITH TIME ZONE,
-  sync_status VARCHAR(50),
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    type VARCHAR(50) NOT NULL,
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'error')),
+    config JSONB,
+    last_sync TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create rules table
+-- Rules table
 CREATE TABLE IF NOT EXISTS rules (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  category VARCHAR(100),
-  status VARCHAR(50) DEFAULT 'Draft' CHECK (status IN ('Draft', 'Active', 'Inactive')),
-  priority INTEGER DEFAULT 0,
-  conditions JSONB NOT NULL,
-  actions JSONB NOT NULL,
-  execution_count INTEGER DEFAULT 0,
-  success_rate DECIMAL(5,2) DEFAULT 0,
-  last_executed TIMESTAMP WITH TIME ZONE,
-  created_by UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
-  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(255) NOT NULL,
+    description TEXT,
+    condition JSONB NOT NULL,
+    action JSONB NOT NULL,
+    priority INTEGER DEFAULT 0,
+    status VARCHAR(50) DEFAULT 'active' CHECK (status IN ('active', 'inactive')),
+    created_by UUID REFERENCES users(id),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Create rule_executions table
-CREATE TABLE IF NOT EXISTS rule_executions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  rule_id UUID REFERENCES rules(id),
-  status VARCHAR(50) NOT NULL CHECK (status IN ('Success', 'Failure')),
-  input_data JSONB,
-  output_data JSONB,
-  error_message TEXT,
-  execution_time_ms INTEGER,
-  executed_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Row Level Security (RLS) Policies
+ALTER TABLE users ENABLE ROW LEVEL SECURITY;
+ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE assets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE dashboard_stats ENABLE ROW LEVEL SECURITY;
+ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE service_requests ENABLE ROW LEVEL SECURITY;
+ALTER TABLE workflows ENABLE ROW LEVEL SECURITY;
+ALTER TABLE integrations ENABLE ROW LEVEL SECURITY;
+ALTER TABLE rules ENABLE ROW LEVEL SECURITY;
 
--- Create rule_versions table
-CREATE TABLE IF NOT EXISTS rule_versions (
-  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-  rule_id UUID REFERENCES rules(id),
-  version VARCHAR(20) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  description TEXT,
-  category VARCHAR(100),
-  status VARCHAR(50) DEFAULT 'Draft' CHECK (status IN ('Draft', 'Active', 'Inactive')),
-  priority INTEGER DEFAULT 0,
-  conditions JSONB NOT NULL,
-  actions JSONB NOT NULL,
-  change_reason TEXT,
-  modified_by UUID REFERENCES users(id),
-  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-);
+-- Users policies
+CREATE POLICY "Users can read own data" ON users
+    FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own data" ON users
+    FOR UPDATE USING (auth.uid() = id);
+
+CREATE POLICY "Admins can read all users" ON users
+    FOR SELECT USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Accounts policies
+CREATE POLICY "Users can read accounts" ON accounts
+    FOR SELECT USING (true);
+
+CREATE POLICY "Admins can manage accounts" ON accounts
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Assets policies
+CREATE POLICY "Users can read assets" ON assets
+    FOR SELECT USING (true);
+
+CREATE POLICY "Admins can manage assets" ON assets
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Tickets policies
+CREATE POLICY "Users can read own tickets" ON tickets
+    FOR SELECT USING (auth.uid() = created_by OR auth.uid() = assigned_to);
+
+CREATE POLICY "Users can create tickets" ON tickets
+    FOR INSERT WITH CHECK (auth.uid() = created_by);
+
+CREATE POLICY "Users can update own tickets" ON tickets
+    FOR UPDATE USING (auth.uid() = created_by OR auth.uid() = assigned_to);
+
+CREATE POLICY "Admins can manage all tickets" ON tickets
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Dashboard stats policies
+CREATE POLICY "Users can read own stats" ON dashboard_stats
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can create own stats" ON dashboard_stats
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Knowledge base policies
+CREATE POLICY "Everyone can read published knowledge base" ON knowledge_base
+    FOR SELECT USING (status = 'published');
+
+CREATE POLICY "Authors can manage own articles" ON knowledge_base
+    FOR ALL USING (auth.uid() = author_id);
+
+-- Notifications policies
+CREATE POLICY "Users can read own notifications" ON notifications
+    FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own notifications" ON notifications
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Service requests policies
+CREATE POLICY "Users can read own service requests" ON service_requests
+    FOR SELECT USING (auth.uid() = requester_id OR auth.uid() = assignee_id);
+
+CREATE POLICY "Users can create service requests" ON service_requests
+    FOR INSERT WITH CHECK (auth.uid() = requester_id);
+
+-- Workflows policies
+CREATE POLICY "Admins can manage workflows" ON workflows
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Integrations policies
+CREATE POLICY "Admins can manage integrations" ON integrations
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Rules policies
+CREATE POLICY "Admins can manage rules" ON rules
+    FOR ALL USING (
+        EXISTS (
+            SELECT 1 FROM users 
+            WHERE id = auth.uid() AND role = 'admin'
+        )
+    );
+
+-- Insert sample data
+INSERT INTO users (id, email, name, role, company, department) VALUES
+    ('550e8400-e29b-41d4-a716-446655440000', 'admin@bsm.com', 'Admin User', 'admin', 'BSM Corp', 'IT'),
+    ('550e8400-e29b-41d4-a716-446655440001', 'customer@bsm.com', 'John Customer', 'customer', 'Customer Corp', 'Operations'),
+    ('550e8400-e29b-41d4-a716-446655440002', 'agent@bsm.com', 'Support Agent', 'agent', 'BSM Corp', 'Support');
+
+INSERT INTO accounts (id, name, type, status, industry, size, contact_email) VALUES
+    ('660e8400-e29b-41d4-a716-446655440000', 'Customer Corp', 'enterprise', 'active', 'Technology', '1000+', 'contact@customer.com'),
+    ('660e8400-e29b-41d4-a716-446655440001', 'Small Business Inc', 'small_business', 'active', 'Retail', '50-100', 'info@smallbiz.com');
+
+INSERT INTO assets (id, name, type, status, priority, location, ip_address, owner_id, account_id) VALUES
+    ('770e8400-e29b-41d4-a716-446655440000', 'Web Server 01', 'server', 'operational', 'high', 'Data Center A', '192.168.1.100', '550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440000'),
+    ('770e8400-e29b-41d4-a716-446655440001', 'Database Server', 'database', 'operational', 'critical', 'Data Center A', '192.168.1.101', '550e8400-e29b-41d4-a716-446655440000', '660e8400-e29b-41d4-a716-446655440000');
+
+INSERT INTO tickets (id, subject, description, status, priority, category, created_by, assigned_to, account_id) VALUES
+    ('880e8400-e29b-41d4-a716-446655440000', 'Login Issue', 'Cannot access the portal', 'Open', 'High', 'Authentication', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440000'),
+    ('880e8400-e29b-41d4-a716-446655440001', 'Feature Request', 'Need new dashboard widget', 'In Progress', 'Medium', 'Enhancement', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440000'),
+    ('880e8400-e29b-41d4-a716-446655440002', 'Bug Report', 'Chart not displaying correctly', 'Resolved', 'High', 'Bug', '550e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440002', '660e8400-e29b-41d4-a716-446655440000');
+
+INSERT INTO dashboard_stats (user_id, metric_name, metric_value, metric_unit) VALUES
+    ('550e8400-e29b-41d4-a716-446655440000', 'total_tickets', 150, 'count'),
+    ('550e8400-e29b-41d4-a716-446655440000', 'open_tickets', 25, 'count'),
+    ('550e8400-e29b-41d4-a716-446655440000', 'resolved_tickets', 125, 'count'),
+    ('550e8400-e29b-41d4-a716-446655440000', 'avg_resolution_time', 4.5, 'hours'),
+    ('550e8400-e29b-41d4-a716-446655440001', 'my_tickets', 3, 'count'),
+    ('550e8400-e29b-41d4-a716-446655440001', 'open_tickets', 1, 'count'),
+    ('550e8400-e29b-41d4-a716-446655440001', 'resolved_tickets', 2, 'count'),
+    ('550e8400-e29b-41d4-a716-446655440001', 'satisfaction_score', 4.2, 'rating');
+
+INSERT INTO knowledge_base (id, title, content, category, tags, author_id, views, helpful_votes) VALUES
+    ('990e8400-e29b-41d4-a716-446655440000', 'How to Reset Password', 'Step-by-step guide to reset your password...', 'Authentication', ARRAY['password', 'login', 'security'], '550e8400-e29b-41d4-a716-446655440000', 45, 12),
+    ('990e8400-e29b-41d4-a716-446655440001', 'Creating Support Tickets', 'Learn how to create effective support tickets...', 'General', ARRAY['tickets', 'support', 'help'], '550e8400-e29b-41d4-a716-446655440000', 78, 23);
+
+INSERT INTO notifications (id, user_id, title, message, type, read, priority) VALUES
+    ('aa0e8400-e29b-41d4-a716-446655440000', '550e8400-e29b-41d4-a716-446655440001', 'New Ticket Assigned', 'You have been assigned a new high-priority ticket', 'info', false, 'high'),
+    ('aa0e8400-e29b-41d4-a716-446655440001', '550e8400-e29b-41d4-a716-446655440001', 'System Maintenance', 'Scheduled maintenance will occur tonight at 2 AM', 'warning', true, 'medium');
 
 -- Create updated_at trigger function
 CREATE OR REPLACE FUNCTION update_updated_at_column()
@@ -223,289 +333,12 @@ END;
 $$ language 'plpgsql';
 
 -- Create triggers for updated_at
-CREATE TRIGGER update_users_updated_at 
-    BEFORE UPDATE ON users 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_accounts_updated_at 
-    BEFORE UPDATE ON accounts 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_assets_updated_at 
-    BEFORE UPDATE ON assets 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_tickets_updated_at 
-    BEFORE UPDATE ON tickets 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_workflows_updated_at 
-    BEFORE UPDATE ON workflows 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_knowledge_base_updated_at 
-    BEFORE UPDATE ON knowledge_base 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_service_requests_updated_at 
-    BEFORE UPDATE ON service_requests 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_integrations_updated_at 
-    BEFORE UPDATE ON integrations 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
-CREATE TRIGGER update_rules_updated_at 
-    BEFORE UPDATE ON rules 
-    FOR EACH ROW 
-    EXECUTE FUNCTION update_updated_at_column();
-
--- Enable Row Level Security
-ALTER TABLE users ENABLE ROW LEVEL SECURITY;
-ALTER TABLE accounts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE assets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
-ALTER TABLE workflows ENABLE ROW LEVEL SECURITY;
-ALTER TABLE workflow_executions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE knowledge_base ENABLE ROW LEVEL SECURITY;
-ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
-ALTER TABLE service_requests ENABLE ROW LEVEL SECURITY;
-ALTER TABLE integrations ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rule_executions ENABLE ROW LEVEL SECURITY;
-ALTER TABLE rule_versions ENABLE ROW LEVEL SECURITY;
-
--- Create RLS policies for users
-CREATE POLICY "Allow authenticated users to read users" ON users
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert users" ON users
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update users" ON users
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete users" ON users
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for accounts
-CREATE POLICY "Allow authenticated users to read accounts" ON accounts
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert accounts" ON accounts
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update accounts" ON accounts
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete accounts" ON accounts
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for assets
-CREATE POLICY "Allow authenticated users to read assets" ON assets
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert assets" ON assets
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update assets" ON assets
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete assets" ON assets
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for tickets
-CREATE POLICY "Allow authenticated users to read tickets" ON tickets
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert tickets" ON tickets
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update tickets" ON tickets
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete tickets" ON tickets
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for workflows
-CREATE POLICY "Allow authenticated users to read workflows" ON workflows
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert workflows" ON workflows
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update workflows" ON workflows
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete workflows" ON workflows
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for knowledge_base
-CREATE POLICY "Allow authenticated users to read knowledge_base" ON knowledge_base
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert knowledge_base" ON knowledge_base
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update knowledge_base" ON knowledge_base
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete knowledge_base" ON knowledge_base
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for notifications
-CREATE POLICY "Allow users to read their own notifications" ON notifications
-  FOR SELECT USING (auth.uid() = user_id);
-
-CREATE POLICY "Allow users to insert their own notifications" ON notifications
-  FOR INSERT WITH CHECK (auth.uid() = user_id);
-
-CREATE POLICY "Allow users to update their own notifications" ON notifications
-  FOR UPDATE USING (auth.uid() = user_id);
-
-CREATE POLICY "Allow users to delete their own notifications" ON notifications
-  FOR DELETE USING (auth.uid() = user_id);
-
--- Create RLS policies for service_requests
-CREATE POLICY "Allow authenticated users to read service_requests" ON service_requests
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert service_requests" ON service_requests
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update service_requests" ON service_requests
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete service_requests" ON service_requests
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for integrations
-CREATE POLICY "Allow authenticated users to read integrations" ON integrations
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert integrations" ON integrations
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update integrations" ON integrations
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete integrations" ON integrations
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for rules
-CREATE POLICY "Allow authenticated users to read rules" ON rules
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert rules" ON rules
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to update rules" ON rules
-  FOR UPDATE USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to delete rules" ON rules
-  FOR DELETE USING (auth.role() = 'authenticated');
-
--- Create RLS policies for rule_executions
-CREATE POLICY "Allow authenticated users to read rule_executions" ON rule_executions
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert rule_executions" ON rule_executions
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
--- Create RLS policies for rule_versions
-CREATE POLICY "Allow authenticated users to read rule_versions" ON rule_versions
-  FOR SELECT USING (auth.role() = 'authenticated');
-
-CREATE POLICY "Allow authenticated users to insert rule_versions" ON rule_versions
-  FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-
--- Enable realtime for key tables
-ALTER PUBLICATION supabase_realtime ADD TABLE users;
-ALTER PUBLICATION supabase_realtime ADD TABLE accounts;
-ALTER PUBLICATION supabase_realtime ADD TABLE assets;
-ALTER PUBLICATION supabase_realtime ADD TABLE tickets;
-ALTER PUBLICATION supabase_realtime ADD TABLE workflows;
-ALTER PUBLICATION supabase_realtime ADD TABLE knowledge_base;
-ALTER PUBLICATION supabase_realtime ADD TABLE notifications;
-ALTER PUBLICATION supabase_realtime ADD TABLE service_requests;
-ALTER PUBLICATION supabase_realtime ADD TABLE integrations;
-ALTER PUBLICATION supabase_realtime ADD TABLE rules;
-
--- Insert sample data
-INSERT INTO users (name, email, role) VALUES
-  ('Admin User', 'admin@example.com', 'Admin'),
-  ('John Doe', 'john.doe@example.com', 'Customer'),
-  ('Jane Smith', 'jane.smith@example.com', 'Customer'),
-  ('Mike Johnson', 'mike.johnson@example.com', 'Customer'),
-  ('Sarah Wilson', 'sarah.wilson@example.com', 'Admin')
-ON CONFLICT (email) DO NOTHING;
-
--- Insert sample accounts
-INSERT INTO accounts (name, account_type, status, industry, size, email, created_by) VALUES
-  ('TechCorp Inc', 'Enterprise', 'Active', 'Technology', '500+', 'contact@techcorp.com', (SELECT id FROM users WHERE email = 'admin@example.com')),
-  ('StartupXYZ', 'Startup', 'Active', 'SaaS', '10-50', 'hello@startupxyz.com', (SELECT id FROM users WHERE email = 'admin@example.com')),
-  ('SMB Solutions', 'SMB', 'Active', 'Consulting', '50-200', 'info@smbsolutions.com', (SELECT id FROM users WHERE email = 'admin@example.com'))
-ON CONFLICT DO NOTHING;
-
--- Insert sample knowledge base articles
-INSERT INTO knowledge_base (title, content, category, status, author_id) VALUES
-  ('Welcome to BSM Pro', 'Welcome to our comprehensive Business Service Management platform. This guide will help you get started.', 'Getting Started', 'Published', (SELECT id FROM users WHERE email = 'admin@example.com')),
-  ('Account Setup Guide', 'Learn how to set up your account and configure your preferences.', 'Account Management', 'Published', (SELECT id FROM users WHERE email = 'admin@example.com')),
-  ('Ticket Management', 'Understanding how to create, manage, and track service tickets.', 'Technical Support', 'Published', (SELECT id FROM users WHERE email = 'admin@example.com'))
-ON CONFLICT DO NOTHING;
-
--- Create indexes for better performance
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-CREATE INDEX IF NOT EXISTS idx_users_role ON users(role);
-CREATE INDEX IF NOT EXISTS idx_accounts_type ON accounts(account_type);
-CREATE INDEX IF NOT EXISTS idx_accounts_status ON accounts(status);
-CREATE INDEX IF NOT EXISTS idx_assets_type ON assets(type);
-CREATE INDEX IF NOT EXISTS idx_assets_status ON assets(status);
-CREATE INDEX IF NOT EXISTS idx_tickets_status ON tickets(status);
-CREATE INDEX IF NOT EXISTS idx_tickets_priority ON tickets(priority);
-CREATE INDEX IF NOT EXISTS idx_tickets_created_by ON tickets(created_by);
-CREATE INDEX IF NOT EXISTS idx_tickets_assigned_to ON tickets(assigned_to);
-CREATE INDEX IF NOT EXISTS idx_workflows_status ON workflows(status);
-CREATE INDEX IF NOT EXISTS idx_knowledge_base_status ON knowledge_base(status);
-CREATE INDEX IF NOT EXISTS idx_knowledge_base_category ON knowledge_base(category);
-CREATE INDEX IF NOT EXISTS idx_notifications_user_id ON notifications(user_id);
-CREATE INDEX IF NOT EXISTS idx_notifications_read ON notifications(read);
-CREATE INDEX IF NOT EXISTS idx_rules_status ON rules(status);
-CREATE INDEX IF NOT EXISTS idx_rule_executions_rule_id ON rule_executions(rule_id);
-CREATE INDEX IF NOT EXISTS idx_rule_versions_rule_id ON rule_versions(rule_id);
-
--- Create functions for knowledge base analytics
-CREATE OR REPLACE FUNCTION increment_views(article_id UUID)
-RETURNS void AS $$
-BEGIN
-  UPDATE knowledge_base 
-  SET views = views + 1 
-  WHERE id = article_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION increment_helpful_votes(article_id UUID)
-RETURNS void AS $$
-BEGIN
-  UPDATE knowledge_base 
-  SET helpful_votes = helpful_votes + 1 
-  WHERE id = article_id;
-END;
-$$ LANGUAGE plpgsql;
-
-CREATE OR REPLACE FUNCTION increment_not_helpful_votes(article_id UUID)
-RETURNS void AS $$
-BEGIN
-  UPDATE knowledge_base 
-  SET not_helpful_votes = not_helpful_votes + 1 
-  WHERE id = article_id;
-END;
-$$ LANGUAGE plpgsql;
+CREATE TRIGGER update_users_updated_at BEFORE UPDATE ON users FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_accounts_updated_at BEFORE UPDATE ON accounts FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_assets_updated_at BEFORE UPDATE ON assets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_tickets_updated_at BEFORE UPDATE ON tickets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_knowledge_base_updated_at BEFORE UPDATE ON knowledge_base FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_service_requests_updated_at BEFORE UPDATE ON service_requests FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_workflows_updated_at BEFORE UPDATE ON workflows FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_integrations_updated_at BEFORE UPDATE ON integrations FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_rules_updated_at BEFORE UPDATE ON rules FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();

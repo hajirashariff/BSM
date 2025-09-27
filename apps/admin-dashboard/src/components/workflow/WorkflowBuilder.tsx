@@ -46,6 +46,10 @@ import {
   CheckCircle,
   X,
   Trash,
+  Brain,
+  Target,
+  TrendingUp,
+  Calendar,
 } from 'lucide-react';
 
 // Transition State Interfaces
@@ -76,22 +80,139 @@ interface TransitionState {
   color: string;
 }
 
-// Palette Items
-const paletteItems = {
-  conditions: [
-    { id: 'priority', label: 'Priority', icon: AlertTriangle, color: 'red' },
-    { id: 'department', label: 'Department', icon: Users, color: 'blue' },
-    { id: 'status', label: 'Status', icon: CheckCircle, color: 'green' },
-    { id: 'sla', label: 'SLA', icon: Timer, color: 'yellow' },
-    { id: 'custom', label: 'Custom Field', icon: Settings, color: 'purple' },
-  ],
-  actions: [
-    { id: 'notify', label: 'Notify', icon: Bell, color: 'blue' },
-    { id: 'update', label: 'Update Field', icon: Edit3, color: 'green' },
-    { id: 'escalate', label: 'Escalate', icon: AlertTriangle, color: 'red' },
-    { id: 'log', label: 'Log Entry', icon: FileText, color: 'gray' },
-  ],
-};
+// Enhanced Node Palette Items inspired by the design
+const nodePalette = [
+  {
+    id: 'trigger',
+    label: 'Trigger',
+    description: 'Start workflow execution',
+    icon: Zap,
+    color: 'blue',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-500',
+    borderColor: 'border-blue-200'
+  },
+  {
+    id: 'action',
+    label: 'Action',
+    description: 'Perform an action',
+    icon: Play,
+    color: 'green',
+    bgColor: 'bg-green-50',
+    iconColor: 'text-green-500',
+    borderColor: 'border-green-200'
+  },
+  {
+    id: 'condition',
+    label: 'Condition',
+    description: 'Branch based on condition',
+    icon: GitBranch,
+    color: 'yellow',
+    bgColor: 'bg-yellow-50',
+    iconColor: 'text-yellow-500',
+    borderColor: 'border-yellow-200'
+  },
+  {
+    id: 'delay',
+    label: 'Delay',
+    description: 'Wait for specified time',
+    icon: Timer,
+    color: 'purple',
+    bgColor: 'bg-purple-50',
+    iconColor: 'text-purple-500',
+    borderColor: 'border-purple-200'
+  },
+  {
+    id: 'approval',
+    label: 'Approval',
+    description: 'Human approval required',
+    icon: Users,
+    color: 'orange',
+    bgColor: 'bg-orange-50',
+    iconColor: 'text-orange-500',
+    borderColor: 'border-orange-200'
+  },
+  {
+    id: 'subworkflow',
+    label: 'Sub-Workflow',
+    description: 'Call another workflow',
+    icon: Layers,
+    color: 'indigo',
+    bgColor: 'bg-indigo-50',
+    iconColor: 'text-indigo-500',
+    borderColor: 'border-indigo-200'
+  },
+  {
+    id: 'errorhandler',
+    label: 'Error Handler',
+    description: 'Handle errors',
+    icon: AlertTriangle,
+    color: 'red',
+    bgColor: 'bg-red-50',
+    iconColor: 'text-red-500',
+    borderColor: 'border-red-200'
+  },
+  {
+    id: 'sentiment-analysis',
+    label: 'Sentiment Analysis',
+    description: 'AI-powered sentiment analysis',
+    icon: Brain,
+    color: 'blue',
+    bgColor: 'bg-blue-50',
+    iconColor: 'text-blue-500',
+    borderColor: 'border-blue-200'
+  },
+  {
+    id: 'predictive-routing',
+    label: 'Predictive Routing',
+    description: 'AI-powered intelligent routing',
+    icon: Target,
+    color: 'green',
+    bgColor: 'bg-green-50',
+    iconColor: 'text-green-500',
+    borderColor: 'border-green-200'
+  },
+  {
+    id: 'anomaly-detection',
+    label: 'Anomaly Detection',
+    description: 'AI-powered anomaly detection',
+    icon: AlertTriangle,
+    color: 'yellow',
+    bgColor: 'bg-yellow-50',
+    iconColor: 'text-yellow-500',
+    borderColor: 'border-yellow-200'
+  },
+  {
+    id: 'auto-categorization',
+    label: 'Auto Categorization',
+    description: 'AI-powered categorization',
+    icon: FileText,
+    color: 'purple',
+    bgColor: 'bg-purple-50',
+    iconColor: 'text-purple-500',
+    borderColor: 'border-purple-200'
+  },
+  {
+    id: 'workflow-optimization',
+    label: 'Workflow Optimization',
+    description: 'AI-powered workflow optimization',
+    icon: TrendingUp,
+    color: 'orange',
+    bgColor: 'bg-orange-50',
+    iconColor: 'text-orange-500',
+    borderColor: 'border-orange-200'
+  },
+  {
+    id: 'smart-scheduling',
+    label: 'Smart Scheduling',
+    description: 'AI-powered optimal scheduling',
+    icon: Calendar,
+    color: 'indigo',
+    bgColor: 'bg-indigo-50',
+    iconColor: 'text-indigo-500',
+    borderColor: 'border-indigo-200'
+  }
+];
 
 // Simple Node Components
 function TriggerNode({ data, isConnectable, selected }: any) {
@@ -149,6 +270,316 @@ function ActionNode({ data, isConnectable, selected }: any) {
   );
 }
 
+function DelayNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-purple-500 shadow-purple-100' : 'border-purple-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#8B5CF6', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#8B5CF6', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-purple-50">
+          <Timer className="text-purple-600" size={12} />
+        </div>
+        <div className="font-semibold text-purple-600 text-xs">Delay</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function ApprovalNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-orange-500 shadow-orange-100' : 'border-orange-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#F97316', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#F97316', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-orange-50">
+          <Users className="text-orange-600" size={12} />
+        </div>
+        <div className="font-semibold text-orange-600 text-xs">Approval</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function SubWorkflowNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-indigo-500 shadow-indigo-100' : 'border-indigo-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#6366F1', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#6366F1', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-indigo-50">
+          <Layers className="text-indigo-600" size={12} />
+        </div>
+        <div className="font-semibold text-indigo-600 text-xs">Sub-Workflow</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function ErrorHandlerNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-red-500 shadow-red-100' : 'border-red-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#EF4444', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#EF4444', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-red-50">
+          <AlertTriangle className="text-red-600" size={12} />
+        </div>
+        <div className="font-semibold text-red-600 text-xs">Error Handler</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function SentimentAnalysisNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-blue-500 shadow-blue-100' : 'border-blue-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#3B82F6', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#3B82F6', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-blue-50">
+          <Brain className="text-blue-600" size={12} />
+        </div>
+        <div className="font-semibold text-blue-600 text-xs">AI Sentiment</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function PredictiveRoutingNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-green-500 shadow-green-100' : 'border-green-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#10B981', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#10B981', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-green-50">
+          <Target className="text-green-600" size={12} />
+        </div>
+        <div className="font-semibold text-green-600 text-xs">AI Routing</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function AnomalyDetectionNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-yellow-500 shadow-yellow-100' : 'border-yellow-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#F59E0B', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#F59E0B', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-yellow-50">
+          <AlertTriangle className="text-yellow-600" size={12} />
+        </div>
+        <div className="font-semibold text-yellow-600 text-xs">AI Anomaly</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function AutoCategorizationNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-purple-500 shadow-purple-100' : 'border-purple-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#8B5CF6', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#8B5CF6', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-purple-50">
+          <FileText className="text-purple-600" size={12} />
+        </div>
+        <div className="font-semibold text-purple-600 text-xs">AI Category</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function WorkflowOptimizationNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-orange-500 shadow-orange-100' : 'border-orange-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#F97316', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#F97316', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-orange-50">
+          <TrendingUp className="text-orange-600" size={12} />
+        </div>
+        <div className="font-semibold text-orange-600 text-xs">AI Optimize</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
+function SmartSchedulingNode({ data, isConnectable, selected }: any) {
+  return (
+    <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
+      selected ? 'border-indigo-500 shadow-indigo-100' : 'border-indigo-200'
+    }`}>
+      <Handle
+        type="target"
+        position={Position.Top}
+        id="top"
+        style={{ background: '#6366F1', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <Handle
+        type="source"
+        position={Position.Bottom}
+        id="bottom"
+        style={{ background: '#6366F1', width: 6, height: 6 }}
+        isConnectable={isConnectable}
+      />
+      <div className="flex items-center space-x-1.5 mb-1">
+        <div className="p-0.5 rounded-full bg-indigo-50">
+          <Calendar className="text-indigo-600" size={12} />
+        </div>
+        <div className="font-semibold text-indigo-600 text-xs">AI Schedule</div>
+      </div>
+      <div className="text-xs font-medium text-gray-800 leading-tight">{data.label}</div>
+      <div className="text-xs text-gray-500 mt-0.5 leading-tight">{data.description}</div>
+    </div>
+  );
+}
+
 function ConditionNode({ data, isConnectable, selected }: any) {
   return (
     <div className={`px-3 py-2 shadow-md rounded-md bg-white border-2 min-w-[160px] transition-all duration-300 ${
@@ -192,6 +623,16 @@ const nodeTypes = {
   trigger: TriggerNode,
   action: ActionNode,
   condition: ConditionNode,
+  delay: DelayNode,
+  approval: ApprovalNode,
+  subworkflow: SubWorkflowNode,
+  errorhandler: ErrorHandlerNode,
+  'sentiment-analysis': SentimentAnalysisNode,
+  'predictive-routing': PredictiveRoutingNode,
+  'anomaly-detection': AnomalyDetectionNode,
+  'auto-categorization': AutoCategorizationNode,
+  'workflow-optimization': WorkflowOptimizationNode,
+  'smart-scheduling': SmartSchedulingNode,
 };
 
 // Initial nodes and edges
@@ -562,6 +1003,44 @@ function WorkflowBuilderContent() {
     [setEdges]
   );
 
+  const onDragStart = useCallback((event: any, nodeType: string) => {
+    event.dataTransfer.setData('application/reactflow', nodeType);
+    event.dataTransfer.effectAllowed = 'move';
+  }, []);
+
+  const onDragOver = useCallback((event: any) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = 'move';
+  }, []);
+
+  const onDrop = useCallback((event: any) => {
+    event.preventDefault();
+    
+    const nodeType = event.dataTransfer.getData('application/reactflow');
+    const nodePaletteItem = nodePalette.find(item => item.id === nodeType);
+    
+    if (!nodePaletteItem) return;
+
+    const reactFlowBounds = reactFlowInstance.getViewport();
+    const position = reactFlowInstance.project({
+      x: event.clientX - reactFlowBounds.x,
+      y: event.clientY - reactFlowBounds.y,
+    });
+
+    const newNode: Node = {
+      id: `${nodeType}-${Date.now()}`,
+      type: nodeType,
+      position,
+      data: {
+        label: nodePaletteItem.label,
+        description: nodePaletteItem.description,
+        type: nodeType
+      },
+    };
+
+    setNodes((nds) => nds.concat(newNode));
+  }, [reactFlowInstance, setNodes]);
+
   const onNodeClick = useCallback((event: any, node: any) => {
     setSelectedNode(node);
     setSelectedEdge(null);
@@ -694,64 +1173,31 @@ function WorkflowBuilderContent() {
                 </button>
               </div>
               
-              {/* Conditions */}
+              {/* Node Palette */}
               <div className="mb-6">
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                  <GitBranch size={14} className="mr-2" />
-                  Conditions
+                  <Grid3X3 size={14} className="mr-2" />
+                  Node Palette
                 </h4>
-                <div className="space-y-2">
-                  {paletteItems.conditions.map((item) => {
+                <div className="space-y-3">
+                  {nodePalette.map((item) => {
                     const IconComponent = item.icon;
                     return (
                       <div
                         key={item.id}
-                        className="flex items-center space-x-3 p-2 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
+                        className={`p-3 rounded-lg border ${item.borderColor} ${item.bgColor} hover:shadow-md cursor-pointer transition-all duration-200 hover:scale-105`}
                         draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('application/json', JSON.stringify({
-                            type: 'condition',
-                            id: item.id,
-                            label: item.label,
-                          }));
-                        }}
+                        onDragStart={(e) => onDragStart(e, item.id)}
                       >
-                        <div className="p-1 rounded-full bg-gray-100">
-                          <IconComponent className="text-gray-600" size={14} />
+                        <div className="flex items-center space-x-3">
+                          <div className={`p-2 rounded-full ${item.bgColor}`}>
+                            <IconComponent className={item.iconColor} size={16} />
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-semibold text-gray-800 text-sm">{item.label}</div>
+                            <div className="text-xs text-gray-600 mt-0.5">{item.description}</div>
+                          </div>
                         </div>
-                        <span className="text-sm text-gray-700">{item.label}</span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Actions */}
-              <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
-                  <Play size={14} className="mr-2" />
-                  Actions
-                </h4>
-                <div className="space-y-2">
-                  {paletteItems.actions.map((item) => {
-                    const IconComponent = item.icon;
-                    return (
-                      <div
-                        key={item.id}
-                        className="flex items-center space-x-3 p-2 rounded-lg border border-gray-200 hover:bg-gray-50 cursor-pointer transition-colors"
-                        draggable
-                        onDragStart={(e) => {
-                          e.dataTransfer.setData('application/json', JSON.stringify({
-                            type: 'action',
-                            id: item.id,
-                            label: item.label,
-                          }));
-                        }}
-                      >
-                        <div className="p-1 rounded-full bg-gray-100">
-                          <IconComponent className="text-gray-600" size={14} />
-                        </div>
-                        <span className="text-sm text-gray-700">{item.label}</span>
                       </div>
                     );
                   })}
@@ -867,6 +1313,8 @@ function WorkflowBuilderContent() {
             onConnect={onConnect}
             onNodeClick={onNodeClick}
             onEdgeClick={onEdgeClick}
+            onDrop={onDrop}
+            onDragOver={onDragOver}
             nodeTypes={nodeTypes}
             fitView
             attributionPosition="bottom-left"
