@@ -38,7 +38,7 @@ import {
   MoreVertical,
   RefreshCw
 } from 'lucide-react';
-import { ticketService, Ticket, TicketFilters, CreateTicketData } from '../lib/ticketService';
+import { ticketService, ticketCommentService, realtimeService, Ticket, CreateTicketData } from '../lib/supabaseService';
 import TicketCreationModal from '../components/TicketCreationModal';
 import TicketDetailsModal from '../components/TicketDetailsModal';
 import AdvancedTicketFilters from '../components/AdvancedTicketFilters';
@@ -99,6 +99,21 @@ export default function TicketsPage() {
     setIsClient(true);
     loadTickets();
   }, []);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!isClient) return;
+
+    const ticketSubscription = realtimeService.subscribeToTickets((payload) => {
+      console.log('Ticket update received:', payload);
+      // Reload tickets when changes occur
+      loadTickets();
+    });
+
+    return () => {
+      ticketSubscription?.unsubscribe();
+    };
+  }, [isClient]);
 
   useEffect(() => {
     applyFilters();
@@ -265,13 +280,22 @@ export default function TicketsPage() {
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-zinc-100">Support Tickets</h1>
                 <p className="text-gray-600 dark:text-zinc-400">Manage and track your support requests</p>
               </div>
-              <button
-                onClick={() => setShowCreateModal(true)}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
-                Create Ticket
-              </button>
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={() => setShowCreateModal(true)}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <Plus className="w-4 h-4" />
+                  Create Ticket
+                </button>
+                <button
+                  onClick={loadTickets}
+                  className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg flex items-center gap-2 transition-colors"
+                >
+                  <RefreshCw className="w-4 h-4" />
+                  Refresh
+                </button>
+              </div>
             </div>
           </div>
         </header>

@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { supabase, userProfileService } from '../lib/supabaseService';
 
 interface User {
   id: string;
@@ -14,8 +15,9 @@ interface AuthContextType {
   user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (userData: User) => void;
-  logout: () => void;
+  login: (email: string, password: string) => Promise<void>;
+  loginWithGoogle: () => Promise<void>;
+  logout: () => Promise<void>;
   updateUser: (userData: Partial<User>) => void;
 }
 
@@ -38,47 +40,141 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check for existing authentication data
-    if (typeof window !== 'undefined') {
-      const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('token');
-      
-      if (storedUser && storedToken) {
-        try {
-          const userData = JSON.parse(storedUser);
-          console.log('🔍 AuthContext: Loaded user data from localStorage:', userData);
-          setUser(userData);
-        } catch (error) {
-          console.error('Error parsing stored user data:', error);
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
+    // Check for existing session
+    const checkSession = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await loadUserProfile(session.user);
         }
-      } else {
-        console.log('🔍 AuthContext: No user data found in localStorage');
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setIsLoading(false);
       }
-    }
-    setIsLoading(false);
+    };
+
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        if (session?.user) {
+          await loadUserProfile(session.user);
+        } else {
+          setUser(null);
+        }
+        setIsLoading(false);
+      }
+    );
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (userData: User) => {
-    setUser(userData);
-    localStorage.setItem('user', JSON.stringify(userData));
+  const loadUserProfile = async (authUser: any) => {
+    try {
+      // Get user profile from our custom table
+      const profile = await userProfileService.getCurrentUserProfile();
+      
+      if (profile) {
+        setUser({
+          id: authUser.id,
+          email: authUser.email || '',
+          name: profile.avatar ? `${profile.avatar}` : authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+          picture: profile.avatar,
+          accountType: profile.role === 'admin' ? 'Admin' : 'Customer',
+          verified: true,
+          authMethod: profile.auth_method
+        });
+      } else {
+        // Create profile if it doesn't exist
+        const newProfile = await userProfileService.upsertUserProfile({
+          auth_method: authUser.app_metadata?.provider === 'google' ? 'google' : 'email',
+          role: 'customer'
+        });
+        
+        if (newProfile) {
+          setUser({
+            id: authUser.id,
+            email: authUser.email || '',
+            name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+            picture: authUser.user_metadata?.avatar_url,
+            accountType: 'Customer',
+            verified: true,
+            authMethod: newProfile.auth_method
+          });
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user profile:', error);
+      // Fallback to basic user data
+      setUser({
+        id: authUser.id,
+        email: authUser.email || '',
+        name: authUser.user_metadata?.full_name || authUser.email?.split('@')[0],
+        picture: authUser.user_metadata?.avatar_url,
+        accountType: 'Customer',
+        verified: true,
+        authMethod: authUser.app_metadata?.provider === 'google' ? 'google' : 'email'
+      });
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem('user');
-    localStorage.removeItem('token');
-    localStorage.removeItem('authMethod');
-    // Redirect to login page
-    window.location.href = 'http://localhost:3001/login';
+  const login = async (email: string, password: string) => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+      if (data.user) {
+        await loadUserProfile(data.user);
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const loginWithGoogle = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      console.error('Google login error:', error);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const logout = async () => {
+    setIsLoading(true);
+    try {
+      await supabase.auth.signOut();
+      setUser(null);
+    } catch (error) {
+      console.error('Logout error:', error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const updateUser = (userData: Partial<User>) => {
     if (user) {
       const updatedUser = { ...user, ...userData };
       setUser(updatedUser);
-      localStorage.setItem('user', JSON.stringify(updatedUser));
     }
   };
 
@@ -87,6 +183,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     isAuthenticated: !!user,
     isLoading,
     login,
+    loginWithGoogle,
     logout,
     updateUser,
   };

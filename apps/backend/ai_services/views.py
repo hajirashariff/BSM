@@ -1,9 +1,46 @@
-from rest_framework.decorators import api_view, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework import viewsets, status
+from rest_framework.decorators import action
 from rest_framework.response import Response
-from rest_framework import status
-from django.http import JsonResponse
+from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.contrib.auth.models import User
+from django.db.models import Q, Count, Avg
+from django.utils import timezone
+from datetime import datetime, timedelta
 import json
+from .models import (
+    UserProfile, Ticket, TicketComment, Service, ServiceIncident, 
+    Rating, Notification, AIModel, AIPrediction, AIInsight, AITrainingData
+)
+from .serializers import (
+    UserProfileSerializer, TicketSerializer, TicketCommentSerializer,
+    ServiceSerializer, ServiceIncidentSerializer, RatingSerializer,
+    NotificationSerializer, AIModelSerializer, AIPredictionSerializer,
+    AIInsightSerializer, AITrainingDataSerializer
+)
+
+class UserProfileViewSet(viewsets.ModelViewSet):
+    """User profile management"""
+    queryset = UserProfile.objects.all()
+    serializer_class = UserProfileSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        if self.request.user.is_staff:
+            return UserProfile.objects.all()
+        return UserProfile.objects.filter(user=self.request.user)
+    
+    @action(detail=False, methods=['get'])
+    def me(self, request):
+        """Get current user's profile"""
+        try:
+            profile = UserProfile.objects.get(user=request.user)
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
+        except UserProfile.DoesNotExist:
+            # Create profile if it doesn't exist
+            profile = UserProfile.objects.create(user=request.user)
+            serializer = self.get_serializer(profile)
+            return Response(serializer.data)
 import logging
 import requests
 from django.conf import settings

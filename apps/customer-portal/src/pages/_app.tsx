@@ -15,7 +15,7 @@ function AppContent({ Component, pageProps }: AppProps) {
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      const publicPages = ['/login', '/', '/help', '/services']
+      const publicPages = ['/login', '/', '/help', '/services', '/tickets', '/analytics', '/ratings']
       if (!publicPages.includes(router.pathname)) {
         // Redirect to admin dashboard login
         window.location.href = 'http://localhost:3001/login'

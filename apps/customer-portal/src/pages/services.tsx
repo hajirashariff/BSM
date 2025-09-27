@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import Head from 'next/head';
 import ModernLayout from '../components/ModernLayout';
+import { useAuth } from '../contexts/AuthContext';
+import { serviceService, realtimeService } from '../lib/supabaseService';
 import { 
   Plus,
   Clock,
@@ -10,88 +12,84 @@ import {
   Activity,
   Filter,
   SortAsc,
-  ExternalLink
+  ExternalLink,
+  RefreshCw,
+  Loader2
 } from 'lucide-react';
 
-const services = [
-  {
-    id: 'SRV-001',
-    name: 'Email Services',
-    description: 'Corporate email hosting and management services',
-    status: 'Operational',
-    health: 95,
-    category: 'Communication',
-    lastUpdated: '2 minutes ago',
-    features: ['Email hosting', 'Calendar integration', 'Mobile sync', 'Spam protection']
-  },
-  {
-    id: 'SRV-002',
-    name: 'File Storage',
-    description: 'Secure cloud storage and file sharing platform',
-    status: 'Minor Issues',
-    health: 88,
-    category: 'Storage',
-    lastUpdated: '5 minutes ago',
-    features: ['Cloud storage', 'File sharing', 'Version control', 'Access control']
-  },
-  {
-    id: 'SRV-003',
-    name: 'Database Services',
-    description: 'Managed database hosting and maintenance',
-    status: 'Operational',
-    health: 92,
-    category: 'Data',
-    lastUpdated: '1 minute ago',
-    features: ['Database hosting', 'Backup services', 'Performance monitoring', 'Security updates']
-  },
-  {
-    id: 'SRV-004',
-    name: 'API Gateway',
-    description: 'Centralized API management and routing',
-    status: 'Operational',
-    health: 98,
-    category: 'Integration',
-    lastUpdated: '30 seconds ago',
-    features: ['API routing', 'Rate limiting', 'Authentication', 'Monitoring']
-  },
-  {
-    id: 'SRV-005',
-    name: 'User Management',
-    description: 'Identity and access management system',
-    status: 'Operational',
-    health: 94,
-    category: 'Security',
-    lastUpdated: '3 minutes ago',
-    features: ['User authentication', 'Role management', 'SSO integration', 'Audit logging']
-  },
-  {
-    id: 'SRV-006',
-    name: 'Monitoring Services',
-    description: 'System monitoring and alerting platform',
-    status: 'Operational',
-    health: 96,
-    category: 'Monitoring',
-    lastUpdated: '1 minute ago',
-    features: ['System monitoring', 'Alert management', 'Performance metrics', 'Dashboard']
-  }
-];
+// Import Service interface from Supabase service
+import { Service } from '../lib/supabaseService';
 
 export default function Services() {
+  const { user } = useAuth();
   const [filterCategory, setFilterCategory] = useState('All');
   const [filterStatus, setFilterStatus] = useState('All');
   const [isClient, setIsClient] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [services, setServices] = useState<Service[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
+  // Load services from Supabase
+  useEffect(() => {
+    const loadServices = async () => {
+      if (!isClient) return;
+      
+      try {
+        setLoading(true);
+        const servicesData = await serviceService.getServices();
+        setServices(servicesData || []);
+      } catch (error) {
+        console.error('Error loading services:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadServices();
+  }, [isClient]);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    if (!isClient) return;
+
+    const subscription = realtimeService.subscribeToServices((payload) => {
+      console.log('Service update received:', payload);
+      // Refresh services when changes occur
+      serviceService.getServices().then(setServices);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, [isClient]);
+
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    try {
+      const servicesData = await serviceService.getServices();
+      setServices(servicesData || []);
+    } catch (error) {
+      console.error('Error refreshing services:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const filteredServices = services.filter(service => {
     const categoryMatch = filterCategory === 'All' || service.category === filterCategory;
-    const statusMatch = filterStatus === 'All' || service.status === filterStatus;
+    const statusMatch = filterStatus === 'All' || 
+      (filterStatus === 'Operational' && service.status === 'operational') ||
+      (filterStatus === 'Minor Issues' && service.status === 'minor_issues') ||
+      (filterStatus === 'Outage' && service.status === 'outage') ||
+      (filterStatus === 'Maintenance' && service.status === 'maintenance');
     const searchMatch = searchTerm === '' || 
       service.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      service.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (service.description && service.description.toLowerCase().includes(searchTerm.toLowerCase())) ||
       service.category.toLowerCase().includes(searchTerm.toLowerCase());
     return categoryMatch && statusMatch && searchMatch;
   });
@@ -114,9 +112,21 @@ export default function Services() {
   };
 
   const getStatusColor = (status: string) => {
-    if (status === 'Operational') return 'bg-green-100 text-green-800';
-    if (status === 'Minor Issues') return 'bg-yellow-100 text-yellow-800';
+    if (status === 'operational') return 'bg-green-100 text-green-800';
+    if (status === 'minor_issues') return 'bg-yellow-100 text-yellow-800';
+    if (status === 'maintenance') return 'bg-blue-100 text-blue-800';
     return 'bg-red-100 text-red-800';
+  };
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case 'operational': return 'Operational';
+      case 'minor_issues': return 'Minor Issues';
+      case 'major_issues': return 'Major Issues';
+      case 'maintenance': return 'Maintenance';
+      case 'outage': return 'Outage';
+      default: return status;
+    }
   };
 
   return (
@@ -137,6 +147,18 @@ export default function Services() {
               </div>
               
               <div className="flex items-center space-x-4">
+                <button 
+                  onClick={handleRefresh}
+                  disabled={refreshing}
+                  className="btn-secondary flex items-center space-x-2"
+                >
+                  {refreshing ? (
+                    <Loader2 size={20} className="animate-spin" />
+                  ) : (
+                    <RefreshCw size={20} />
+                  )}
+                  <span>Refresh</span>
+                </button>
                 <button className="btn-primary flex items-center space-x-2">
                   <Plus size={20} />
                   <span>Request Service</span>
@@ -184,6 +206,7 @@ export default function Services() {
                       <option value="All">All Status</option>
                       <option value="Operational">Operational</option>
                       <option value="Minor Issues">Minor Issues</option>
+                      <option value="Maintenance">Maintenance</option>
                       <option value="Outage">Outage</option>
                     </select>
                   </div>
@@ -191,16 +214,30 @@ export default function Services() {
               </div>
 
               {/* Services Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {filteredServices.map((service) => (
+              {loading ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="text-center">
+                    <Loader2 className="h-8 w-8 animate-spin mx-auto text-blue-600" />
+                    <p className="mt-2 text-gray-600">Loading services...</p>
+                  </div>
+                </div>
+              ) : filteredServices.length === 0 ? (
+                <div className="text-center py-12">
+                  <Activity className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No services found</h3>
+                  <p className="text-gray-600">Try adjusting your filters or check back later.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {filteredServices.map((service) => (
                   <div key={service.id} className="card hover:shadow-md transition-shadow">
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-gray-900 mb-2">{service.name}</h3>
-                        <p className="text-gray-600 text-sm mb-3">{service.description}</p>
+                        <p className="text-gray-600 text-sm mb-3">{service.description || 'No description available'}</p>
                         <div className="flex items-center space-x-2 mb-3">
                           <span className={`px-2 py-1 text-xs rounded-full ${getStatusColor(service.status)}`}>
-                            {service.status}
+                            {getStatusLabel(service.status)}
                           </span>
                           <span className="px-2 py-1 text-xs rounded-full bg-gray-100 text-gray-800">
                             {service.category}
@@ -215,23 +252,23 @@ export default function Services() {
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="text-sm font-medium text-gray-700">Health Score</span>
-                        <span className={`text-sm font-semibold ${getHealthColor(service.health)}`}>
-                          {service.health}%
+                        <span className={`text-sm font-semibold ${getHealthColor(service.health_score)}`}>
+                          {service.health_score}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className={`h-2 rounded-full transition-all duration-300 ${
-                            service.health >= 95 ? 'bg-green-500' :
-                            service.health >= 90 ? 'bg-yellow-500' :
+                            service.health_score >= 95 ? 'bg-green-500' :
+                            service.health_score >= 90 ? 'bg-yellow-500' :
                             'bg-red-500'
                           }`}
-                          style={{ width: `${service.health}%` }}
+                          style={{ width: `${service.health_score}%` }}
                         ></div>
                       </div>
                       
                       <div className="text-xs text-gray-500">
-                        Last updated: {service.lastUpdated}
+                        Last updated: {new Date(service.last_updated).toLocaleString()}
                       </div>
                       
                       <div className="pt-3 border-t border-gray-200">
@@ -247,7 +284,8 @@ export default function Services() {
                     </div>
                   </div>
                 ))}
-              </div>
+                </div>
+              )}
             </div>
           </main>
       </div>

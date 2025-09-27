@@ -1,41 +1,330 @@
--- BSM Platform Database Schema
--- Run this in Supabase SQL Editor
-
 -- Enable necessary extensions
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 
--- Users table
-CREATE TABLE IF NOT EXISTS users (
+-- Create custom types
+CREATE TYPE ticket_status AS ENUM ('pending', 'open', 'in_progress', 'resolved', 'closed');
+CREATE TYPE ticket_priority AS ENUM ('low', 'medium', 'high', 'urgent');
+CREATE TYPE ticket_category AS ENUM ('technical', 'billing', 'general', 'feature_request', 'bug_report');
+CREATE TYPE service_status AS ENUM ('operational', 'minor_issues', 'major_issues', 'maintenance', 'outage');
+CREATE TYPE auth_method AS ENUM ('google', 'email');
+CREATE TYPE notification_type AS ENUM ('ticket_created', 'ticket_updated', 'ticket_resolved', 'service_incident', 'system_maintenance', 'rating_received');
+
+-- User profiles table
+CREATE TABLE user_profiles (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    email VARCHAR(255) UNIQUE NOT NULL,
-    name VARCHAR(255) NOT NULL,
-    role VARCHAR(50) NOT NULL CHECK (role IN ('admin', 'customer', 'agent')),
-    company VARCHAR(255),
-    avatar_url TEXT,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    avatar TEXT,
     phone VARCHAR(20),
-    department VARCHAR(100),
+    location VARCHAR(100),
+    bio TEXT,
+    website TEXT,
+    auth_method auth_method DEFAULT 'email',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    UNIQUE(user_id)
+);
+
+-- Tickets table
+CREATE TABLE tickets (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    subject VARCHAR(200) NOT NULL,
+    description TEXT NOT NULL,
+    category ticket_category DEFAULT 'general',
+    priority ticket_priority DEFAULT 'medium',
+    status ticket_status DEFAULT 'pending',
+    created_by UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    tags JSONB DEFAULT '[]',
+    attachments JSONB DEFAULT '[]'
+);
+
+-- Ticket comments table
+CREATE TABLE ticket_comments (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE,
+    author_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    content TEXT NOT NULL,
+    is_internal BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Accounts table
-CREATE TABLE IF NOT EXISTS accounts (
+-- Services table
+CREATE TABLE services (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
-    name VARCHAR(255) NOT NULL,
-    type VARCHAR(50) NOT NULL CHECK (type IN ('enterprise', 'small_business', 'individual')),
-    status VARCHAR(50) NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'inactive', 'suspended')),
-    industry VARCHAR(100),
-    size VARCHAR(50),
-    contact_email VARCHAR(255),
-    contact_phone VARCHAR(20),
-    address TEXT,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    status service_status DEFAULT 'operational',
+    health_score INTEGER DEFAULT 100 CHECK (health_score >= 0 AND health_score <= 100),
+    category VARCHAR(50),
+    features JSONB DEFAULT '[]',
+    last_updated TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    is_active BOOLEAN DEFAULT TRUE
+);
+
+-- Service incidents table
+CREATE TABLE service_incidents (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    service_id UUID REFERENCES services(id) ON DELETE CASCADE,
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    severity VARCHAR(20) CHECK (severity IN ('low', 'medium', 'high', 'critical')),
+    status VARCHAR(20) CHECK (status IN ('investigating', 'identified', 'monitoring', 'resolved')),
+    started_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    resolved_at TIMESTAMP WITH TIME ZONE,
+    created_by UUID REFERENCES auth.users(id) ON DELETE CASCADE
+);
+
+-- Ratings table
+CREATE TABLE ratings (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    ticket_id UUID REFERENCES tickets(id) ON DELETE CASCADE,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+    comment TEXT,
+    category VARCHAR(50) CHECK (category IN ('support', 'response_time', 'resolution', 'overall')),
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Notifications table
+CREATE TABLE notifications (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+    type notification_type NOT NULL,
+    title VARCHAR(200) NOT NULL,
+    message TEXT NOT NULL,
+    is_read BOOLEAN DEFAULT FALSE,
+    data JSONB DEFAULT '{}',
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- AI Models table
+CREATE TABLE ai_models (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    model_type VARCHAR(50),
+    version VARCHAR(20),
+    is_active BOOLEAN DEFAULT TRUE,
+    accuracy_score FLOAT,
+    config JSONB DEFAULT '{}',
     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
--- Assets table
-CREATE TABLE IF NOT EXISTS assets (
+-- AI Predictions table
+CREATE TABLE ai_predictions (
     id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    model_id UUID REFERENCES ai_models(id) ON DELETE CASCADE,
+    input_data JSONB NOT NULL,
+    prediction JSONB NOT NULL,
+    confidence_score FLOAT NOT NULL,
+    actual_result JSONB,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- AI Insights table
+CREATE TABLE ai_insights (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    insight_type VARCHAR(50) CHECK (insight_type IN ('ticket_assignment', 'churn_prediction', 'upsell_opportunity', 'workflow_optimization', 'content_recommendation')),
+    title VARCHAR(200) NOT NULL,
+    description TEXT,
+    confidence FLOAT NOT NULL,
+    data JSONB DEFAULT '{}',
+    is_actionable BOOLEAN DEFAULT TRUE,
+    is_implemented BOOLEAN DEFAULT FALSE,
+    created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- AI Training Data table
+CREATE TABLE ai_training_data (
+    id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+    data_type VARCHAR(50) NOT NULL,
+    content TEXT NOT NULL,
+    labels JSONB DEFAULT '{}',
+    metadata JSONB DEFAULT '{}',
+    is_processed BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+-- Create indexes for better performance
+CREATE INDEX idx_tickets_created_by ON tickets(created_by);
+CREATE INDEX idx_tickets_status ON tickets(status);
+CREATE INDEX idx_tickets_created_at ON tickets(created_at);
+CREATE INDEX idx_ticket_comments_ticket_id ON ticket_comments(ticket_id);
+CREATE INDEX idx_ratings_user_id ON ratings(user_id);
+CREATE INDEX idx_ratings_ticket_id ON ratings(ticket_id);
+CREATE INDEX idx_notifications_user_id ON notifications(user_id);
+CREATE INDEX idx_notifications_is_read ON notifications(is_read);
+CREATE INDEX idx_services_status ON services(status);
+CREATE INDEX idx_services_is_active ON services(is_active);
+
+-- Create updated_at trigger function
+CREATE OR REPLACE FUNCTION update_updated_at_column()
+RETURNS TRIGGER AS $$
+BEGIN
+    NEW.updated_at = NOW();
+    RETURN NEW;
+END;
+$$ language 'plpgsql';
+
+-- Create triggers for updated_at
+CREATE TRIGGER update_user_profiles_updated_at BEFORE UPDATE ON user_profiles FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_tickets_updated_at BEFORE UPDATE ON tickets FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ticket_comments_updated_at BEFORE UPDATE ON ticket_comments FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+CREATE TRIGGER update_ai_models_updated_at BEFORE UPDATE ON ai_models FOR EACH ROW EXECUTE FUNCTION update_updated_at_column();
+
+-- Row Level Security (RLS) policies
+ALTER TABLE user_profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE tickets ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ticket_comments ENABLE ROW LEVEL SECURITY;
+ALTER TABLE services ENABLE ROW LEVEL SECURITY;
+ALTER TABLE service_incidents ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ratings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_models ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_predictions ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_insights ENABLE ROW LEVEL SECURITY;
+ALTER TABLE ai_training_data ENABLE ROW LEVEL SECURITY;
+
+-- User profiles policies
+CREATE POLICY "Users can view own profile" ON user_profiles FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own profile" ON user_profiles FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Users can insert own profile" ON user_profiles FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Admins can view all profiles" ON user_profiles FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- Tickets policies
+CREATE POLICY "Users can view own tickets" ON tickets FOR SELECT USING (auth.uid() = created_by);
+CREATE POLICY "Users can create tickets" ON tickets FOR INSERT WITH CHECK (auth.uid() = created_by);
+CREATE POLICY "Users can update own tickets" ON tickets FOR UPDATE USING (auth.uid() = created_by);
+CREATE POLICY "Admins can view all tickets" ON tickets FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- Ticket comments policies
+CREATE POLICY "Users can view comments on their tickets" ON ticket_comments FOR SELECT USING (
+    EXISTS (SELECT 1 FROM tickets WHERE id = ticket_id AND created_by = auth.uid())
+);
+CREATE POLICY "Users can create comments on their tickets" ON ticket_comments FOR INSERT WITH CHECK (
+    EXISTS (SELECT 1 FROM tickets WHERE id = ticket_id AND created_by = auth.uid())
+);
+CREATE POLICY "Admins can view all comments" ON ticket_comments FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- Services policies (public read)
+CREATE POLICY "Anyone can view active services" ON services FOR SELECT USING (is_active = TRUE);
+CREATE POLICY "Admins can manage services" ON services FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- Ratings policies
+CREATE POLICY "Users can view own ratings" ON ratings FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can create ratings" ON ratings FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "Users can update own ratings" ON ratings FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "Admins can view all ratings" ON ratings FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- Notifications policies
+CREATE POLICY "Users can view own notifications" ON notifications FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY "Users can update own notifications" ON notifications FOR UPDATE USING (auth.uid() = user_id);
+CREATE POLICY "System can create notifications" ON notifications FOR INSERT WITH CHECK (TRUE);
+
+-- AI models policies (admin only)
+CREATE POLICY "Admins can manage AI models" ON ai_models FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- AI predictions policies (admin only)
+CREATE POLICY "Admins can manage AI predictions" ON ai_predictions FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- AI insights policies
+CREATE POLICY "Users can view actionable insights" ON ai_insights FOR SELECT USING (is_actionable = TRUE);
+CREATE POLICY "Admins can manage insights" ON ai_insights FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- AI training data policies (admin only)
+CREATE POLICY "Admins can manage training data" ON ai_training_data FOR ALL USING (
+    EXISTS (SELECT 1 FROM auth.users WHERE id = auth.uid() AND raw_user_meta_data->>'role' = 'admin')
+);
+
+-- Insert sample data
+INSERT INTO services (name, description, status, health_score, category, features) VALUES
+('Email Services', 'Corporate email hosting and management services', 'operational', 95, 'Communication', '["Email hosting", "Calendar integration", "Mobile sync", "Spam protection"]'),
+('File Storage', 'Secure cloud storage and file sharing platform', 'operational', 88, 'Storage', '["Cloud storage", "File sharing", "Version control", "Access control"]'),
+('Database Services', 'Managed database hosting and maintenance', 'operational', 92, 'Data', '["Database hosting", "Backup services", "Performance monitoring", "Security updates"]'),
+('API Gateway', 'Centralized API management and routing', 'operational', 98, 'Infrastructure', '["API routing", "Rate limiting", "Authentication", "Monitoring"]'),
+('CDN Services', 'Content delivery network for global performance', 'operational', 99, 'Infrastructure', '["Global CDN", "Caching", "DDoS protection", "SSL/TLS"]');
+
+-- Insert sample AI models
+INSERT INTO ai_models (name, model_type, version, is_active, accuracy_score, config) VALUES
+('Ticket Classification', 'classification', '1.0', TRUE, 0.92, '{"algorithm": "BERT", "max_length": 512}'),
+('Sentiment Analysis', 'nlp', '2.1', TRUE, 0.88, '{"algorithm": "RoBERTa", "threshold": 0.7}'),
+('Churn Prediction', 'regression', '1.5', TRUE, 0.85, '{"algorithm": "XGBoost", "features": 50}'),
+('Recommendation Engine', 'recommendation', '3.0', TRUE, 0.91, '{"algorithm": "Collaborative Filtering", "k": 10}');
+
+-- Create functions for common operations
+CREATE OR REPLACE FUNCTION get_user_ticket_stats(user_uuid UUID)
+RETURNS JSON AS $$
+DECLARE
+    result JSON;
+BEGIN
+    SELECT json_build_object(
+        'total', COUNT(*),
+        'open', COUNT(*) FILTER (WHERE status = 'open'),
+        'in_progress', COUNT(*) FILTER (WHERE status = 'in_progress'),
+        'resolved', COUNT(*) FILTER (WHERE status = 'resolved'),
+        'closed', COUNT(*) FILTER (WHERE status = 'closed'),
+        'pending', COUNT(*) FILTER (WHERE status = 'pending')
+    ) INTO result
+    FROM tickets
+    WHERE created_by = user_uuid;
+    
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+CREATE OR REPLACE FUNCTION get_service_status_overview()
+RETURNS JSON AS $$
+DECLARE
+    result JSON;
+BEGIN
+    SELECT json_build_object(
+        'total_services', COUNT(*),
+        'operational', COUNT(*) FILTER (WHERE status = 'operational'),
+        'minor_issues', COUNT(*) FILTER (WHERE status = 'minor_issues'),
+        'major_issues', COUNT(*) FILTER (WHERE status = 'major_issues'),
+        'maintenance', COUNT(*) FILTER (WHERE status = 'maintenance'),
+        'outage', COUNT(*) FILTER (WHERE status = 'outage'),
+        'overall_status', CASE
+            WHEN COUNT(*) FILTER (WHERE status = 'outage') > 0 THEN 'outage'
+            WHEN COUNT(*) FILTER (WHERE status = 'major_issues') > 0 THEN 'major_issues'
+            WHEN COUNT(*) FILTER (WHERE status = 'minor_issues') > 0 THEN 'minor_issues'
+            WHEN COUNT(*) FILTER (WHERE status = 'maintenance') > 0 THEN 'maintenance'
+            ELSE 'operational'
+        END
+    ) INTO result
+    FROM services
+    WHERE is_active = TRUE;
+    
+    RETURN result;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Grant necessary permissions
+GRANT USAGE ON SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL TABLES IN SCHEMA public TO anon, authenticated;
+GRANT ALL ON ALL SEQUENCES IN SCHEMA public TO anon, authenticated;
+GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO anon, authenticated;
     name VARCHAR(255) NOT NULL,
     type VARCHAR(50) NOT NULL CHECK (type IN ('server', 'network', 'application', 'database', 'storage')),
     status VARCHAR(50) NOT NULL DEFAULT 'operational' CHECK (status IN ('operational', 'degraded', 'outage', 'maintenance')),

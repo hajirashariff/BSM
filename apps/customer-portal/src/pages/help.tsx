@@ -3,6 +3,8 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import ModernLayout from '../components/ModernLayout';
+import { useAuth } from '../contexts/AuthContext';
+import { knowledgeService, KnowledgeArticle } from '../lib/supabaseService';
 
 import { 
   HelpCircle,
@@ -28,7 +30,8 @@ import {
   Bell,
   Zap,
   Shield,
-  Globe
+  Globe,
+  Eye
 } from 'lucide-react';
 
 const supportMethods = [
@@ -189,13 +192,66 @@ const quickLinks = [
 ];
 
 export default function HelpPage() {
+  const { user } = useAuth();
   const [searchQuery, setSearchQuery] = useState('');
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [isClient, setIsClient] = useState(false);
+  const [articles, setArticles] = useState<KnowledgeArticle[]>([]);
+  const [featuredArticles, setFeaturedArticles] = useState<KnowledgeArticle[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchResults, setSearchResults] = useState<KnowledgeArticle[]>([]);
+  const [isSearching, setIsSearching] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Load knowledge base data
+  useEffect(() => {
+    const loadKnowledgeData = async () => {
+      if (!isClient) return;
+      
+      try {
+        setLoading(true);
+        const [articlesData, featuredData, categoriesData] = await Promise.all([
+          knowledgeService.getArticles(),
+          knowledgeService.getFeaturedArticles(),
+          knowledgeService.getCategories()
+        ]);
+        
+        setArticles(articlesData);
+        setFeaturedArticles(featuredData);
+        setCategories(categoriesData);
+      } catch (error) {
+        console.error('Error loading knowledge base data:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadKnowledgeData();
+  }, [isClient]);
+
+  // Handle search
+  const handleSearch = async (query: string) => {
+    setSearchQuery(query);
+    if (query.trim() === '') {
+      setSearchResults([]);
+      setIsSearching(false);
+      return;
+    }
+
+    setIsSearching(true);
+    try {
+      const results = await knowledgeService.searchArticles(query);
+      setSearchResults(results);
+    } catch (error) {
+      console.error('Error searching articles:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
 
   const handleFaqToggle = (faqId: string) => {
     setExpandedFaq(expandedFaq === faqId ? null : faqId);
@@ -208,6 +264,9 @@ export default function HelpPage() {
       q.answer.toLowerCase().includes(searchQuery.toLowerCase())
     )
   })).filter(category => category.questions.length > 0);
+
+  // Get display articles (search results or all articles)
+  const displayArticles = searchQuery.trim() ? searchResults : articles;
 
   const filteredSupportMethods = supportMethods.filter(method =>
     method.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -246,7 +305,7 @@ export default function HelpPage() {
           <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
             We're here to help! Get support through multiple channels and find answers to common questions.
           </p>
-        </div>
+          </div>
 
         {/* Search Bar */}
         <div className="max-w-2xl mx-auto mb-12">
@@ -256,7 +315,7 @@ export default function HelpPage() {
               type="text"
               placeholder="Search for help articles, FAQs, or topics..."
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={(e) => handleSearch(e.target.value)}
               className="w-full pl-12 pr-4 py-4 border border-gray-300 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-800 dark:text-white"
             />
           </div>
@@ -276,7 +335,7 @@ export default function HelpPage() {
                 <div className="flex items-center mb-4">
                   <method.icon className="w-8 h-8 mr-3" />
                   <h3 className="text-lg font-semibold">{method.title}</h3>
-                </div>
+        </div>
                 <p className="text-white/90 mb-4">{method.description}</p>
                 {method.href ? (
                   <Link
@@ -299,14 +358,90 @@ export default function HelpPage() {
                       <span className="inline-flex items-center text-sm">
                         <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
                         {method.status}
-                      </span>
+        </span>
                     )}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
         </div>
+      )}
+    </div>
+            ))}
+            </div>
+          </div>
+          
+        {/* Knowledge Base Articles */}
+        {loading ? (
+          <div className="mb-16">
+            <div className="text-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-4 text-gray-600">Loading knowledge base...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="mb-16">
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-8 text-center">
+              {searchQuery ? 'Search Results' : 'Knowledge Base'}
+            </h2>
+            
+            {isSearching ? (
+              <div className="text-center py-8">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                <p className="mt-2 text-gray-600">Searching...</p>
+        </div>
+            ) : displayArticles.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {displayArticles.map((article) => (
+                  <div key={article.id} className="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-md transition-shadow">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                          {article.title}
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400 text-sm mb-3 line-clamp-2">
+                          {article.content.substring(0, 150)}...
+                        </p>
+                        <div className="flex items-center space-x-2 mb-3">
+                          <span className="px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+                            {article.category}
+                          </span>
+                          {article.featured && (
+                            <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-800 rounded-full">
+                              Featured
+                            </span>
+      )}
+    </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                      <div className="flex items-center space-x-4">
+                        <span className="flex items-center">
+                          <Eye className="w-4 h-4 mr-1" />
+                          {article.views}
+                        </span>
+                        <span className="flex items-center">
+                          <ThumbsUp className="w-4 h-4 mr-1" />
+                          {article.helpful_votes}
+                        </span>
+                      </div>
+                      <span>
+                        {new Date(article.updated_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-12">
+                <BookOpen className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+                  {searchQuery ? 'No articles found' : 'No articles available'}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {searchQuery ? 'Try a different search term' : 'Check back later for new articles'}
+                </p>
+            </div>
+            )}
+          </div>
+        )}
 
         {/* Quick Links */}
         <div className="mb-16">
@@ -315,7 +450,7 @@ export default function HelpPage() {
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {filteredQuickLinks.map((link, index) => (
-              <Link
+                    <Link 
                 key={index}
                 href={link.href}
                 className="bg-blue-600 hover:bg-blue-700 rounded-lg p-6 text-white hover:shadow-md transition-all duration-200 group"
@@ -323,16 +458,16 @@ export default function HelpPage() {
                 <div className="flex items-center mb-4">
                   <link.icon className="w-8 h-8 mr-3" />
                   <h3 className="text-lg font-semibold">{link.title}</h3>
-                </div>
+              </div>
                 <p className="text-white/90 mb-4">{link.description}</p>
                 <div className="flex items-center text-white font-medium group-hover:text-white/80 transition-colors">
                   Learn More
                   <ExternalLink className="w-4 h-4 ml-2" />
-                </div>
+                  </div>
               </Link>
             ))}
-          </div>
-        </div>
+                    </div>
+                  </div>
 
         {/* FAQ Section */}
         <div className="mb-16">
@@ -348,15 +483,15 @@ export default function HelpPage() {
                 <span>{filteredSupportMethods.length} support methods</span>
                 <span>{filteredQuickLinks.length} resources</span>
                 <span>{filteredFaqs.reduce((total, category) => total + category.questions.length, 0)} FAQs</span>
-              </div>
+                  </div>
               {filteredSupportMethods.length === 0 && filteredQuickLinks.length === 0 && filteredFaqs.reduce((total, category) => total + category.questions.length, 0) === 0 && (
                 <div className="mt-8 p-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl">
                   <p className="text-yellow-800 dark:text-yellow-200 font-medium">
                     No results found for "{searchQuery}". Try different keywords or browse our support methods below.
                   </p>
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
           )}
           <div className="space-y-6">
             {filteredFaqs.map((category) => (
@@ -373,7 +508,7 @@ export default function HelpPage() {
                   <div className="space-y-4">
                     {category.questions.map((faq, index) => (
                       <div key={index} className="border-b border-gray-200 dark:border-gray-700 last:border-b-0">
-                        <button
+                          <button
                           onClick={() => handleFaqToggle(`${category.id}-${index}`)}
                           className="w-full text-left py-4 flex items-center justify-between hover:bg-gray-50 dark:hover:bg-gray-700 rounded-lg px-2 -mx-2 transition-colors"
                         >
@@ -385,7 +520,7 @@ export default function HelpPage() {
                           ) : (
                             <ChevronDown className="w-5 h-5 text-gray-500 flex-shrink-0" />
                           )}
-                        </button>
+                          </button>
                         {expandedFaq === `${category.id}-${index}` && (
                           <div className="pb-4 px-2 -mx-2">
                             <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
@@ -393,14 +528,14 @@ export default function HelpPage() {
                             </p>
                           </div>
                         )}
+                        </div>
+                    ))}
+                          </div>
+                        </div>
                       </div>
                     ))}
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        </div>
 
         {/* Contact Information */}
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 rounded-xl p-8 text-center">
@@ -425,9 +560,9 @@ export default function HelpPage() {
               <Mail className="w-5 h-5 mr-2" />
               Email Support
             </a>
-          </div>
-        </div>
-      </div>
+                              </div>
+                            </div>
+                          </div>
     </ModernLayout>
   );
 }

@@ -346,7 +346,8 @@ const Dashboard: React.FC = () => {
                 category: ticketData.category,
                 priority: ticketData.priority,
                 tags: ticketData.tags,
-                attachments: ticketData.attachments
+                attachments: ticketData.attachments,
+                metadata: {}
               });
               
               console.log('📤 Ticket service response:', newTicket);

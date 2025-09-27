@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
-import { X, Paperclip, AlertCircle, Clock, Zap, Shield, Bug, Settings, HelpCircle, Send } from 'lucide-react';
-import { CreateTicketData } from '../lib/ticketService';
+import React, { useState, useRef } from 'react';
+import { X, Paperclip, AlertCircle, Clock, Zap, Shield, Bug, Settings, HelpCircle, Send, Upload, Trash2, File, Image, FileText } from 'lucide-react';
+import { CreateTicketData } from '../lib/supabaseService';
+import { storageService, FILE_VALIDATION } from '../lib/storageService';
 
 interface TicketCreationModalProps {
   onClose: () => void;
@@ -23,6 +24,7 @@ const priorities = [
 ];
 
 export default function TicketCreationModal({ onClose, onSubmit }: TicketCreationModalProps) {
+  console.log('🎫 TicketCreationModal component rendered');
   const [formData, setFormData] = useState<CreateTicketData>({
     subject: '',
     description: '',
@@ -34,37 +36,129 @@ export default function TicketCreationModal({ onClose, onSubmit }: TicketCreatio
   const [newTag, setNewTag] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [uploadingFiles, setUploadingFiles] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const validateForm = () => {
+    console.log('🔍 Validating form with data:', formData);
     const newErrors: Record<string, string> = {};
     
     if (!formData.subject.trim()) {
       newErrors.subject = 'Subject is required';
+      console.log('❌ Subject validation failed: empty');
     } else if (formData.subject.length < 5) {
       newErrors.subject = 'Subject must be at least 5 characters';
+      console.log('❌ Subject validation failed: too short');
+    } else {
+      console.log('✅ Subject validation passed');
     }
     
     if (!formData.description.trim()) {
       newErrors.description = 'Description is required';
+      console.log('❌ Description validation failed: empty');
     } else if (formData.description.length < 20) {
       newErrors.description = 'Description must be at least 20 characters';
+      console.log('❌ Description validation failed: too short');
+    } else {
+      console.log('✅ Description validation passed');
     }
     
+    console.log('🔍 Validation errors:', newErrors);
     setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const isValid = Object.keys(newErrors).length === 0;
+    console.log('🔍 Form is valid:', isValid);
+    return isValid;
+  };
+
+  const handleFileUpload = async (files: FileList) => {
+    setUploadingFiles(true);
+    const validFiles: File[] = [];
+    const errors: string[] = [];
+
+    Array.from(files).forEach(file => {
+      // Validate file type
+      if (!storageService.validateFileType(file)) {
+        errors.push(`${file.name}: Invalid file type`);
+        return;
+      }
+
+      // Validate file size
+      if (!storageService.validateFileSize(file)) {
+        errors.push(`${file.name}: File too large (max ${storageService.formatFileSize(FILE_VALIDATION.TICKET_ATTACHMENTS_MAX_SIZE)})`);
+        return;
+      }
+
+      validFiles.push(file);
+    });
+
+    if (errors.length > 0) {
+      setErrors(prev => ({ ...prev, files: errors.join(', ') }));
+    }
+
+    if (validFiles.length > 0) {
+      setUploadedFiles(prev => [...prev, ...validFiles]);
+      setFormData(prev => ({
+        ...prev,
+        attachments: [...prev.attachments, ...validFiles.map(file => ({
+          name: file.name,
+          size: file.size,
+          type: file.type,
+          url: storageService.createPreviewUrl(file)
+        }))]
+      }));
+    }
+
+    setUploadingFiles(false);
+  };
+
+  const handleFileRemove = (index: number) => {
+    const fileToRemove = uploadedFiles[index];
+    if (fileToRemove) {
+      storageService.revokePreviewUrl(storageService.createPreviewUrl(fileToRemove));
+    }
+
+    setUploadedFiles(prev => prev.filter((_, i) => i !== index));
+    setFormData(prev => ({
+      ...prev,
+      attachments: prev.attachments.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleFileInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      handleFileUpload(e.target.files);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    console.log('📝 Form submitted, validating...');
     
     if (!validateForm()) {
+      console.log('❌ Form validation failed');
       return;
     }
     
+    console.log('✅ Form validation passed');
     setIsSubmitting(true);
     
     try {
-      await onSubmit(formData);
+      // Prepare ticket data without file uploads for now
+      const ticketData = {
+        subject: formData.subject,
+        description: formData.description,
+        category: formData.category,
+        priority: formData.priority,
+        tags: formData.tags,
+        attachments: [] // Simplified - no file uploads for now
+      };
+
+      console.log('📤 Calling onSubmit with ticket data:', ticketData);
+      // Submit ticket
+      await onSubmit(ticketData);
+      
+      // Reset form
       setFormData({
         subject: '',
         description: '',
@@ -73,28 +167,17 @@ export default function TicketCreationModal({ onClose, onSubmit }: TicketCreatio
         attachments: [],
         tags: []
       });
+      setUploadedFiles([]);
       onClose();
     } catch (error) {
       console.error('Error creating ticket:', error);
+      alert('Failed to create ticket. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
   };
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    setFormData(prev => ({
-      ...prev,
-      attachments: [...prev.attachments, ...files]
-    }));
-  };
 
-  const removeAttachment = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      attachments: prev.attachments.filter((_, i) => i !== index)
-    }));
-  };
 
   const addTag = () => {
     const tag = newTag.trim().toLowerCase();
@@ -256,6 +339,87 @@ export default function TicketCreationModal({ onClose, onSubmit }: TicketCreatio
             </p>
           </div>
 
+          {/* File Attachments */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
+              Attachments
+            </label>
+            <div className="space-y-4">
+              {/* File Upload Area */}
+              <div
+                className="border-2 border-dashed border-gray-300 dark:border-zinc-600 rounded-lg p-6 text-center hover:border-primary-400 dark:hover:border-primary-500 transition-colors cursor-pointer"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  multiple
+                  accept="image/*,application/pdf,text/*,.doc,.docx,.xls,.xlsx"
+                  onChange={handleFileInputChange}
+                  className="hidden"
+                />
+                <Upload className="mx-auto h-12 w-12 text-gray-400 dark:text-zinc-500" />
+                <p className="mt-2 text-sm text-gray-600 dark:text-zinc-400">
+                  Click to upload files or drag and drop
+                </p>
+                <p className="text-xs text-gray-500 dark:text-zinc-500">
+                  Max file size: {storageService.formatFileSize(FILE_VALIDATION.TICKET_ATTACHMENTS_MAX_SIZE)}
+                </p>
+                {uploadingFiles && (
+                  <div className="mt-2">
+                    <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary-600 mx-auto"></div>
+                    <p className="text-sm text-primary-600">Uploading files...</p>
+                  </div>
+                )}
+              </div>
+
+              {/* Uploaded Files List */}
+              {uploadedFiles.length > 0 && (
+                <div className="space-y-2">
+                  <h4 className="text-sm font-medium text-gray-700 dark:text-zinc-300">
+                    Uploaded Files ({uploadedFiles.length})
+                  </h4>
+                  {uploadedFiles.map((file, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 dark:bg-zinc-800 rounded-lg"
+                    >
+                      <div className="flex items-center space-x-3">
+                        {file.type.startsWith('image/') ? (
+                          <Image className="h-5 w-5 text-blue-500" />
+                        ) : file.type === 'application/pdf' ? (
+                          <FileText className="h-5 w-5 text-red-500" />
+                        ) : (
+                          <File className="h-5 w-5 text-gray-500" />
+                        )}
+                        <div>
+                          <p className="text-sm font-medium text-gray-900 dark:text-zinc-100">
+                            {file.name}
+                          </p>
+                          <p className="text-xs text-gray-500 dark:text-zinc-400">
+                            {storageService.formatFileSize(file.size)}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => handleFileRemove(index)}
+                        className="p-1 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* File Upload Errors */}
+              {errors.files && (
+                <p className="text-sm text-red-600 dark:text-red-400">{errors.files}</p>
+              )}
+            </div>
+          </div>
+
           {/* Tags */}
           <div>
             <label className="block text-sm font-medium text-gray-700 dark:text-zinc-300 mb-2">
@@ -309,7 +473,7 @@ export default function TicketCreationModal({ onClose, onSubmit }: TicketCreatio
                 type="file"
                 id="attachments"
                 multiple
-                onChange={handleFileUpload}
+                onChange={handleFileInputChange}
                 className="hidden"
                 accept=".pdf,.doc,.docx,.txt,.jpg,.jpeg,.png,.gif"
               />
@@ -327,34 +491,6 @@ export default function TicketCreationModal({ onClose, onSubmit }: TicketCreatio
               </label>
             </div>
 
-            {/* File List */}
-            {formData.attachments.length > 0 && (
-              <div className="mt-3 space-y-2">
-                {formData.attachments.map((file, index) => (
-                  <div
-                    key={index}
-                    className="flex items-center justify-between p-2 bg-gray-50 dark:bg-zinc-800 rounded-lg"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <Paperclip size={16} className="text-gray-400" />
-                      <span className="text-sm text-gray-900 dark:text-zinc-100">
-                        {file.name}
-                      </span>
-                      <span className="text-xs text-gray-500 dark:text-zinc-500">
-                        ({(file.size / 1024 / 1024).toFixed(2)} MB)
-                      </span>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => removeAttachment(index)}
-                      className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Actions */}

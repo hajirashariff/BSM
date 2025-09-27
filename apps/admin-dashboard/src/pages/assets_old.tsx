@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Server, 
   Plus, 
@@ -26,125 +25,106 @@ import {
   Trash2,
   Link,
   Zap,
-  Network
+  Network,
+  Loader2
 } from 'lucide-react';
 import AddAssetModal from '../components/AddAssetModal';
 import AssetDetailsModal from '../components/AssetDetailsModal';
 import EditAssetModal from '../components/EditAssetModal';
 import AdvancedFilterModal from '../components/AdvancedFilterModal';
+import { assetService, realtimeService } from '../lib/supabaseService';
+import { Asset } from '../lib/supabaseService';
 
-const assetData = [
-  {
-    id: 'AST-001',
-    name: 'Production Database Server',
-    type: 'Server',
-    category: 'Infrastructure',
-    status: 'Healthy',
-    health: 95,
-    location: 'Data Center A',
-    owner: 'Platform Team',
-    vendor: 'Dell',
-    model: 'PowerEdge R750',
-    serialNumber: 'DL123456789',
-    ipAddress: '192.168.1.100',
-    os: 'Ubuntu 22.04 LTS',
-    cpu: 'Intel Xeon E5-2680 v4',
-    memory: '64GB DDR4',
-    storage: '2TB SSD',
-    purchaseDate: '2023-01-15',
-    warrantyExpiry: '2026-01-15',
-    lastMaintenance: '2024-01-10',
-    nextMaintenance: '2024-04-10',
-    dependencies: ['AST-002', 'AST-003'],
-    dependents: ['AST-004', 'AST-005'],
-    incidents: 2,
-    uptime: '99.9%',
-    tags: ['Production', 'Database', 'Critical'],
-    cost: '$15,000',
-    lifecycle: 'Active'
-  },
-  {
-    id: 'AST-002',
-    name: 'Load Balancer',
-    type: 'Network',
-    category: 'Infrastructure',
-    status: 'Degraded',
-    health: 78,
-    location: 'Data Center A',
-    owner: 'Network Team',
-    vendor: 'F5 Networks',
-    model: 'BIG-IP 4000',
-    serialNumber: 'F5123456789',
-    ipAddress: '192.168.1.101',
-    os: 'F5 TMOS',
-    cpu: 'Custom ASIC',
-    memory: '16GB',
-    storage: '500GB SSD',
-    purchaseDate: '2022-06-20',
-    warrantyExpiry: '2025-06-20',
-    lastMaintenance: '2023-12-15',
-    nextMaintenance: '2024-03-15',
-    dependencies: [],
-    dependents: ['AST-001', 'AST-004'],
-    incidents: 5,
-    uptime: '98.5%',
-    tags: ['Load Balancer', 'Network', 'Critical'],
-    cost: '$25,000',
-    lifecycle: 'Active'
-  },
-  {
-    id: 'AST-003',
-    name: 'Backup Storage Array',
-    type: 'Storage',
-    category: 'Infrastructure',
-    status: 'Healthy',
-    health: 92,
-    location: 'Data Center B',
-    owner: 'Storage Team',
-    vendor: 'NetApp',
-    model: 'FAS2750',
-    serialNumber: 'NA987654321',
-    ipAddress: '192.168.2.100',
-    os: 'ONTAP 9.8',
-    cpu: 'Intel Xeon E5-2620',
-    memory: '32GB',
-    storage: '50TB Raw',
-    purchaseDate: '2023-03-10',
-    warrantyExpiry: '2026-03-10',
-    lastMaintenance: '2024-01-05',
-    nextMaintenance: '2024-04-05',
-    dependencies: [],
-    dependents: ['AST-001'],
-    incidents: 1,
-    uptime: '99.8%',
-    tags: ['Backup', 'Storage', 'Important'],
-    cost: '$45,000',
-    lifecycle: 'Active'
-  },
-  {
-    id: 'AST-004',
-    name: 'Web Application Server',
-    type: 'Server',
-    category: 'Application',
-    status: 'Healthy',
-    health: 88,
-    location: 'Data Center A',
-    owner: 'Development Team',
-    vendor: 'HP',
-    model: 'ProLiant DL380',
-    serialNumber: 'HP456789123',
-    ipAddress: '192.168.1.102',
-    os: 'CentOS 8',
-    cpu: 'Intel Xeon E5-2640',
-    memory: '32GB DDR4',
-    storage: '1TB SSD',
-    purchaseDate: '2022-11-05',
-    warrantyExpiry: '2025-11-05',
-    lastMaintenance: '2023-12-20',
-    nextMaintenance: '2024-03-20',
-    dependencies: ['AST-001', 'AST-002'],
-    dependents: [],
-    incidents: 3,
+export default function AssetsPage() {
+  const [assets, setAssets] = useState<Asset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedType, setSelectedType] = useState('all');
+  const [selectedStatus, setSelectedStatus] = useState('all');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+  const [sortOrder, setSortOrder] = useState('asc');
+  const [viewMode, setViewMode] = useState<'grid' | 'list' | 'kanban'>('grid');
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [selectedAsset, setSelectedAsset] = useState<Asset | null>(null);
+  const [expandedAssets, setExpandedAssets] = useState<Set<string>>(new Set());
+
+  // Load assets from Supabase
+  useEffect(() => {
+    const loadAssets = async () => {
+      try {
+        setLoading(true);
+        const assetsData = await assetService.getAssets();
+        setAssets(assetsData || []);
+      } catch (error) {
+        console.error('Error loading assets:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAssets();
+  }, []);
+
+  // Set up real-time subscriptions
+  useEffect(() => {
+    const subscription = realtimeService.subscribeToAssets((payload) => {
+      console.log('Asset update received:', payload);
+      // Refresh assets when changes occur
+      assetService.getAssets().then(setAssets);
+    });
+
+    return () => {
+      subscription?.unsubscribe();
+    };
+  }, []);
+
+  // Get unique values for filters
+  const types = ['all', ...Array.from(new Set(assets.map(a => a.type).filter(Boolean)))];
+  const statuses = ['all', ...Array.from(new Set(assets.map(a => a.status).filter(Boolean)))];
+  const categories = ['all', ...Array.from(new Set(assets.map(a => a.category).filter(Boolean)))];
+
+  // Filter and sort assets
+  const filteredAssets = assets
+    .filter(asset => {
+      const matchesSearch = asset.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           asset.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                           asset.location.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesType = selectedType === 'all' || asset.type === selectedType;
+      const matchesStatus = selectedStatus === 'all' || asset.status === selectedStatus;
+      const matchesCategory = selectedCategory === 'all' || asset.category === selectedCategory;
+      
+      return matchesSearch && matchesType && matchesStatus && matchesCategory;
+    })
+    .sort((a, b) => {
+      let aValue = a[sortBy as keyof Asset];
+      let bValue = b[sortBy as keyof Asset];
+      
+      if (typeof aValue === 'string' && typeof bValue === 'string') {
+        aValue = aValue.toLowerCase();
+        bValue = bValue.toLowerCase();
+      }
+      
+      if (sortOrder === 'asc') {
+        return aValue < bValue ? -1 : aValue > bValue ? 1 : 0;
+      } else {
+        return aValue > bValue ? -1 : aValue < bValue ? 1 : 0;
+      }
+    });
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin mx-auto mb-4 text-blue-500" />
+          <p className="text-gray-600">Loading assets...</p>
+        </div>
+      </div>
+    );
+  }
     uptime: '99.2%',
     tags: ['Web', 'Application', 'Production'],
     cost: '$12,000',
